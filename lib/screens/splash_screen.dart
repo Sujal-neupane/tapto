@@ -22,7 +22,7 @@ class _SplashScreenState extends State<SplashScreen> {
       });
     });
 
-    // Navigate to Login screen after 1 second
+    // Navigate to Login screen after 2 seconds
     Timer(const Duration(seconds: 1), () {
       Navigator.pushReplacementNamed(context, '/login');
     });
@@ -41,6 +41,7 @@ class _SplashScreenState extends State<SplashScreen> {
             'assets/images/logo1.png',
             width: 120,
             height: 120,
+            alignment: Alignment.center,
           ),
         ),
       ),
