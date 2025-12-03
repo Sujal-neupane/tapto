@@ -54,8 +54,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _completeOnboarding() {
-    Navigator.of(context).pushReplacementNamed('/home');
-    // For now, just show a snackbar
+    Navigator.of(context).pushReplacementNamed('/dashboard');
+    // For now, just  a snackbar
     ScaffoldMessenger.of(
       context,
     ).showSnackBar(const SnackBar(content: Text('Onboarding completed!')));
@@ -112,7 +112,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         child: TextButton(
           onPressed: _skipOnboarding,
           child: const Text(
-            "Text",
+            "Skip",
             style: TextStyle(fontSize: 16, color: Colors.grey),
           ),
         ),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:tapto/screens/dashboard_screen.dart';
+import 'package:tapto/screens/onboarding_screen.dart';
 import 'package:tapto/screens/signp_screen.dart';
 import 'package:tapto/screens/splash_screen.dart';
 import 'package:tapto/screens/login_screen.dart';
@@ -17,6 +19,8 @@ class MyApp extends StatelessWidget {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
         '/signup': (context) => const SignupScreen(),
+        '/dashboard': (context) => const DashboardScreen(),
+        '/onboarding': (context) => const OnboardingScreen(),
       },
     );
   }

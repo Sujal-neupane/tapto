@@ -15,6 +15,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _login() {
     if (_formKey.currentState!.validate()) {
+      Navigator.of(context).pushReplacementNamed('/onboarding');
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Signing in...')));

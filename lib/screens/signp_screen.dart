@@ -18,6 +18,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
   void _signup() {
     if (_formKey.currentState!.validate()) {
+      Navigator.of(context).pushReplacementNamed('/login');
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Creating account')));
