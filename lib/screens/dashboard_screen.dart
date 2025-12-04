@@ -5,6 +5,18 @@ class DashboardScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(appBar: AppBar(title: Text("This is Dashboard")));
+    return Scaffold(
+      appBar: AppBar(
+        title: Text("This is Dashboard"),
+        backgroundColor: Color(0xFF1687FF),
+      ),
+      body: Center(
+        child: Text(
+          "Welcome to the Dashboard!",
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 24),
+        ),
+      ),
+    );
   }
 }
