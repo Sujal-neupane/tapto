@@ -14,7 +14,7 @@ class DashboardScreen extends StatelessWidget {
         child: Text(
           "Welcome to the Dashboard!",
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 24),
+          style: TextStyle(fontSize: 24, color: Colors.white),
         ),
       ),
     );

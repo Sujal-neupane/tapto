@@ -97,7 +97,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             // Next/Get Started button
             _buildNavigationButton(),
 
-            const SizedBox(height: 32),
+            const SizedBox(height: 31),
           ],
         ),
       ),
