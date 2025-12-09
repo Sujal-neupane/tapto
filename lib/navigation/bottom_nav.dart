@@ -15,7 +15,7 @@ class _BottomNavState extends State<BottomNav> {
 
   List<Widget> lstBottomScreen = [
     HomeScreen(),
-    WishListScreen(),
+    WishlistScreen(),
     ProfileScreen(),
   ];
   @override
