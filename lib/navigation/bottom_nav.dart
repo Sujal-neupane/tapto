@@ -12,9 +12,11 @@ class BottomNav extends StatelessWidget {
         BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
       ],
       currentIndex: 0,
-      selectedItemColor: Colors.blue,
+      selectedItemColor: Colors.white,
+      fixedColor: Colors.blue,
+      unselectedItemColor: Colors.grey,
       onTap: (index) {
-        // Handle navigation logic here
+        // Handle navigation based on the tapped index
       },
     );
   }
