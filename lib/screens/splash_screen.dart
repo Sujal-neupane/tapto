@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:async';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -8,40 +7,62 @@ class SplashScreen extends StatefulWidget {
   State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends State<SplashScreen> {
-  double _scale = 0.3; // Initial scale for animation
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _fadeAnimation;
 
   @override
   void initState() {
     super.initState();
 
-    // Animate logo after a short delay
-    Future.delayed(const Duration(milliseconds: 300), () {
-      setState(() {
-        _scale = 1.8; // Target scale for pop effect
-      });
-    });
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
 
-    // Navigate to Login screen after 2 seconds
-    Timer(const Duration(seconds: 1), () {
-      Navigator.pushReplacementNamed(context, '/login');
+    _scaleAnimation = Tween<double>(
+      begin: 0.4,
+      end: 1.4,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
+
+    _fadeAnimation = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
+
+    _controller.forward();
+
+    Future.delayed(const Duration(seconds: 2), () {
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, "/login");
+      }
     });
   }
 
   @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final colors = Theme.of(context).colorScheme;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colors.surface,
       body: Center(
-        child: AnimatedScale(
-          scale: _scale,
-          duration: const Duration(milliseconds: 800),
-          curve: Curves.easeOutBack, // Smooth pop animation
-          child: Image.asset(
-            'assets/images/logo1.png',
-            width: 120,
-            height: 120,
-            alignment: Alignment.center,
+        child: FadeTransition(
+          opacity: _fadeAnimation,
+          child: ScaleTransition(
+            scale: _scaleAnimation,
+            child: Image.asset(
+              "assets/images/logo1.png",
+              width: MediaQuery.of(context).size.width * 0.25,
+              height: MediaQuery.of(context).size.width * 0.25,
+            ),
           ),
         ),
       ),
