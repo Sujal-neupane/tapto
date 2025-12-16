@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'app_colors.dart';
 
 class AppTextStyles {
-  static const String fontPrimary = 'Poppins';
+  static const String fontPrimary = 'Geom';
   static const String fontSecondary = 'Inter';
 
   static const heading = TextStyle(
@@ -30,4 +30,10 @@ class AppTextStyles {
     fontWeight: FontWeight.w600,
     color: Colors.white,
   );
+
+  static TextStyle? get appBar => null;
+
+  static TextStyle? get link => null;
+
+  static TextStyle? get hint => null;
 }

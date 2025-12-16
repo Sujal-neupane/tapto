@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tapto/screens/auth/forgot_password_screen.dart';
+import 'package:tapto/screens/auth/otp_screen.dart';
 // import 'package:tapto/screens/wish_list_screen.dart';
 import 'package:tapto/screens/dashboard_screen.dart';
 import 'package:tapto/screens/onboarding_screen.dart';
@@ -17,15 +18,14 @@ class MyApp extends StatelessWidget {
       title: 'Tapto',
       theme: AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
-      // home: const WishlistScreen(),
-      // initialRoute: 'WishListScreen',
       routes: {
         '/': (context) => const SplashScreen(),
         '/login': (context) => const LoginScreen(),
         '/signup': (context) => const SignupScreen(),
-        // '/dashboard': (context) => const DashboardScreen(),
+        '/dashboard': (context) => const DashboardScreen(),
         '/onboarding': (context) => const OnboardingScreen(),
-        // '/forgot-password': (context) => const ForgotPasswordScreen(),
+        '/forgot-password': (context) => const ForgotPasswordScreen(),
+        '/otp': (context) => const OtpScreen(),
       },
     );
   }

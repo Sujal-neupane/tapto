@@ -1,88 +1,84 @@
 import 'package:flutter/material.dart';
+import 'package:tapto/screens/profile_screen.dart';
+import 'package:tapto/screens/wish_list_screen.dart';
 import '../../theme/app_colors.dart';
 import '../../theme/app_text_styles.dart';
 import '../../theme/app_spacing.dart';
+import 'home_swipe_screen.dart';
 
-class HomeSwipeScreen extends StatelessWidget {
-  const HomeSwipeScreen({super.key});
+class DashboardScreen extends StatefulWidget {
+  const DashboardScreen({super.key});
+
+  @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  int _currentIndex = 0;
+
+  final _pages = const [HomeSwipeScreen(), WishlistScreen(), ProfileScreen()];
+
+  String get _title {
+    switch (_currentIndex) {
+      case 1:
+        return 'Wishlist';
+      case 2:
+        return 'Profile';
+      default:
+        return 'Home';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Discover'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.tune),
-            onPressed: () {}, // filter later
-          ),
-        ],
-      ),
-      body: Center(
-        child: Stack(
-          children: List.generate(
-            3,
-            (index) => Draggable(
-              childWhenDragging: const SizedBox.shrink(),
-              feedback: _ProductCard(index: index),
-              child: _ProductCard(index: index),
-              onDragEnd: (details) {
-                // swipe right = like
-                // swipe left = skip
-                // swipe up = details of the product
-                // double tap = add to wishlist
-              },
-            ),
-          ).reversed.toList(),
-        ),
-      ),
-    );
-  }
-}
-
-class _ProductCard extends StatelessWidget {
-  final int index;
-  const _ProductCard({required this.index});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      margin: const EdgeInsets.all(AppSpacing.md),
-      elevation: 6,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: SizedBox(
-        width: MediaQuery.of(context).size.width * 0.85,
-        height: MediaQuery.of(context).size.height * 0.6,
-        child: Column(
+        titleSpacing: AppSpacing.md,
+        title: Row(
           children: [
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(16),
-                  ),
-                ),
-                child: const Icon(
-                  Icons.shopping_bag,
-                  size: 120,
-                  color: AppColors.primary,
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(AppSpacing.md),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Product ${index + 1}', style: AppTextStyles.body),
-                  const SizedBox(height: 4),
-                  Text('\$99.00', style: AppTextStyles.subHeading),
-                ],
+            Image.asset('assets/images/logo1.png', height: 32),
+            const SizedBox(width: AppSpacing.sm),
+            Text(
+              _title,
+              style: AppTextStyles.appBar?.copyWith(
+                fontWeight: FontWeight.bold,
               ),
             ),
           ],
         ),
+        actions: [
+          if (_currentIndex == 0) ...[
+            IconButton(icon: const Icon(Icons.search), onPressed: () {}),
+            IconButton(icon: const Icon(Icons.tune), onPressed: () {}),
+          ],
+          IconButton(
+            icon: const Icon(Icons.shopping_cart_outlined),
+            onPressed: () {},
+          ),
+        ],
+      ),
+
+      body: IndexedStack(index: _currentIndex, children: _pages),
+
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _currentIndex,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.textSecondary,
+        onTap: (index) => setState(() => _currentIndex = index),
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.explore_outlined),
+            label: 'Home',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.favorite_border),
+            label: 'Wishlist',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person_outline),
+            label: 'Profile',
+          ),
+        ],
       ),
     );
   }
