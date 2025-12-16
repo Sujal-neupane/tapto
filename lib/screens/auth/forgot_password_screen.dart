@@ -57,7 +57,11 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: _sendOtp,
+                onPressed: () {
+                  _sendOtp();
+                },
+                // onPressed: () => Navigator.pushNamed(
+                //
                 child: const Text('Send OTP', style: AppTextStyles.button),
               ),
             ),

@@ -86,11 +86,21 @@ class _LoginScreenState extends State<LoginScreen> {
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: _login,
+                        onPressed: () =>
+                            Navigator.pushNamed(context, '/onboarding'),
                         child: const Text(
                           'Sign In',
                           style: AppTextStyles.button,
                         ),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    TextButton(
+                      onPressed: () =>
+                          Navigator.pushNamed(context, '/forgot-password'),
+                      child: const Text(
+                        'Forgot Password?',
+                        style: TextStyle(color: AppColors.primary),
                       ),
                     ),
 

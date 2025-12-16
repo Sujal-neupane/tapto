@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../theme/app_text_styles.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_input_theme.dart';
+import 'package:tapto/widgets/preference_chip.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -19,6 +20,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    String preference = '';
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -73,7 +75,31 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ),
               ),
+              const SizedBox(height: AppSpacing.md),
 
+              const Text(
+                'Shopping Preference',
+                style: AppTextStyles.subHeading,
+              ),
+              const SizedBox(height: AppSpacing.sm),
+
+              Row(
+                children: [
+                  PreferenceChip(
+                    label: "Men's Fashion",
+                    selected: preference == 'Men',
+                    onTap: () => setState(() => preference = 'Men'),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  PreferenceChip(
+                    label: "Women's Fashion",
+                    selected: preference == 'Women',
+                    onTap: () => setState(() => preference = 'Women'),
+                  ),
+                ],
+              ),
+
+              // inside signup form
               const SizedBox(height: AppSpacing.lg),
 
               SizedBox(
