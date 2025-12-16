@@ -76,20 +76,20 @@ flutter:
   fonts:
     - family: Geom
       fonts:
-        - asset: fonts/Geom-Black.ttf
-        - asset: fonts/Geom-BlackItalic.ttf
-        - asset: fonts/Geom-Bold.ttf
-        - asset: fonts/Geom-BoldItalic.ttf
-        - asset: fonts/Geom-ExtraBold.ttf
-        - asset: fonts/Geom-ExtraBoldItalic.ttf
-        - asset: fonts/Geom-Italic.ttf
-        - asset: fonts/Geom-Light.ttf
-        - asset: fonts/Geom-LightItalic.ttf
-        - asset: fonts/Geom-Medium.ttf
-        - asset: fonts/Geom-MediumItalic.ttf
-        - asset: fonts/Geom-Regular.ttf
-        - asset: fonts/Geom-SemiBold.ttf
-        - asset: fonts/Geom-SemiBoldItalic.ttf
+        - asset: assets/fonts/Geom-Black.ttf
+        - asset: assets/fonts/Geom-BlackItalic.ttf
+        - asset: assets/fonts/Geom-Bold.ttf
+        - asset: assets/fonts/Geom-BoldItalic.ttf
+        - asset: assets/fonts/Geom-ExtraBold.ttf
+        - asset: assets/fonts/Geom-ExtraBoldItalic.ttf
+        - asset: assets/fonts/Geom-Italic.ttf
+        - asset: assets/fonts/Geom-Light.ttf
+        - asset: assets/fonts/Geom-LightItalic.ttf
+        - asset: assets/fonts/Geom-Medium.ttf
+        - asset: assets/fonts/Geom-MediumItalic.ttf
+        - asset: assets/fonts/Geom-Regular.ttf
+        - asset: assets/fonts/Geom-SemiBold.ttf
+        - asset: assets/fonts/Geom-SemiBoldItalic.ttf
   #         style: italic
   #   - family: Trajan Pro
   #     fonts:
