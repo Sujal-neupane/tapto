@@ -60,7 +60,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 onPressed: () {
                   _sendOtp();
                 },
-                // onPressed: () => Navigator.pushNamed(
                 //
                 child: const Text('Send OTP', style: AppTextStyles.button),
               ),
