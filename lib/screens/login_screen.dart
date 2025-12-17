@@ -44,7 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 style: AppTextStyles.subHeading,
               ),
 
-              const SizedBox(height: AppSpacing.lg),
+              const SizedBox(height: AppSpacing.xl),
 
               Form(
                 key: _formKey,
@@ -59,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       validator: (v) =>
                           v != null && v.contains('@') ? null : 'Invalid email',
                     ),
-                    const SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.lg),
 
                     TextFormField(
                       controller: password,
@@ -94,7 +94,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(height: AppSpacing.md),
+                    const SizedBox(height: AppSpacing.sm),
                     TextButton(
                       onPressed: () =>
                           Navigator.pushNamed(context, '/forgot-password'),
@@ -103,6 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         style: TextStyle(color: AppColors.primary),
                       ),
                     ),
+                    const SizedBox(height: AppSpacing.sm),
 
                     TextButton(
                       onPressed: () => Navigator.pushNamed(context, '/signup'),
