@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import '../../theme/app_text_styles.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_input_theme.dart';
-import 'package:tapto/widgets/preference_chip.dart';
+import 'package:tapto/core/widgets/preference_chip.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});

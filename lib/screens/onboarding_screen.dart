@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/onboarding_model.dart';
-import '../widgets/onboarding_page_widget.dart';
-import '../widgets/page_indicator_widget.dart';
+import '../core/widgets/onboarding_page_widget.dart';
+import '../core/widgets/page_indicator_widget.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
