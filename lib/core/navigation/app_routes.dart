@@ -1,0 +1,44 @@
+import 'package:flutter/material.dart';
+import 'package:tapto/features/auth/presentation/pages/forgot_password_screen.dart';
+import 'package:tapto/features/auth/presentation/pages/otp_screen.dart';
+import 'package:tapto/features/dashboard/presentation/pages/cart_screen.dart';
+import 'package:tapto/features/dashboard/presentation/pages/dashboard_screen.dart';
+import 'package:tapto/features/dashboard/presentation/pages/filter_screen.dart';
+import 'package:tapto/features/onboarding/presentation/pages/onboarding_screen.dart';
+import 'package:tapto/features/dashboard/presentation/pages/search_screen.dart';
+import 'package:tapto/features/auth/presentation/pages/signup_screen.dart';
+import 'package:tapto/features/splash/presentation/pages/splash_screen.dart';
+import 'package:tapto/features/auth/presentation/pages/login_screen.dart';
+import 'package:tapto/features/dashboard/presentation/pages/wish_list_screen.dart';
+import 'package:tapto/features/dashboard/presentation/pages/product_details_screen.dart';
+
+/// Centralized route definitions for the application
+class AppRoutes {
+  /// Route names
+  static const String splash = '/';
+  static const String login = '/login';
+  static const String signup = '/signup';
+  static const String dashboard = '/dashboard';
+  static const String onboarding = '/onboarding';
+  static const String forgotPassword = '/forgot-password';
+  static const String otp = '/otp';
+  static const String filter = '/filter';
+  static const String search = '/search';
+  static const String cart = '/cart';
+  static const String wishlist = '/wish-list';
+
+  /// Route map
+  static final Map<String, WidgetBuilder> routes = {
+    splash: (context) => const SplashScreen(),
+    login: (context) => const LoginScreen(),
+    signup: (context) => const SignupScreen(),
+    dashboard: (context) => const DashboardScreen(),
+    onboarding: (context) => const OnboardingScreen(),
+    forgotPassword: (context) => const ForgotPasswordScreen(),
+    otp: (context) => const OtpScreen(),
+    filter: (context) => const FilterScreen(),
+    search: (context) => const SearchScreen(),
+    cart: (context) => const CartScreen(),
+    wishlist: (context) => const WishlistScreen(),
+  };
+}

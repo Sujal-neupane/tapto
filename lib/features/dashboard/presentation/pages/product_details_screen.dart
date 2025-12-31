@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../theme/app_colors.dart';
-import '../../../theme/app_spacing.dart';
-import '../../../theme/app_text_styles.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_text_styles.dart';
 
 class ProductDetailsScreen extends StatelessWidget {
   const ProductDetailsScreen({super.key});
@@ -24,7 +24,7 @@ class ProductDetailsScreen extends StatelessWidget {
               height: 280,
               width: double.infinity,
               decoration: BoxDecoration(
-                color: AppColors.grey200,
+                color: AppColors.surface,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: const Icon(Icons.shopping_bag, size: 120),

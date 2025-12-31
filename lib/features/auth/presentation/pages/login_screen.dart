@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
-import '../../theme/app_text_styles.dart';
-import '../../theme/app_spacing.dart';
-import '../../theme/app_input_theme.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_input_theme.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,12 +16,6 @@ class _LoginScreenState extends State<LoginScreen> {
   final email = TextEditingController();
   final password = TextEditingController();
   bool showPassword = false;
-
-  void _login() {
-    if (_formKey.currentState!.validate()) {
-      Navigator.pushReplacementNamed(context, '/onboarding');
-    }
-  }
 
   @override
   Widget build(BuildContext context) {

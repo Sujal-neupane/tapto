@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../../theme/app_spacing.dart';
-import '../../../theme/app_text_styles.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_text_styles.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -18,7 +18,10 @@ class ProfileScreen extends StatelessWidget {
 
             Text('Sujal Neupane', style: AppTextStyles.subHeading),
             const SizedBox(height: AppSpacing.sm),
-            Text('sujal@gmail.com', style: AppTextStyles.caption),
+            Text(
+              'sujal@gmail.com',
+              style: AppTextStyles.caption ?? AppTextStyles.body,
+            ),
 
             const SizedBox(height: AppSpacing.xl),
 

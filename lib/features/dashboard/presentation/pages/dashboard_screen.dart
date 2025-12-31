@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:tapto/screens/profile_screen.dart';
-import 'package:tapto/screens/wish_list_screen.dart';
-import '../../theme/app_colors.dart';
-import '../../theme/app_text_styles.dart';
-import '../../theme/app_spacing.dart';
-import 'home_swipe_screen.dart';
+import '../../presentation/pages/home_swipe_screen.dart';
+import '../../presentation/pages/wish_list_screen.dart';
+import '../../presentation/pages/profile_screen.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_text_styles.dart';
+import '../../../../core/theme/app_spacing.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -40,9 +40,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
             const SizedBox(width: AppSpacing.sm),
             Text(
               _title,
-              style: AppTextStyles.appBar?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style:
+                  AppTextStyles.appBar?.copyWith(fontWeight: FontWeight.bold) ??
+                  const TextStyle(fontWeight: FontWeight.bold),
             ),
           ],
         ),

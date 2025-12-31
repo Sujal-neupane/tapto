@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../theme/app_colors.dart';
-import '../../../theme/app_spacing.dart';
-import '../../../theme/app_text_styles.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../../../core/theme/app_spacing.dart';
+import '../../../../core/theme/app_text_styles.dart';
 
 class SearchScreen extends StatelessWidget {
   const SearchScreen({super.key});
@@ -33,7 +33,7 @@ class SearchScreen extends StatelessWidget {
                       width: 50,
                       height: 50,
                       decoration: BoxDecoration(
-                        color: AppColors.grey200,
+                        color: Colors.grey[200],
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: const Icon(Icons.shopping_bag),
@@ -42,7 +42,7 @@ class SearchScreen extends StatelessWidget {
                       'Product ${index + 1}',
                       style: AppTextStyles.body,
                     ),
-                    subtitle: Text('\$99.00', style: AppTextStyles.caption),
+                    subtitle: const Text('\$99.00'),
                     onTap: () =>
                         Navigator.pushNamed(context, '/product-details'),
                   );
