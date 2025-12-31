@@ -1,0 +1,156 @@
+import 'package:hive_flutter/hive_flutter.dart';
+import '../../../features/auth/data/models/user_model.dart';
+import '../../../features/auth/domain/entities/user.dart';
+
+/// Service for managing user session and authentication state
+class UserSessionService {
+  static const String _usersBoxName = 'users';
+  static const String _sessionBoxName = 'session';
+  static const String _currentUserKey = 'current_user_id';
+
+  Box<UserModel>? _usersBox;
+  Box? _sessionBox;
+
+  /// Initialize Hive and open boxes
+  Future<void> initialize() async {
+    await Hive.initFlutter();
+
+    // Register adapters if not already registered
+    if (!Hive.isAdapterRegistered(0)) {
+      Hive.registerAdapter(UserModelAdapter());
+    }
+
+    _usersBox = await Hive.openBox<UserModel>(_usersBoxName);
+    _sessionBox = await Hive.openBox(_sessionBoxName);
+  }
+
+  /// Register a new user
+  Future<User> registerUser({
+    required String name,
+    required String email,
+    required String password,
+    String? preference,
+  }) async {
+    // Check if email already exists
+    final existingUser = _usersBox!.values.firstWhere(
+      (user) => user.email.toLowerCase() == email.toLowerCase(),
+      orElse: () => throw Exception(''),
+    );
+
+    if (existingUser.email.isNotEmpty) {
+      throw Exception('Email already registered');
+    }
+
+    // Create new user
+    final userModel = UserModel.register(
+      name: name,
+      email: email,
+      password: password,
+      preference: preference,
+    );
+
+    // Save to Hive
+    await _usersBox!.put(userModel.id, userModel);
+
+    // Set as current user
+    await _sessionBox!.put(_currentUserKey, userModel.id);
+
+    return userModel.toEntity();
+  }
+
+  /// Login user with email and password
+  Future<User> loginUser({
+    required String email,
+    required String password,
+  }) async {
+    // Find user by email
+    UserModel? userModel;
+
+    try {
+      userModel = _usersBox!.values.firstWhere(
+        (user) => user.email.toLowerCase() == email.toLowerCase(),
+      );
+    } catch (e) {
+      throw Exception('User not found');
+    }
+
+    // Verify password
+    if (!userModel.verifyPassword(password)) {
+      throw Exception('Invalid password');
+    }
+
+    // Set as current user
+    await _sessionBox!.put(_currentUserKey, userModel.id);
+
+    return userModel.toEntity();
+  }
+
+  /// Get current logged in user
+  Future<User?> getCurrentUser() async {
+    final userId = _sessionBox!.get(_currentUserKey) as String?;
+
+    if (userId == null) {
+      return null;
+    }
+
+    final userModel = _usersBox!.get(userId);
+    return userModel?.toEntity();
+  }
+
+  /// Check if user is logged in
+  Future<bool> isLoggedIn() async {
+    final userId = _sessionBox!.get(_currentUserKey);
+    return userId != null;
+  }
+
+  /// Logout current user
+  Future<void> logout() async {
+    await _sessionBox!.delete(_currentUserKey);
+  }
+
+  /// Update user profile
+  Future<User> updateUser({
+    required String userId,
+    String? name,
+    String? preference,
+  }) async {
+    final userModel = _usersBox!.get(userId);
+
+    if (userModel == null) {
+      throw Exception('User not found');
+    }
+
+    final updatedModel = userModel.copyWith(name: name, preference: preference);
+
+    await _usersBox!.put(userId, updatedModel);
+    return updatedModel.toEntity();
+  }
+
+  /// Delete user account
+  Future<void> deleteUser(String userId) async {
+    await _usersBox!.delete(userId);
+
+    // If this was the current user, logout
+    final currentUserId = _sessionBox!.get(_currentUserKey);
+    if (currentUserId == userId) {
+      await logout();
+    }
+  }
+
+  /// Get all registered users (for debugging)
+  List<User> getAllUsers() {
+    return _usersBox!.values.map((model) => model.toEntity()).toList();
+  }
+
+  /// Clear all data (for testing/debugging)
+  Future<void> clearAllData() async {
+    await _usersBox!.clear();
+    await _sessionBox!.clear();
+  }
+
+  /// Close all boxes
+  Future<void> dispose() async {
+    await _usersBox?.close();
+    await _sessionBox?.close();
+  }
+}

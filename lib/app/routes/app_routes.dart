@@ -10,7 +10,6 @@ import 'package:tapto/features/auth/presentation/pages/signup_screen.dart';
 import 'package:tapto/features/splash/presentation/pages/splash_screen.dart';
 import 'package:tapto/features/auth/presentation/pages/login_screen.dart';
 import 'package:tapto/features/dashboard/presentation/pages/wish_list_screen.dart';
-import 'package:tapto/features/dashboard/presentation/pages/product_details_screen.dart';
 
 /// Centralized route definitions for the application
 class AppRoutes {
