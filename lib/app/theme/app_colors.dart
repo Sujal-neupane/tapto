@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 class AppColors {
   static const primary = Color(0xFF1687FF);
+  static const secondary = Color(0xFFFFA500);
   static const background = Color(0xFFFFFFFF);
   static const surface = Color(0xFFF3F4F6);
 
@@ -14,6 +15,7 @@ class AppColors {
   static const error = Color(0xFFEF4444);
 
   static Color? get grey200 => null;
+  static Color? get black20 => Color.fromRGBO(0, 0, 0, 0.2);
 }
 
 class AppDarkColors {

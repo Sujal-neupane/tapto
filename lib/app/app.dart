@@ -9,23 +9,42 @@ class MyApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final themeMode = ref.watch(themeProvider);
+    try {
+      final themeMode = ref.watch(themeProvider);
 
-    return MaterialApp(
-      title: 'Tapto',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: themeMode,
-      routes: AppRoutes.routes,
-      initialRoute: AppRoutes.splash,
-      onUnknownRoute: (settings) {
-        return MaterialPageRoute(
-          builder: (context) => Scaffold(
-            body: Center(child: Text('Route not found: ${settings.name}')),
+      return MaterialApp(
+        title: 'Tapto',
+        debugShowCheckedModeBanner: false,
+        theme: AppTheme.lightTheme,
+        darkTheme: AppTheme.darkTheme,
+        themeMode: themeMode,
+        routes: AppRoutes.routes,
+        initialRoute: AppRoutes.splash,
+        onUnknownRoute: (settings) {
+          return MaterialPageRoute(
+            builder: (context) => Scaffold(
+              body: Center(child: Text('Route not found: ${settings.name}')),
+            ),
+          );
+        },
+      );
+    } catch (e, stackTrace) {
+      debugPrint('❌ MyApp Error: $e');
+      debugPrint('Stack trace: $stackTrace');
+      return MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('Critical Error in MyApp'),
+                const SizedBox(height: 16),
+                Text(e.toString()),
+              ],
+            ),
           ),
-        );
-      },
-    );
+        ),
+      );
+    }
   }
 }
