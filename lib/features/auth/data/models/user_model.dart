@@ -75,7 +75,7 @@ class UserModel extends HiveObject {
 
   /// Verify password
   bool verifyPassword(String inputPassword) {
-    return password == inputPassword; // In production, use proper hashing
+    return password == inputPassword;
   }
 
   UserModel copyWith({

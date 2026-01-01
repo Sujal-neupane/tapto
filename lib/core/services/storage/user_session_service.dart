@@ -1,12 +1,24 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../features/auth/data/models/user_model.dart';
 import '../../../features/auth/domain/entities/user.dart';
+
+final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
+  throw UnimplementedError('SharedPreferences must be overridden in main.dart');
+});
+
+// UserSessionService provider
+final userSessionServiceProvider = Provider<UserSessionService>((ref) {
+  return UserSessionService();
+});
 
 /// Service for managing user session and authentication state
 class UserSessionService {
   static const String _usersBoxName = 'users';
   static const String _sessionBoxName = 'session';
   static const String _currentUserKey = 'current_user_id';
+  static const String _onboardingCompleteKey = 'onboarding_complete';
   static bool _hiveInitialized = false;
 
   Box<UserModel>? _usersBox;
@@ -173,9 +185,37 @@ class UserSessionService {
     await _sessionBox!.clear();
   }
 
+  /// Mark onboarding as complete for current user
+  Future<void> markOnboardingComplete() async {
+    await _ensureInitialized();
+    final userId = _sessionBox!.get(_currentUserKey);
+    if (userId != null) {
+      await _sessionBox!.put('${_onboardingCompleteKey}_$userId', true);
+    }
+  }
+
+  /// Check if onboarding is complete for current user
+  Future<bool> isOnboardingComplete() async {
+    await _ensureInitialized();
+    final userId = _sessionBox!.get(_currentUserKey);
+    if (userId == null) return false;
+    return _sessionBox!.get(
+          '${_onboardingCompleteKey}_$userId',
+          defaultValue: false,
+        )
+        as bool;
+  }
+
   /// Close all boxes
   Future<void> dispose() async {
     await _usersBox?.close();
     await _sessionBox?.close();
   }
+
+  Future<void> saveUserSession({
+    required userId,
+    required email,
+    required name,
+    required preference,
+  }) async {}
 }

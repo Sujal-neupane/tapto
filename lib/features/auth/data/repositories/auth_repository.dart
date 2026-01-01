@@ -12,7 +12,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<User> login(String email, String password) async {
     try {
       final userModel = await localDataSource.login(email, password);
-      return userModel.toEntity();
+      return userModel?.toEntity() ?? (throw Exception('User model is null'));
     } catch (e) {
       throw Exception('Login failed: ${e.toString()}');
     }

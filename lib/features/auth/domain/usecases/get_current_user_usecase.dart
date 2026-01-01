@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/core/error/failures.dart';
 import 'package:tapto/core/usecases/app_usecases.dart';
 import 'package:tapto/core/services/storage/user_session_service.dart';
+import 'package:tapto/core/services/hive/hive_services.dart'; // Import the HiveService
 import 'package:tapto/features/auth/domain/entities/user.dart';
 import 'package:tapto/features/auth/domain/repositories/auth_repository.dart';
 import 'package:tapto/features/auth/data/repositories/auth_repository.dart';
@@ -16,7 +17,11 @@ final userSessionServiceProvider = Provider<UserSessionService>((ref) {
 /// Provider for AuthLocalDataSource
 final authLocalDataSourceProvider = Provider<AuthLocalDataSource>((ref) {
   final sessionService = ref.read(userSessionServiceProvider);
-  return AuthLocalDataSourceImpl(sessionService: sessionService);
+  final hiveService = ref.read(hiveServiceProvider); // Now defined
+  return AuthLocalDataSourceImpl(
+    sessionService: sessionService,
+    hiveService: hiveService,
+  );
 });
 
 /// Provider for AuthRepository

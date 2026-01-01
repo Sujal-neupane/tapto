@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../../../../models/onboarding_model.dart';
 import '../../../../core/widgets/onboarding_page_widget.dart';
 import '../../../../core/widgets/page_indicator_widget.dart';
+import '../../../../core/services/storage/user_session_service.dart';
+import '../../../../app/routes/app_routes.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -12,6 +14,7 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
+  final UserSessionService _sessionService = UserSessionService();
 
   // indexing of the current page done
   int _currentPage = 0;
@@ -53,12 +56,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     _completeOnboarding();
   }
 
-  void _completeOnboarding() {
-    Navigator.of(context).pushReplacementNamed('/dashboard');
-    // For now, just  a snackbar
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Onboarding completed!')));
+  Future<void> _completeOnboarding() async {
+    await _sessionService.markOnboardingComplete();
+    if (mounted) {
+      Navigator.of(context).pushReplacementNamed(AppRoutes.dashboard);
+    }
   }
 
   @override

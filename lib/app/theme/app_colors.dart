@@ -15,3 +15,19 @@ class AppColors {
 
   static Color? get grey200 => null;
 }
+
+class AppDarkColors {
+  static const darkPrimary = Color(0xFF0A52FF);
+  static const darkBackground = Color(0xFF121212);
+  static const darkSurface = Color(0xFF1E1E1E);
+
+  static const darkTextPrimary = Color(0xFFFFFFFF);
+  static const darkTextSecondary = Color(0xFF9CA3AF);
+
+  static const darkBorder = Color(0xFF374151);
+
+  static const darkSuccess = Color(0xFF22C55E);
+  static const darkError = Color(0xFFEF4444);
+
+  static Color? get darkGrey200 => null;
+}

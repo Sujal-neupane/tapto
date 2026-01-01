@@ -93,11 +93,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       if (next.status == AuthStatus.registered) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Registration successful! Please login.'),
+            content: Text('Registration successful! Welcome to Tapto!'),
             backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
           ),
         );
-        Navigator.pushReplacementNamed(context, AppRoutes.login);
+        // Navigate to onboarding for new users
+        Navigator.pushReplacementNamed(context, AppRoutes.onboarding);
       } else if (next.status == AuthStatus.error) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -449,25 +451,41 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   const SizedBox(height: AppSpacing.xl),
 
                   // Sign Up Button
-                  SizedBox(
-                    height: 54,
+                  Container(
+                    height: 56,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.primary,
+                          AppColors.primary.withOpacity(0.8),
+                        ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withOpacity(0.4),
+                          blurRadius: 16,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
                     child: ElevatedButton(
                       onPressed: authState.status == AuthStatus.loading
                           ? null
                           : _handleRegister,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(14),
                         ),
-                        elevation: 2,
                       ),
                       child: authState.status == AuthStatus.loading
                           ? const SizedBox(
                               height: 24,
                               width: 24,
                               child: CircularProgressIndicator(
-                                strokeWidth: 2,
+                                strokeWidth: 2.5,
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                   Colors.white,
                                 ),
@@ -476,9 +494,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           : const Text(
                               'Create Account',
                               style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
+                                fontSize: 17,
+                                fontWeight: FontWeight.w700,
                                 color: Colors.white,
+                                letterSpacing: 0.5,
                               ),
                             ),
                     ),

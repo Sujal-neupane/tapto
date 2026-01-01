@@ -14,4 +14,18 @@ class AppTheme {
       ),
     ),
   );
+  static ThemeData darkTheme = ThemeData(
+    scaffoldBackgroundColor: AppDarkColors.darkBackground,
+    primaryColor: AppDarkColors.darkPrimary,
+    snackBarTheme: const SnackBarThemeData(
+      backgroundColor: AppDarkColors.darkPrimary,
+    ),
+    elevatedButtonTheme: ElevatedButtonThemeData(
+      style: ElevatedButton.styleFrom(
+        backgroundColor: AppDarkColors.darkPrimary,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+    ),
+  );
 }
