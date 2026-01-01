@@ -7,21 +7,36 @@ class UserSessionService {
   static const String _usersBoxName = 'users';
   static const String _sessionBoxName = 'session';
   static const String _currentUserKey = 'current_user_id';
+  static bool _hiveInitialized = false;
 
   Box<UserModel>? _usersBox;
   Box? _sessionBox;
+  bool _isInitialized = false;
 
   /// Initialize Hive and open boxes
   Future<void> initialize() async {
-    await Hive.initFlutter();
+    if (_isInitialized) return;
+
+    if (!_hiveInitialized) {
+      await Hive.initFlutter();
+      _hiveInitialized = true;
+    }
 
     // Register adapters if not already registered
     if (!Hive.isAdapterRegistered(0)) {
       Hive.registerAdapter(UserModelAdapter());
     }
 
-    _usersBox = await Hive.openBox<UserModel>(_usersBoxName);
-    _sessionBox = await Hive.openBox(_sessionBoxName);
+    _usersBox ??= await Hive.openBox<UserModel>(_usersBoxName);
+    _sessionBox ??= await Hive.openBox(_sessionBoxName);
+    _isInitialized = true;
+  }
+
+  /// Ensure the Hive boxes are ready before any operation
+  Future<void> _ensureInitialized() async {
+    if (_usersBox == null || _sessionBox == null || !_isInitialized) {
+      await initialize();
+    }
   }
 
   /// Register a new user
@@ -31,15 +46,14 @@ class UserSessionService {
     required String password,
     String? preference,
   }) async {
+    await _ensureInitialized();
+
     // Check if email already exists
-    final existingUser = _usersBox!.values.firstWhere(
+    final emailExists = _usersBox!.values.any(
       (user) => user.email.toLowerCase() == email.toLowerCase(),
-      orElse: () => throw Exception(''),
     );
 
-    if (existingUser.email.isNotEmpty) {
-      throw Exception('Email already registered');
-    }
+    if (emailExists) throw Exception('Email already registered');
 
     // Create new user
     final userModel = UserModel.register(
@@ -63,6 +77,8 @@ class UserSessionService {
     required String email,
     required String password,
   }) async {
+    await _ensureInitialized();
+
     // Find user by email
     UserModel? userModel;
 
@@ -87,6 +103,8 @@ class UserSessionService {
 
   /// Get current logged in user
   Future<User?> getCurrentUser() async {
+    await _ensureInitialized();
+
     final userId = _sessionBox!.get(_currentUserKey) as String?;
 
     if (userId == null) {
@@ -99,12 +117,15 @@ class UserSessionService {
 
   /// Check if user is logged in
   Future<bool> isLoggedIn() async {
+    await _ensureInitialized();
+
     final userId = _sessionBox!.get(_currentUserKey);
     return userId != null;
   }
 
   /// Logout current user
   Future<void> logout() async {
+    await _ensureInitialized();
     await _sessionBox!.delete(_currentUserKey);
   }
 
@@ -114,6 +135,8 @@ class UserSessionService {
     String? name,
     String? preference,
   }) async {
+    await _ensureInitialized();
+
     final userModel = _usersBox!.get(userId);
 
     if (userModel == null) {
@@ -128,6 +151,8 @@ class UserSessionService {
 
   /// Delete user account
   Future<void> deleteUser(String userId) async {
+    await _ensureInitialized();
+
     await _usersBox!.delete(userId);
 
     // If this was the current user, logout

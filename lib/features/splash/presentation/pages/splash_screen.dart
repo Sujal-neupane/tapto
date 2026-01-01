@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:tapto/app/routes/app_routes.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -32,7 +33,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) {
-        Navigator.pushReplacementNamed(context, "/login");
+        Navigator.pushReplacementNamed(context, AppRoutes.login);
       }
     });
   }
@@ -54,9 +55,37 @@ class _SplashScreenState extends State<SplashScreen>
           opacity: _fade,
           child: ScaleTransition(
             scale: _scale,
-            child: Image.asset(
-              "assets/images/logo1.png",
-              width: MediaQuery.of(context).size.width * 0.28,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                shape: BoxShape.circle,
+              ),
+              padding: const EdgeInsets.all(20),
+              child: Image.asset(
+                'assets/images/logo1.png',
+                width: MediaQuery.of(context).size.width * 0.28,
+                height: MediaQuery.of(context).size.width * 0.28,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    width: MediaQuery.of(context).size.width * 0.28,
+                    height: MediaQuery.of(context).size.width * 0.28,
+                    decoration: BoxDecoration(
+                      color: Colors.blue,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Center(
+                      child: Text(
+                        'Tapto',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
             ),
           ),
         ),

@@ -2,6 +2,7 @@ import 'package:dartz/dartz.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/core/error/failures.dart';
 import 'package:tapto/core/usecases/app_usecases.dart';
+import 'package:tapto/features/auth/domain/usecases/get_current_user_usecase.dart';
 import '../entities/user.dart';
 import '../repositories/auth_repository.dart';
 import './auth_params.dart';

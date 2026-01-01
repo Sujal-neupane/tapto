@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../../theme/app_colors.dart';
-import '../../theme/app_spacing.dart';
+import '../../app/theme/app_colors.dart';
+import '../../app/theme/app_spacing.dart';
 
 class PreferenceChip extends StatelessWidget {
   final String label;

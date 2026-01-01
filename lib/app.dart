@@ -11,6 +11,7 @@ class MyApp extends StatelessWidget {
       title: 'Tapto',
       theme: AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
+      initialRoute: AppRoutes.splash,
       routes: AppRoutes.routes,
     );
   }

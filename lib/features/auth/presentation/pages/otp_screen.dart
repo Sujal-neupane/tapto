@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../../../../core/theme/app_colors.dart';
-import '../../../../core/theme/app_text_styles.dart';
-import '../../../../core/theme/app_spacing.dart';
+import '../../../../../app/theme/app_colors.dart';
+import '../../../../../app/theme/app_text_styles.dart';
+import '../../../../../app/theme/app_spacing.dart';
 
 class OtpScreen extends StatelessWidget {
   const OtpScreen({super.key});

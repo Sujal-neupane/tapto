@@ -30,7 +30,7 @@ class AppRoutes {
   static final Map<String, WidgetBuilder> routes = {
     splash: (context) => const SplashScreen(),
     login: (context) => const LoginScreen(),
-    signup: (context) => const SignupScreen(),
+    signup: (context) => const RegisterScreen(),
     dashboard: (context) => const DashboardScreen(),
     onboarding: (context) => const OnboardingScreen(),
     forgotPassword: (context) => const ForgotPasswordScreen(),

@@ -1,13 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../data/datasources/auth_local_datasource.dart';
-import '../data/repositories/auth_repository_impl.dart';
-import '../domain/repositories/auth_repository.dart';
-import '../domain/usecases/login_usecase.dart';
-import '../domain/usecases/register_usecase.dart';
-import '../domain/usecases/logout_usecase.dart';
-import '../domain/usecases/get_current_user_usecase.dart';
-import '../../../core/services/storage/user_session_service.dart';
-import '../domain/entities/user.dart';
+import 'package:flutter_riverpod/legacy.dart';
+import 'package:tapto/features/auth/data/datasource/local/auth_local_datasource.dart';
+import 'package:tapto/features/auth/domain/usecases/auth_params.dart';
+import '../../data/repositories/auth_repository.dart';
+import '../../domain/repositories/auth_repository.dart';
+import '../../domain/usecases/login_usecase.dart';
+import '../../domain/usecases/register_usecase.dart';
+import '../../domain/usecases/logout_usecase.dart';
+import '../../domain/usecases/get_current_user_usecase.dart';
+import '../../../../core/services/storage/user_session_service.dart';
+import '../../domain/entities/user.dart';
 
 /// User session service provider
 final userSessionServiceProvider = Provider<UserSessionService>((ref) {
@@ -27,27 +29,27 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 });
 
 /// Login use case provider
-final loginUseCaseProvider = Provider<LoginUseCase>((ref) {
+final loginUseCaseProvider = Provider<LoginUsecase>((ref) {
   final repository = ref.watch(authRepositoryProvider);
-  return LoginUseCase(repository);
+  return LoginUsecase(repository);
 });
 
 /// Register use case provider
-final registerUseCaseProvider = Provider<RegisterUseCase>((ref) {
+final registerUseCaseProvider = Provider<RegisterUsecase>((ref) {
   final repository = ref.watch(authRepositoryProvider);
-  return RegisterUseCase(repository);
+  return RegisterUsecase(repository);
 });
 
 /// Logout use case provider
-final logoutUseCaseProvider = Provider<LogoutUseCase>((ref) {
+final logoutUseCaseProvider = Provider<LogoutUsecase>((ref) {
   final repository = ref.watch(authRepositoryProvider);
-  return LogoutUseCase(repository);
+  return LogoutUsecase(repository);
 });
 
 /// Get current user use case provider
-final getCurrentUserUseCaseProvider = Provider<GetCurrentUserUseCase>((ref) {
+final getCurrentUserUseCaseProvider = Provider<GetCurrentUserUsecase>((ref) {
   final repository = ref.watch(authRepositoryProvider);
-  return GetCurrentUserUseCase(repository);
+  return GetCurrentUserUsecase(authRepository: repository);
 });
 
 /// Auth state provider
@@ -81,10 +83,10 @@ class AuthState {
 
 /// Auth notifier provider
 class AuthNotifier extends StateNotifier<AuthState> {
-  final LoginUseCase loginUseCase;
-  final RegisterUseCase registerUseCase;
-  final LogoutUseCase logoutUseCase;
-  final GetCurrentUserUseCase getCurrentUserUseCase;
+  final LoginUsecase loginUseCase;
+  final RegisterUsecase registerUseCase;
+  final LogoutUsecase logoutUseCase;
+  final GetCurrentUserUsecase getCurrentUserUseCase;
 
   AuthNotifier({
     required this.loginUseCase,
@@ -96,10 +98,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
   /// Check current auth state
   Future<void> checkAuthStatus() async {
     try {
-      final user = await getCurrentUserUseCase();
-      state = state.copyWith(
-        user: user,
-        isAuthenticated: user != null,
+      final result = await getCurrentUserUseCase();
+      result.fold(
+        (failure) => state = state.copyWith(isAuthenticated: false),
+        (user) => state = state.copyWith(user: user, isAuthenticated: true),
       );
     } catch (e) {
       state = state.copyWith(isAuthenticated: false);
@@ -109,13 +111,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
   /// Login
   Future<void> login(String email, String password) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
-      final user = await loginUseCase(email, password);
-      state = AuthState(
-        user: user,
-        isAuthenticated: true,
-        isLoading: false,
+      final result = await loginUseCase(
+        LoginParams(email: email, password: password),
+      );
+      result.fold(
+        (failure) =>
+            state = state.copyWith(isLoading: false, error: failure.message),
+        (user) => state = AuthState(
+          user: user,
+          isAuthenticated: true,
+          isLoading: false,
+        ),
       );
     } catch (e) {
       state = state.copyWith(
@@ -134,18 +142,24 @@ class AuthNotifier extends StateNotifier<AuthState> {
     String? preference,
   }) async {
     state = state.copyWith(isLoading: true, error: null);
-    
+
     try {
-      final user = await registerUseCase(
-        name: name,
-        email: email,
-        password: password,
-        preference: preference,
+      final result = await registerUseCase(
+        RegisterParams(
+          name: name,
+          email: email,
+          password: password,
+          preference: preference,
+        ),
       );
-      state = AuthState(
-        user: user,
-        isAuthenticated: true,
-        isLoading: false,
+      result.fold(
+        (failure) =>
+            state = state.copyWith(isLoading: false, error: failure.message),
+        (user) => state = AuthState(
+          user: user,
+          isAuthenticated: true,
+          isLoading: false,
+        ),
       );
     } catch (e) {
       state = state.copyWith(

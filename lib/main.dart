@@ -6,7 +6,7 @@ import 'core/services/storage/user_session_service.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Initialize Hive
+  // Initialize Hive for local storage
   final userSessionService = UserSessionService();
   await userSessionService.initialize();
 

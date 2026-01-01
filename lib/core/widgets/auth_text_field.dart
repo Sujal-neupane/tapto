@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:tapto/theme/app_colors.dart';
+import 'package:tapto/app/theme/app_colors.dart';
 
 class AuthTextField extends StatelessWidget {
   final TextEditingController controller;
