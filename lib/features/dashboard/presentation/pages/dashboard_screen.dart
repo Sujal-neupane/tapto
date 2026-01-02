@@ -8,6 +8,7 @@ import '../../presentation/pages/filter_screen.dart';
 import '../../presentation/pages/cart_screen.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
+import '../../../../core/utils/responsive_utils.dart';
 import '../../../auth/presentation/viewmodel/auth_viewmodel.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
@@ -46,6 +47,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     final userName = currentUser?.name != null
         ? currentUser!.name.split(' ').first
         : null;
+    final isTablet =
+        ResponsiveUtils.isTablet(context) || ResponsiveUtils.isDesktop(context);
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -53,14 +56,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         backgroundColor: Colors.white,
         elevation: 0.5,
         automaticallyImplyLeading: false,
-        titleSpacing: AppSpacing.lg,
+        titleSpacing: isTablet ? AppSpacing.xl : AppSpacing.lg,
         title: Row(
           children: [
             Hero(
               tag: 'app_logo',
               child: Container(
-                width: 36,
-                height: 36,
+                width: isTablet ? 44 : 36,
+                height: isTablet ? 44 : 36,
                 decoration: BoxDecoration(
                   color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
@@ -77,7 +80,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 ),
               ),
             ),
-            const SizedBox(width: AppSpacing.md),
+            SizedBox(width: isTablet ? AppSpacing.lg : AppSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -85,15 +88,21 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   Text(
                     _currentIndex == 0 ? _getWelcomeMessage() : 'Tapto',
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: ResponsiveUtils.getResponsiveFontSize(
+                        context,
+                        13,
+                      ),
                       fontWeight: FontWeight.w500,
                       color: Colors.grey[600],
                     ),
                   ),
                   Text(
                     _getTitle(userName),
-                    style: const TextStyle(
-                      fontSize: 18,
+                    style: TextStyle(
+                      fontSize: ResponsiveUtils.getResponsiveFontSize(
+                        context,
+                        18,
+                      ),
                       fontWeight: FontWeight.bold,
                       color: Colors.black87,
                     ),
@@ -106,7 +115,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         actions: [
           if (_currentIndex == 0) ...[
             IconButton(
-              icon: const Icon(Icons.search_rounded, color: Colors.black87),
+              icon: Icon(
+                Icons.search_rounded,
+                color: Colors.black87,
+                size: ResponsiveUtils.getResponsiveIconSize(context, 24),
+              ),
               tooltip: 'Search',
               onPressed: () {
                 Navigator.push(
@@ -116,7 +129,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               },
             ),
             IconButton(
-              icon: const Icon(Icons.tune_rounded, color: Colors.black87),
+              icon: Icon(
+                Icons.tune_rounded,
+                color: Colors.black87,
+                size: ResponsiveUtils.getResponsiveIconSize(context, 24),
+              ),
               tooltip: 'Filter',
               onPressed: () {
                 Navigator.push(
@@ -129,9 +146,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           Stack(
             children: [
               IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.shopping_cart_outlined,
                   color: Colors.black87,
+                  size: ResponsiveUtils.getResponsiveIconSize(context, 24),
                 ),
                 tooltip: 'Cart',
                 onPressed: () {
@@ -183,43 +201,53 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           ],
         ),
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _NavItem(
-                  icon: Icons.explore_rounded,
-                  label: 'Discover',
-                  isSelected: _currentIndex == 0,
-                  onTap: () {
-                    if (_currentIndex != 0) {
-                      setState(() => _currentIndex = 0);
-                    }
-                  },
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxWidth: isTablet ? 600 : double.infinity,
+              ),
+              child: Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: isTablet ? 32 : 16,
+                  vertical: isTablet ? 12 : 8,
                 ),
-                _NavItem(
-                  icon: Icons.favorite_rounded,
-                  label: 'Wishlist',
-                  isSelected: _currentIndex == 1,
-                  badge: 0,
-                  onTap: () {
-                    if (_currentIndex != 1) {
-                      setState(() => _currentIndex = 1);
-                    }
-                  },
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _NavItem(
+                      icon: Icons.explore_rounded,
+                      label: 'Discover',
+                      isSelected: _currentIndex == 0,
+                      onTap: () {
+                        if (_currentIndex != 0) {
+                          setState(() => _currentIndex = 0);
+                        }
+                      },
+                    ),
+                    _NavItem(
+                      icon: Icons.favorite_rounded,
+                      label: 'Wishlist',
+                      isSelected: _currentIndex == 1,
+                      badge: 0,
+                      onTap: () {
+                        if (_currentIndex != 1) {
+                          setState(() => _currentIndex = 1);
+                        }
+                      },
+                    ),
+                    _NavItem(
+                      icon: Icons.person_rounded,
+                      label: 'Profile',
+                      isSelected: _currentIndex == 2,
+                      onTap: () {
+                        if (_currentIndex != 2) {
+                          setState(() => _currentIndex = 2);
+                        }
+                      },
+                    ),
+                  ],
                 ),
-                _NavItem(
-                  icon: Icons.person_rounded,
-                  label: 'Profile',
-                  isSelected: _currentIndex == 2,
-                  onTap: () {
-                    if (_currentIndex != 2) {
-                      setState(() => _currentIndex = 2);
-                    }
-                  },
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -245,15 +273,21 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isTablet =
+        ResponsiveUtils.isTablet(context) || ResponsiveUtils.isDesktop(context);
+
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        padding: EdgeInsets.symmetric(
+          horizontal: isTablet ? 28 : 20,
+          vertical: isTablet ? 14 : 10,
+        ),
         decoration: BoxDecoration(
           color: isSelected ? AppColors.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(isTablet ? 20 : 16),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -264,7 +298,7 @@ class _NavItem extends StatelessWidget {
                 Icon(
                   icon,
                   color: isSelected ? Colors.white : Colors.grey[400],
-                  size: 26,
+                  size: ResponsiveUtils.getResponsiveIconSize(context, 26),
                 ),
                 if (badge != null && badge! > 0)
                   Positioned(
@@ -294,11 +328,11 @@ class _NavItem extends StatelessWidget {
                   ),
               ],
             ),
-            const SizedBox(height: 6),
+            SizedBox(height: isTablet ? 8 : 6),
             Text(
               label,
               style: TextStyle(
-                fontSize: 12,
+                fontSize: ResponsiveUtils.getResponsiveFontSize(context, 12),
                 fontWeight: FontWeight.w600,
                 color: isSelected ? Colors.white : Colors.grey[400],
               ),
