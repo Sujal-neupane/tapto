@@ -27,7 +27,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   bool _acceptTerms = false;
   String? _selectedPreference;
   String _selectedCountry = 'United States';
-  String _selectedCountryCode = '+1';
   late AnimationController _controller;
 
   final List<String> _preferences = ['Mens Fashion', 'Womens Fashion'];
@@ -236,9 +235,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                             if (value != null) {
                               setState(() {
                                 _selectedCountry = value;
-                                _selectedCountryCode = _countries.firstWhere(
-                                  (c) => c['name'] == value,
-                                )['code']!;
                               });
                             }
                           },
