@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_text_styles.dart';
+import '../../../../app/widgets/custom_app_bar.dart';
 
 class SearchScreen extends StatelessWidget {
   const SearchScreen({super.key});
@@ -8,15 +10,35 @@ class SearchScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Search')),
+      backgroundColor: AppColors.surface,
+      appBar: CustomAppBar(
+        title: 'Search Products',
+        subtitle: 'Find what you like',
+        showBackButton: true,
+      ),
       body: Padding(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           children: [
             TextField(
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Search products, brands...',
-                prefixIcon: Icon(Icons.search),
+                prefixIcon: const Icon(Icons.search, color: AppColors.primary),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppColors.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: AppColors.primary,
+                    width: 2,
+                  ),
+                ),
               ),
             ),
             const SizedBox(height: AppSpacing.lg),

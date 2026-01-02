@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/app/routes/app_routes.dart';
 import 'package:tapto/core/services/storage/user_session_service.dart';
+import 'package:tapto/features/auth/presentation/viewmodel/auth_viewmodel.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -91,6 +92,9 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       );
 
       if (isLoggedIn) {
+        // Load current user into auth state
+        await ref.read(authViewModelProvider.notifier).getCurrentUser();
+
         final isOnboardingComplete = await userSessionService
             .isOnboardingComplete()
             .timeout(const Duration(seconds: 5), onTimeout: () => false);

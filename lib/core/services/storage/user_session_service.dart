@@ -212,10 +212,14 @@ class UserSessionService {
     await _sessionBox?.close();
   }
 
+  /// Save user session to session box
   Future<void> saveUserSession({
-    required userId,
-    required email,
-    required name,
-    required preference,
-  }) async {}
+    required String userId,
+    required String email,
+    required String name,
+    String? preference,
+  }) async {
+    await _ensureInitialized();
+    await _sessionBox!.put(_currentUserKey, userId);
+  }
 }

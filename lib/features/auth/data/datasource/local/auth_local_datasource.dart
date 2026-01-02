@@ -3,7 +3,6 @@ import 'package:tapto/core/services/hive/hive_services.dart';
 import '../../models/user_model.dart';
 import 'package:tapto/core/services/storage/user_session_service.dart';
 
-
 /// Local datasource for authentication
 abstract class AuthLocalDataSource {
   Future<UserModel> register({
@@ -29,8 +28,8 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   AuthLocalDataSourceImpl({
     required UserSessionService sessionService,
     required HiveService hiveService,
-  })  : _sessionService = sessionService,
-        _hiveService = hiveService;
+  }) : _sessionService = sessionService,
+       _hiveService = hiveService;
 
   @override
   Future<UserModel> register({
@@ -69,7 +68,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
     try {
       // Get user from Hive
       final user = await _hiveService.getUserByEmail(email);
-      
+
       if (user == null) {
         throw Exception('User not found');
       }
@@ -89,7 +88,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
 
       return user;
     } catch (e) {
-      return null;
+      throw Exception('Login failed: ${e.toString()}');
     }
   }
 

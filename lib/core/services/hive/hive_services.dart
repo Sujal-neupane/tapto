@@ -9,9 +9,12 @@ class HiveService {
 
   static const String _userBoxName = 'users';
   Box<UserModel>? _userBox;
+  bool _isInitialized = false;
 
   /// Initialize Hive and register adapters
   Future<void> init() async {
+    if (_isInitialized) return;
+
     await Hive.initFlutter();
 
     // Register UserModel adapter (generated from user_model.g.dart)
@@ -20,23 +23,31 @@ class HiveService {
     }
 
     _userBox = await Hive.openBox<UserModel>(_userBoxName);
+    _isInitialized = true;
+  }
+
+  /// Ensure initialization before operations
+  Future<void> _ensureInitialized() async {
+    if (!_isInitialized || _userBox == null) {
+      await init();
+    }
   }
 
   /// Save a new user
   Future<void> saveUser(UserModel user) async {
-    if (_userBox == null) throw Exception('Hive not initialized');
+    await _ensureInitialized();
     await _userBox!.put(user.id, user);
   }
 
   /// Get user by ID
   Future<UserModel?> getUserById(String id) async {
-    if (_userBox == null) throw Exception('Hive not initialized');
+    await _ensureInitialized();
     return _userBox!.get(id);
   }
 
   /// Get user by email
   Future<UserModel?> getUserByEmail(String email) async {
-    if (_userBox == null) throw Exception('Hive not initialized');
+    await _ensureInitialized();
 
     final users = _userBox!.values.where((user) => user.email == email);
     return users.isEmpty ? null : users.first;
@@ -44,7 +55,7 @@ class HiveService {
 
   /// Update existing user
   Future<bool> updateUser(UserModel user) async {
-    if (_userBox == null) throw Exception('Hive not initialized');
+    await _ensureInitialized();
 
     try {
       await _userBox!.put(user.id, user);
@@ -56,25 +67,25 @@ class HiveService {
 
   /// Delete user by ID
   Future<void> deleteUser(String id) async {
-    if (_userBox == null) throw Exception('Hive not initialized');
+    await _ensureInitialized();
     await _userBox!.delete(id);
   }
 
   /// Get all users
   Future<List<UserModel>> getAllUsers() async {
-    if (_userBox == null) throw Exception('Hive not initialized');
+    await _ensureInitialized();
     return _userBox!.values.toList();
   }
 
   /// Check if user exists by email
   Future<bool> userExists(String email) async {
-    if (_userBox == null) throw Exception('Hive not initialized');
+    await _ensureInitialized();
     return _userBox!.values.any((user) => user.email == email);
   }
 
   /// Clear all users (for testing purposes)
   Future<void> clearAllUsers() async {
-    if (_userBox == null) throw Exception('Hive not initialized');
+    await _ensureInitialized();
     await _userBox!.clear();
   }
 

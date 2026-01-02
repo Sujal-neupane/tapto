@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/app/routes/app_routes.dart';
 import 'package:tapto/app/theme/app_colors.dart';
-import 'package:tapto/app/theme/app_spacing.dart';
 import 'package:tapto/app/theme/app_text_styles.dart';
 import 'package:tapto/features/auth/presentation/state/auth_state.dart';
 import 'package:tapto/features/auth/presentation/viewmodel/auth_viewmodel.dart';
+import 'package:tapto/features/auth/presentation/widgets/auth_text_field.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -14,73 +14,47 @@ class RegisterScreen extends ConsumerStatefulWidget {
   ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState extends ConsumerState<RegisterScreen> {
+class _RegisterScreenState extends ConsumerState<RegisterScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  late TextEditingController _countryCodeController;
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _acceptTerms = false;
   String? _selectedPreference;
   String _selectedCountry = 'United States';
   String _selectedCountryCode = '+1';
+  late AnimationController _controller;
 
   final List<String> _preferences = ['Mens Fashion', 'Womens Fashion'];
-
   final List<Map<String, String>> _countries = [
     {'name': 'United States', 'code': '+1', 'flag': '🇺🇸'},
     {'name': 'India', 'code': '+91', 'flag': '🇮🇳'},
     {'name': 'Nepal', 'code': '+977', 'flag': '🇳🇵'},
-    {'name': 'United Kingdom', 'code': '+44', 'flag': '🇬🇧'},
-    {'name': 'Australia', 'code': '+61', 'flag': '🇦🇺'},
-    {'name': 'Canada', 'code': '+1', 'flag': '🇨🇦'},
-    {'name': 'Germany', 'code': '+49', 'flag': '🇩🇪'},
-    {'name': 'France', 'code': '+33', 'flag': '🇫🇷'},
-    {'name': 'Japan', 'code': '+81', 'flag': '🇯🇵'},
   ];
 
   @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    )..forward();
+  }
+
+  @override
   void dispose() {
+    _controller.dispose();
     _nameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
-    _countryCodeController.dispose();
     super.dispose();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _countryCodeController = TextEditingController(text: _selectedCountryCode);
-  }
-
-  void _handleRegister() {
-    if (!_acceptTerms) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please accept the terms and conditions'),
-          backgroundColor: Colors.red,
-        ),
-      );
-      return;
-    }
-
-    if (_formKey.currentState!.validate()) {
-      ref
-          .read(authViewModelProvider.notifier)
-          .register(
-            name: _nameController.text.trim(),
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
-            preference: _selectedPreference,
-          );
-    }
   }
 
   @override
@@ -89,16 +63,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     ref.listen<AuthState>(authViewModelProvider, (previous, next) {
       if (!mounted) return;
-
       if (next.status == AuthStatus.registered) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Registration successful! Welcome to Tapto!'),
+            content: Text('Registration successful!'),
             backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
           ),
         );
-        // Navigate to onboarding for new users
         Navigator.pushReplacementNamed(context, AppRoutes.onboarding);
       } else if (next.status == AuthStatus.error) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -110,67 +81,70 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       }
     });
 
-    return WillPopScope(
-      onWillPop: () async => false,
-      child: Scaffold(
-        backgroundColor: Colors.white,
-        body: SafeArea(
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: FadeTransition(
+          opacity: _controller,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.lg,
-              vertical: AppSpacing.md,
-            ),
+            padding: const EdgeInsets.all(24),
             child: Form(
               key: _formKey,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Header
-                  Center(
-                    child: Column(
-                      children: [
-                        Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
+                  const SizedBox(height: 20),
+                  Hero(
+                    tag: 'app_logo',
+                    child: Container(
+                      width: 90,
+                      height: 90,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withOpacity(0.15),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
                           ),
-                          child: Image.asset(
-                            'assets/images/logo1.png',
-                            height: 60,
-                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: Image.asset(
+                          'assets/images/logo1.png',
+                          fit: BoxFit.cover,
                         ),
-                        const SizedBox(height: AppSpacing.lg),
-                        Text(
-                          'Create Account',
-                          style: AppTextStyles.heading.copyWith(
-                            fontSize: 26,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(
-                          'Join Tapto for curated picks',
-                          style: AppTextStyles.body.copyWith(
-                            color: Colors.grey[600],
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
-
-                  const SizedBox(height: AppSpacing.xl),
-
-                  // Full Name
-                  TextFormField(
-                    controller: _nameController,
-                    textCapitalization: TextCapitalization.words,
-                    decoration: InputDecoration(
-                      labelText: 'Full Name',
-                      hintText: 'Enter your full name',
-                      prefixIcon: const Icon(Icons.person_outline_rounded),
+                  const SizedBox(height: 28),
+                  ShaderMask(
+                    shaderCallback: (bounds) => LinearGradient(
+                      colors: [
+                        AppColors.primary,
+                        AppColors.primary.withOpacity(0.8),
+                      ],
+                    ).createShader(bounds),
+                    child: Text(
+                      'Create Account',
+                      style: AppTextStyles.heading.copyWith(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Join Tapto for curated picks',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 15),
+                  ),
+                  const SizedBox(height: 36),
+                  AuthTextField(
+                    controller: _nameController,
+                    label: 'Full Name',
+                    hint: 'Enter your full name',
+                    prefixIcon: Icons.person_outline_rounded,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your name';
@@ -181,18 +155,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       return null;
                     },
                   ),
-
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // Email
-                  TextFormField(
+                  const SizedBox(height: 16),
+                  AuthTextField(
                     controller: _emailController,
+                    label: 'Email Address',
+                    hint: 'Enter your email',
+                    prefixIcon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      labelText: 'Email Address',
-                      hintText: 'Enter your email',
-                      prefixIcon: const Icon(Icons.email_outlined),
-                    ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your email';
@@ -205,40 +174,61 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       return null;
                     },
                   ),
-
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // Country & Phone
+                  const SizedBox(height: 16),
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      SizedBox(
-                        width: 110,
+                      Container(
+                        width: 100,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.08),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
                         child: DropdownButtonFormField<String>(
                           value: _selectedCountry,
                           decoration: InputDecoration(
-                            labelText: 'Code',
+                            filled: true,
+                            fillColor: Colors.grey[50],
                             contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 16,
+                              horizontal: 8,
+                              vertical: 20,
+                            ),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(
+                                color: Colors.grey[200]!,
+                                width: 1.5,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: BorderSide(
+                                color: Colors.grey[200]!,
+                                width: 1.5,
+                              ),
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: const BorderSide(
+                                color: AppColors.primary,
+                                width: 2,
+                              ),
                             ),
                           ),
+                          isExpanded: true,
                           items: _countries.map((country) {
                             return DropdownMenuItem<String>(
                               value: country['name'],
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    country['flag']!,
-                                    style: const TextStyle(fontSize: 18),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    country['code']!,
-                                    style: const TextStyle(fontSize: 13),
-                                  ),
-                                ],
+                              child: Text(
+                                '${country['flag']} ${country['code']}',
+                                style: const TextStyle(fontSize: 12),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             );
                           }).toList(),
@@ -246,65 +236,86 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                             if (value != null) {
                               setState(() {
                                 _selectedCountry = value;
-                                final country = _countries.firstWhere(
+                                _selectedCountryCode = _countries.firstWhere(
                                   (c) => c['name'] == value,
-                                );
-                                _selectedCountryCode = country['code']!;
+                                )['code']!;
                               });
                             }
                           },
                         ),
                       ),
-                      const SizedBox(width: AppSpacing.md),
+                      const SizedBox(width: 12),
                       Expanded(
-                        child: TextFormField(
+                        child: AuthTextField(
                           controller: _phoneController,
+                          label: 'Phone',
+                          hint: '9800000000',
+                          prefixIcon: Icons.phone_outlined,
                           keyboardType: TextInputType.phone,
                           maxLength: 10,
-                          decoration: InputDecoration(
-                            labelText: 'Phone Number',
-                            hintText: '9800000000',
-                            prefixIcon: const Icon(Icons.phone_outlined),
-                            counterText: '',
-                          ),
                           validator: (value) {
                             if (value == null || value.isEmpty) {
-                              return 'Please enter your phone';
+                              return 'Required';
                             }
-                            if (value.length < 7) {
-                              return 'Invalid phone';
-                            }
-                            if (!RegExp(r'^[0-9]+$').hasMatch(value)) {
-                              return 'Only numbers';
-                            }
+                            if (value.length < 7) return 'Invalid';
                             return null;
                           },
                         ),
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // Shopping Preference
-                  Theme(
-                    data: Theme.of(context).copyWith(
-                      inputDecorationTheme: InputDecorationTheme(
+                  const SizedBox(height: 16),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.08),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: DropdownButtonFormField<String>(
+                      initialValue: _selectedPreference,
+                      decoration: InputDecoration(
+                        labelText: 'Shopping Preference (Optional)',
+                        labelStyle: TextStyle(
+                          color: Colors.grey[600],
+                          fontSize: 15,
+                        ),
+                        prefixIcon: const Icon(
+                          Icons.favorite_outline,
+                          color: AppColors.primary,
+                        ),
+                        filled: true,
+                        fillColor: Colors.grey[50],
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 20,
+                          vertical: 20,
+                        ),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(
+                            color: Colors.grey[200]!,
+                            width: 1.5,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide(
+                            color: Colors.grey[200]!,
+                            width: 1.5,
+                          ),
+                        ),
                         focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
                           borderSide: const BorderSide(
                             color: AppColors.primary,
                             width: 2,
                           ),
-                          borderRadius: BorderRadius.circular(8),
                         ),
-                      ),
-                    ),
-                    child: DropdownButtonFormField<String>(
-                      value: _selectedPreference,
-                      decoration: InputDecoration(
-                        labelText: 'Shopping Preference (Optional)',
-                        hintText: 'Choose your preference',
-                        prefixIcon: const Icon(Icons.favorite_outline),
                       ),
                       items: _preferences.map((pref) {
                         return DropdownMenuItem<String>(
@@ -312,35 +323,26 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           child: Text(pref),
                         );
                       }).toList(),
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedPreference = value;
-                        });
-                      },
+                      onChanged: (value) =>
+                          setState(() => _selectedPreference = value),
                     ),
                   ),
-
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // Password
-                  TextFormField(
+                  const SizedBox(height: 16),
+                  AuthTextField(
                     controller: _passwordController,
+                    label: 'Password',
+                    hint: 'Create a strong password',
+                    prefixIcon: Icons.lock_outline_rounded,
                     obscureText: !_isPasswordVisible,
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      hintText: 'Create a strong password',
-                      prefixIcon: const Icon(Icons.lock_outline_rounded),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _isPasswordVisible
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _isPasswordVisible = !_isPasswordVisible;
-                          });
-                        },
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isPasswordVisible
+                            ? Icons.visibility_rounded
+                            : Icons.visibility_off_rounded,
+                        color: Colors.grey[600],
+                      ),
+                      onPressed: () => setState(
+                        () => _isPasswordVisible = !_isPasswordVisible,
                       ),
                     ),
                     validator: (value) {
@@ -353,34 +355,28 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       return null;
                     },
                   ),
-
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // Confirm Password
-                  TextFormField(
+                  const SizedBox(height: 16),
+                  AuthTextField(
                     controller: _confirmPasswordController,
+                    label: 'Confirm Password',
+                    hint: 'Re-enter your password',
+                    prefixIcon: Icons.lock_outline_rounded,
                     obscureText: !_isConfirmPasswordVisible,
-                    decoration: InputDecoration(
-                      labelText: 'Confirm Password',
-                      hintText: 'Re-enter your password',
-                      prefixIcon: const Icon(Icons.lock_outline_rounded),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _isConfirmPasswordVisible
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _isConfirmPasswordVisible =
-                                !_isConfirmPasswordVisible;
-                          });
-                        },
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _isConfirmPasswordVisible
+                            ? Icons.visibility_rounded
+                            : Icons.visibility_off_rounded,
+                        color: Colors.grey[600],
+                      ),
+                      onPressed: () => setState(
+                        () => _isConfirmPasswordVisible =
+                            !_isConfirmPasswordVisible,
                       ),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please confirm your password';
+                        return 'Please confirm';
                       }
                       if (value != _passwordController.text) {
                         return 'Passwords do not match';
@@ -388,77 +384,76 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                       return null;
                     },
                   ),
-
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // Terms & Conditions
-                  Row(
-                    children: [
-                      SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: Checkbox(
-                          value: _acceptTerms,
-                          onChanged: (value) {
-                            setState(() {
-                              _acceptTerms = value ?? false;
-                            });
-                          },
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(6),
+                  const SizedBox(height: 20),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: Colors.grey[50],
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: _acceptTerms
+                            ? AppColors.primary.withOpacity(0.3)
+                            : Colors.grey[200]!,
+                      ),
+                    ),
+                    padding: const EdgeInsets.all(12),
+                    child: Row(
+                      children: [
+                        SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: Checkbox(
+                            value: _acceptTerms,
+                            onChanged: (value) =>
+                                setState(() => _acceptTerms = value ?? false),
+                            activeColor: AppColors.primary,
                           ),
                         ),
-                      ),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _acceptTerms = !_acceptTerms;
-                            });
-                          },
-                          child: Text.rich(
-                            TextSpan(
-                              text: 'I agree to the ',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[700],
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () =>
+                                setState(() => _acceptTerms = !_acceptTerms),
+                            child: Text.rich(
+                              TextSpan(
+                                text: 'I agree to the ',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey[700],
+                                ),
+                                children: const [
+                                  TextSpan(
+                                    text: 'Terms & Conditions',
+                                    style: TextStyle(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  TextSpan(text: ' and '),
+                                  TextSpan(
+                                    text: 'Privacy Policy',
+                                    style: TextStyle(
+                                      color: AppColors.primary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              children: [
-                                TextSpan(
-                                  text: 'Terms & Conditions',
-                                  style: const TextStyle(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                                const TextSpan(text: ' and '),
-                                TextSpan(
-                                  text: 'Privacy Policy',
-                                  style: const TextStyle(
-                                    color: AppColors.primary,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-
-                  const SizedBox(height: AppSpacing.xl),
-
-                  // Sign Up Button
+                  const SizedBox(height: 28),
                   Container(
-                    height: 56,
+                    height: 58,
+                    width: double.infinity,
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(16),
                       gradient: LinearGradient(
                         colors: [
                           AppColors.primary,
-                          AppColors.primary.withOpacity(0.8),
+                          AppColors.primary.withOpacity(0.85),
                         ],
                       ),
                       boxShadow: [
@@ -472,18 +467,38 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     child: ElevatedButton(
                       onPressed: authState.status == AuthStatus.loading
                           ? null
-                          : _handleRegister,
+                          : () {
+                              if (!_acceptTerms) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Please accept terms'),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                                return;
+                              }
+                              if (_formKey.currentState?.validate() == true) {
+                                ref
+                                    .read(authViewModelProvider.notifier)
+                                    .register(
+                                      name: _nameController.text.trim(),
+                                      email: _emailController.text.trim(),
+                                      password: _passwordController.text,
+                                      preference: _selectedPreference,
+                                    );
+                              }
+                            },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.transparent,
                         shadowColor: Colors.transparent,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
+                          borderRadius: BorderRadius.circular(16),
                         ),
                       ),
                       child: authState.status == AuthStatus.loading
                           ? const SizedBox(
-                              height: 24,
-                              width: 24,
+                              height: 26,
+                              width: 26,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2.5,
                                 valueColor: AlwaysStoppedAnimation<Color>(
@@ -494,45 +509,36 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           : const Text(
                               'Create Account',
                               style: TextStyle(
-                                fontSize: 17,
-                                fontWeight: FontWeight.w700,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
                                 color: Colors.white,
-                                letterSpacing: 0.5,
                               ),
                             ),
                     ),
                   ),
-
-                  const SizedBox(height: AppSpacing.xl),
-
-                  // Login Link
+                  const SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         'Already have an account? ',
-                        style: TextStyle(color: Colors.grey[600], fontSize: 15),
+                        style: TextStyle(color: Colors.grey[700]),
                       ),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.pushReplacementNamed(
-                            context,
-                            AppRoutes.login,
-                          );
-                        },
+                      TextButton(
+                        onPressed: () => Navigator.pushReplacementNamed(
+                          context,
+                          AppRoutes.login,
+                        ),
                         child: const Text(
                           'Login',
                           style: TextStyle(
                             color: AppColors.primary,
                             fontWeight: FontWeight.bold,
-                            fontSize: 15,
                           ),
                         ),
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: AppSpacing.lg),
                 ],
               ),
             ),

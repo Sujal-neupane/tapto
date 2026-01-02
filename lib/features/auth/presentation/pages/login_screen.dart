@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/app/routes/app_routes.dart';
 import 'package:tapto/features/auth/presentation/state/auth_state.dart';
 import 'package:tapto/features/auth/presentation/viewmodel/auth_viewmodel.dart';
+import 'package:tapto/features/auth/presentation/widgets/auth_text_field.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_text_styles.dart';
-import '../../../../app/theme/app_spacing.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -14,25 +14,29 @@ class LoginScreen extends ConsumerStatefulWidget {
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final email = TextEditingController();
   final password = TextEditingController();
   bool showPassword = false;
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    )..forward();
+  }
 
   @override
   void dispose() {
+    _controller.dispose();
     email.dispose();
     password.dispose();
     super.dispose();
-  }
-
-  void _handleLogin() {
-    if (_formKey.currentState?.validate() != true) return;
-
-    ref
-        .read(authViewModelProvider.notifier)
-        .login(email: email.text.trim(), password: password.text);
   }
 
   @override
@@ -41,7 +45,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
     ref.listen<AuthState>(authViewModelProvider, (previous, next) {
       if (!mounted) return;
-
       if (next.status == AuthStatus.authenticated) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -60,68 +63,71 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       }
     });
 
-    return WillPopScope(
-      onWillPop: () async => false,
-      child: Scaffold(
-        backgroundColor: Colors.white,
-
-        body: SafeArea(
+    return Scaffold(
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: FadeTransition(
+          opacity: _controller,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.lg,
-              vertical: AppSpacing.md,
-            ),
+            padding: const EdgeInsets.all(24),
             child: Form(
               key: _formKey,
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Header
-                  Center(
-                    child: Column(
-                      children: [
-                        Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
+                  const SizedBox(height: 40),
+                  Hero(
+                    tag: 'app_logo',
+                    child: Container(
+                      width: 100,
+                      height: 100,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppColors.primary.withOpacity(0.15),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
                           ),
-                          child: Image.asset(
-                            'assets/images/logo1.png',
-                            height: 60,
-                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: Image.asset(
+                          'assets/images/logo1.png',
+                          fit: BoxFit.cover,
                         ),
-                        const SizedBox(height: AppSpacing.lg),
-                        Text(
-                          'Welcome Back',
-                          style: AppTextStyles.heading.copyWith(
-                            fontSize: 26,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(
-                          'Your curated deals await',
-                          style: AppTextStyles.body.copyWith(
-                            color: Colors.grey[600],
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
+                      ),
                     ),
                   ),
-
-                  const SizedBox(height: AppSpacing.xl),
-
-                  // Email Field
-                  TextFormField(
-                    controller: email,
-                    keyboardType: TextInputType.emailAddress,
-                    decoration: InputDecoration(
-                      labelText: 'Email Address',
-                      hintText: 'Enter your email',
-                      prefixIcon: const Icon(Icons.email_outlined),
+                  const SizedBox(height: 32),
+                  ShaderMask(
+                    shaderCallback: (bounds) => LinearGradient(
+                      colors: [
+                        AppColors.primary,
+                        AppColors.primary.withOpacity(0.8),
+                      ],
+                    ).createShader(bounds),
+                    child: Text(
+                      'Welcome Back',
+                      style: AppTextStyles.heading.copyWith(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
                     ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Your curated deals await',
+                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                  ),
+                  const SizedBox(height: 48),
+                  AuthTextField(
+                    controller: email,
+                    label: 'Email Address',
+                    hint: 'Enter your email',
+                    prefixIcon: Icons.email_outlined,
+                    keyboardType: TextInputType.emailAddress,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Please enter your email';
@@ -134,27 +140,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       return null;
                     },
                   ),
-
-                  const SizedBox(height: AppSpacing.lg),
-
-                  // Password Field
-                  TextFormField(
+                  const SizedBox(height: 20),
+                  AuthTextField(
                     controller: password,
+                    label: 'Password',
+                    hint: 'Enter your password',
+                    prefixIcon: Icons.lock_outline_rounded,
                     obscureText: !showPassword,
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      hintText: 'Enter your password',
-                      prefixIcon: const Icon(Icons.lock_outline_rounded),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          showPassword
-                              ? Icons.visibility_outlined
-                              : Icons.visibility_off_outlined,
-                        ),
-                        onPressed: () {
-                          setState(() => showPassword = !showPassword);
-                        },
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        showPassword
+                            ? Icons.visibility_rounded
+                            : Icons.visibility_off_rounded,
+                        color: Colors.grey[600],
                       ),
+                      onPressed: () =>
+                          setState(() => showPassword = !showPassword),
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
@@ -166,14 +167,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       return null;
                     },
                   ),
-
-                  const SizedBox(height: AppSpacing.md),
-
-                  // Forgot Password Link
+                  const SizedBox(height: 16),
                   Align(
                     alignment: Alignment.centerRight,
-                    child: GestureDetector(
-                      onTap: () => Navigator.pushNamed(
+                    child: TextButton(
+                      onPressed: () => Navigator.pushNamed(
                         context,
                         AppRoutes.forgotPassword,
                       ),
@@ -181,35 +179,57 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         'Forgot Password?',
                         style: TextStyle(
                           color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),
                   ),
-
-                  const SizedBox(height: AppSpacing.xl),
-
-                  // Login Button
-                  SizedBox(
-                    height: 54,
+                  const SizedBox(height: 32),
+                  Container(
+                    height: 58,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        colors: [
+                          AppColors.primary,
+                          AppColors.primary.withOpacity(0.85),
+                        ],
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppColors.primary.withOpacity(0.4),
+                          blurRadius: 16,
+                          offset: const Offset(0, 8),
+                        ),
+                      ],
+                    ),
                     child: ElevatedButton(
                       onPressed: authState.status == AuthStatus.loading
                           ? null
-                          : _handleLogin,
+                          : () {
+                              if (_formKey.currentState?.validate() == true) {
+                                ref
+                                    .read(authViewModelProvider.notifier)
+                                    .login(
+                                      email: email.text.trim(),
+                                      password: password.text,
+                                    );
+                              }
+                            },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
+                        backgroundColor: Colors.transparent,
+                        shadowColor: Colors.transparent,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        elevation: 2,
                       ),
                       child: authState.status == AuthStatus.loading
                           ? const SizedBox(
-                              height: 24,
-                              width: 24,
+                              height: 26,
+                              width: 26,
                               child: CircularProgressIndicator(
-                                strokeWidth: 2,
+                                strokeWidth: 2.5,
                                 valueColor: AlwaysStoppedAnimation<Color>(
                                   Colors.white,
                                 ),
@@ -218,26 +238,23 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           : const Text(
                               'Log In',
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
                             ),
                     ),
                   ),
-
-                  const SizedBox(height: AppSpacing.xl),
-
-                  // Sign Up Link
+                  const SizedBox(height: 40),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         "Don't have an account? ",
-                        style: TextStyle(color: Colors.grey[600], fontSize: 15),
+                        style: TextStyle(color: Colors.grey[700]),
                       ),
-                      GestureDetector(
-                        onTap: () => Navigator.pushReplacementNamed(
+                      TextButton(
+                        onPressed: () => Navigator.pushReplacementNamed(
                           context,
                           AppRoutes.signup,
                         ),
@@ -246,14 +263,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           style: TextStyle(
                             color: AppColors.primary,
                             fontWeight: FontWeight.bold,
-                            fontSize: 15,
                           ),
                         ),
                       ),
                     ],
                   ),
-
-                  const SizedBox(height: AppSpacing.lg),
                 ],
               ),
             ),
