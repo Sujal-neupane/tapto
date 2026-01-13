@@ -8,7 +8,6 @@ import '../../presentation/pages/filter_screen.dart';
 import '../../presentation/pages/cart_screen.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
-import '../../../auth/presentation/viewmodel/auth_viewmodel.dart';
 
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
@@ -20,33 +19,25 @@ class DashboardScreen extends ConsumerStatefulWidget {
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   int _currentIndex = 0;
 
-  final _pages = const <Widget>[HomeSwipeScreen(), WishlistScreen(), ProfileScreen()];
+  final _pages = const <Widget>[
+    HomeSwipeScreen(),
+    WishlistScreen(),
+    ProfileScreen(),
+  ];
 
-  String _getTitle(String? userName) {
+  String _getTitle() {
     switch (_currentIndex) {
       case 1:
         return 'Wishlist';
       case 2:
         return 'Profile';
       default:
-        return userName != null ? 'Hi, $userName!' : 'Discover';
+        return 'Discover';
     }
-  }
-
-  String _getWelcomeMessage() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) return 'Good Morning! ☀️';
-    if (hour < 17) return 'Good Afternoon! 🌤️';
-    return 'Good Evening! 🌙';
   }
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = ref.watch(currentUserProvider);
-    final userName = currentUser?.name != null
-        ? currentUser!.name.split(' ').first
-        : null;
-
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -83,15 +74,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _currentIndex == 0 ? _getWelcomeMessage() : 'Tapto',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  Text(
-                    _getTitle(userName),
+                    _getTitle(),
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
