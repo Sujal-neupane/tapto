@@ -1,4 +1,5 @@
 /// Custom exceptions for the application
+library;
 
 /// Network related exceptions
 class NetworkException implements Exception {
@@ -16,7 +17,7 @@ class ApiException implements Exception {
   const ApiException(this.message, {this.statusCode});
 
   @override
-  String toString() => statusCode != null 
+  String toString() => statusCode != null
       ? 'ApiException ($statusCode): $message'
       : 'ApiException: $message';
 }

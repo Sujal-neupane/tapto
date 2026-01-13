@@ -4,7 +4,6 @@ import '../../../../app/routes/app_routes.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_text_styles.dart';
-import '../../../../app/widgets/custom_app_bar.dart';
 import '../../../../app/widgets/logout_dialog.dart';
 import '../../../auth/presentation/viewmodel/auth_viewmodel.dart';
 import '../../../auth/presentation/state/auth_state.dart';
@@ -43,12 +42,6 @@ class ProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: CustomAppBar(
-        title: 'My Profile',
-        subtitle: userEmail,
-        showLogo: false,
-        showBackButton: false,
-      ),
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),

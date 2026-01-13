@@ -2,16 +2,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 // Core Services
-import '../api/api_client.dart';
-import '../services/connectivity/network_info.dart';
 import '../services/hive/hive_services.dart';
 import '../services/storage/user_session_service.dart';
 
 // Auth Feature
-import '../../features/auth/data/datasource/local/auth_local_datasource.dart';
-import '../../features/auth/data/datasource/remote/auth_remote_datasource.dart';
-import '../../features/auth/data/repositories/auth_repository.dart';
-import '../../features/auth/domain/repositories/auth_repository.dart';
 
 /// Central file for all app-level providers
 /// This helps in dependency injection and makes testing easier
@@ -49,9 +43,9 @@ final sharedPreferencesInstanceProvider = Provider<SharedPreferences>((ref) {
 Future<void> initializeProviders(ProviderContainer container) async {
   // Initialize Hive
   await container.read(hiveServiceProvider).init();
-  
+
   // Initialize User Session Service
   await container.read(userSessionServiceProvider).initialize();
-  
+
   // Additional initialization can be added here
 }

@@ -5,25 +5,29 @@ import 'api_endpoint.dart';
 
 /// Provider for Dio instance
 final dioProvider = Provider<Dio>((ref) {
-  final dio = Dio(BaseOptions(
-    baseUrl: ApiEndpoints.baseUrl,
-    connectTimeout: ApiEndpoints.connectionTimeout,
-    receiveTimeout: ApiEndpoints.receiveTimeout,
-    headers: {
-      'Content-Type': 'application/json',
-      'Accept': 'application/json',
-    },
-  ));
+  final dio = Dio(
+    BaseOptions(
+      baseUrl: ApiEndpoints.baseUrl,
+      connectTimeout: ApiEndpoints.connectionTimeout,
+      receiveTimeout: ApiEndpoints.receiveTimeout,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+      },
+    ),
+  );
 
   // Add pretty logger for development
-  dio.interceptors.add(PrettyDioLogger(
-    requestHeader: true,
-    requestBody: true,
-    responseBody: true,
-    responseHeader: false,
-    error: true,
-    compact: true,
-  ));
+  dio.interceptors.add(
+    PrettyDioLogger(
+      requestHeader: true,
+      requestBody: true,
+      responseBody: true,
+      responseHeader: false,
+      error: true,
+      compact: true,
+    ),
+  );
 
   return dio;
 });
@@ -143,7 +147,8 @@ class ApiClient {
 
     switch (error.type) {
       case DioExceptionType.connectionTimeout:
-        errorMessage = 'Connection timeout. Please check your internet connection.';
+        errorMessage =
+            'Connection timeout. Please check your internet connection.';
         break;
       case DioExceptionType.sendTimeout:
         errorMessage = 'Send timeout. Please try again.';

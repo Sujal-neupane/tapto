@@ -86,7 +86,7 @@ class AuthRepositoryImpl implements AuthRepository {
       final isConnected = await networkInfo.isConnected;
 
       if (isConnected) {
-        // Register with remote server
+        // Try to register with remote server
         try {
           final authApiModel = await remoteDataSource.register(
             email: email,
@@ -110,7 +110,18 @@ class AuthRepositoryImpl implements AuthRepository {
 
           return authApiModel.toEntity();
         } catch (e) {
-          throw Exception('Remote registration failed: ${e.toString()}');
+          // If remote registration fails (backend not running), fall back to local registration
+          try {
+            final userModel = await localDataSource.register(
+              name: name,
+              email: email,
+              password: password,
+              preference: preference,
+            );
+            return userModel.toEntity();
+          } catch (localError) {
+            throw Exception('Registration failed: ${localError.toString()}');
+          }
         }
       } else {
         // No network, register locally only
