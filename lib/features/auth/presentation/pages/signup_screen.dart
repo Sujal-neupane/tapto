@@ -190,7 +190,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                           ],
                         ),
                         child: DropdownButtonFormField<String>(
-                          value: _selectedCountry,
+                          initialValue: _selectedCountry,
                           decoration: InputDecoration(
                             filled: true,
                             fillColor: Colors.grey[50],

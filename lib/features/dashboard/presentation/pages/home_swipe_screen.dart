@@ -1,170 +1,30 @@
 import 'package:flutter/material.dart';
+
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../app/widgets/timer_widget.dart';
-import '../../../../core/utils/responsive_utils.dart';
 
-class HomeSwipeScreen extends StatelessWidget {
-  const HomeSwipeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final isTablet =
-        ResponsiveUtils.isTablet(context) || ResponsiveUtils.isDesktop(context);
-    final padding = ResponsiveUtils.getResponsivePadding(context);
-
-    return Padding(
-      padding: padding,
-      child: Column(
-        children: [
-          // Time Tracking Section
-          const TimerWidget(isRunning: true),
-          const SizedBox(height: AppSpacing.lg),
-
-          // Recent Sessions
-          Container(
-            padding: EdgeInsets.all(isTablet ? AppSpacing.lg : AppSpacing.md),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(isTablet ? 16 : 12),
-              border: Border.all(color: AppColors.border, width: 1),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.history,
-                  color: AppColors.primary,
-                  size: ResponsiveUtils.getResponsiveIconSize(context, 24),
-                ),
-                const SizedBox(width: AppSpacing.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Today\'s Activities',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: ResponsiveUtils.getResponsiveFontSize(
-                            context,
-                            14,
-                          ),
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        '4 sessions • 2h 45m',
-                        style: TextStyle(
-                          fontSize: ResponsiveUtils.getResponsiveFontSize(
-                            context,
-                            12,
-                          ),
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.sm,
-                    vertical: AppSpacing.xs,
-                  ),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Text(
-                    'View All',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.primary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.lg),
-
-          // Swipeable Products Section Title
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Discover Products',
-                style: TextStyle(
-                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 16),
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              Text(
-                'Swipe to explore',
-                style: TextStyle(
-                  fontSize: ResponsiveUtils.getResponsiveFontSize(context, 12),
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.md),
-
-          // Product Cards
-          Expanded(
-            child: Center(
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxWidth: ResponsiveUtils.getMaxContentWidth(context),
-                ),
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: List.generate(
-                    5,
-                    (index) => Draggable(
-                      childWhenDragging: const SizedBox.shrink(),
-                      feedback: _ProductCard(index: index),
-                      child: _ProductCard(index: index),
-                      onDragEnd: (details) {
-                        // Swipe logic here
-                      },
-                    ),
-                  ).reversed.toList(),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ProductCard extends StatelessWidget {
+class ProductCard extends StatelessWidget {
   final int index;
-  const _ProductCard({required this.index});
+
+  const ProductCard({super.key, required this.index});
 
   @override
   Widget build(BuildContext context) {
-    final cardWidth = ResponsiveUtils.getCardWidth(context);
-    final cardHeight = ResponsiveUtils.getCardHeight(context);
-    final isTablet =
-        ResponsiveUtils.isTablet(context) || ResponsiveUtils.isDesktop(context);
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    final cardWidth = isMobile
+        ? MediaQuery.of(context).size.width * 0.85
+        : MediaQuery.of(context).size.width * 0.6;
 
     return Card(
-      elevation: isTablet ? 12 : 8,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(isTablet ? 32 : 24),
-      ),
-      margin: EdgeInsets.all(isTablet ? AppSpacing.lg : AppSpacing.md),
+      elevation: 8,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      margin: const EdgeInsets.all(AppSpacing.md),
       child: SizedBox(
         width: cardWidth,
-        height: cardHeight,
+        height: 400,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(
               child: Container(
@@ -178,19 +38,19 @@ class _ProductCard extends StatelessWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.vertical(
-                    top: Radius.circular(isTablet ? 32 : 24),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
                   ),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.shopping_bag_outlined,
-                  size: ResponsiveUtils.getResponsiveIconSize(context, 100),
+                  size: 100,
                   color: AppColors.primary,
                 ),
               ),
             ),
             Padding(
-              padding: EdgeInsets.all(isTablet ? AppSpacing.xl : AppSpacing.lg),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -198,10 +58,7 @@ class _ProductCard extends StatelessWidget {
                     'Product ${index + 1}',
                     style: AppTextStyles.body.copyWith(
                       fontWeight: FontWeight.w700,
-                      fontSize: ResponsiveUtils.getResponsiveFontSize(
-                        context,
-                        18,
-                      ),
+                      fontSize: 18,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.xs),
@@ -210,15 +67,139 @@ class _ProductCard extends StatelessWidget {
                     style: AppTextStyles.body.copyWith(
                       fontWeight: FontWeight.w600,
                       color: AppColors.primary,
-                      fontSize: ResponsiveUtils.getResponsiveFontSize(
-                        context,
-                        16,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class HomeSwipeScreen extends StatelessWidget {
+  const HomeSwipeScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = MediaQuery.of(context).size.width < 600;
+    final padding = isMobile ? AppSpacing.md : AppSpacing.lg;
+
+    return SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.all(padding),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Time Tracking Section
+            const TimerWidget(isRunning: true),
+            SizedBox(height: padding),
+
+            // Recent Sessions
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: AppColors.border, width: 1),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.history, color: AppColors.primary, size: 24),
+                  const SizedBox(width: AppSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Today\'s Activities',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: AppColors.textPrimary,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        Text(
+                          '4 sessions • 2h 45m',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.sm,
+                      vertical: AppSpacing.xs,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Text(
+                      'View All',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.primary,
                       ),
                     ),
                   ),
                 ],
               ),
             ),
+            SizedBox(height: padding),
+
+            // Swipeable Products Section Title
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text(
+                  'Discover Products',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                Text(
+                  'Swipe to explore',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: padding),
+
+            // Product Cards - Fixed Height
+            SizedBox(
+              height: 500,
+              child: Center(
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: List.generate(
+                    5,
+                    (index) => Draggable(
+                      childWhenDragging: const SizedBox.shrink(),
+                      feedback: ProductCard(index: index),
+                      child: ProductCard(index: index),
+                      onDragEnd: (details) {
+                        // Swipe logic here
+                      },
+                    ),
+                  ).reversed.toList(),
+                ),
+              ),
+            ),
+            SizedBox(height: padding),
           ],
         ),
       ),

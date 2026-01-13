@@ -1,6 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/core/error/failures.dart';
+import 'package:tapto/core/services/connectivity/network_info.dart';
 import 'package:tapto/core/usecases/app_usecases.dart';
 import 'package:tapto/core/services/storage/user_session_service.dart';
 import 'package:tapto/core/services/hive/hive_services.dart'; // Import the HiveService
@@ -8,6 +9,7 @@ import 'package:tapto/features/auth/domain/entities/user.dart';
 import 'package:tapto/features/auth/domain/repositories/auth_repository.dart';
 import 'package:tapto/features/auth/data/repositories/auth_repository.dart';
 import 'package:tapto/features/auth/data/datasource/local/auth_local_datasource.dart';
+import 'package:tapto/features/auth/data/datasource/remote/auth_remote_datasource.dart';
 
 /// Provider for UserSessionService
 final userSessionServiceProvider = Provider<UserSessionService>((ref) {
@@ -27,7 +29,13 @@ final authLocalDataSourceProvider = Provider<AuthLocalDataSource>((ref) {
 /// Provider for AuthRepository
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   final localDataSource = ref.read(authLocalDataSourceProvider);
-  return AuthRepositoryImpl(localDataSource: localDataSource);
+  final remoteDataSource = ref.read(authRemoteDataSourceProvider);
+  final networkInfo = ref.read(networkInfoProvider);
+  return AuthRepositoryImpl(
+    localDataSource: localDataSource,
+    remoteDataSource: remoteDataSource,
+    networkInfo: networkInfo,
+  );
 });
 
 /// Provider for GetCurrentUserUsecase

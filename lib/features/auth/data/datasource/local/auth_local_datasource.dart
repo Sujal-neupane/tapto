@@ -1,9 +1,17 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/core/services/hive/hive_services.dart';
-
 import '../../models/user_model.dart';
 import 'package:tapto/core/services/storage/user_session_service.dart';
 
-/// Local datasource for authentication
+/// Provider for AuthLocalDataSource
+final authLocalDataSourceProvider = Provider<AuthLocalDataSource>((ref) {
+  return AuthLocalDataSourceImpl(
+    sessionService: ref.read(userSessionServiceProvider),
+    hiveService: ref.read(hiveServiceProvider),
+  );
+});
+
+/// Abstract interface for local authentication data source
 abstract class AuthLocalDataSource {
   Future<UserModel> register({
     required String name,
@@ -19,8 +27,10 @@ abstract class AuthLocalDataSource {
   Future<UserModel?> getUserByEmail(String email);
   Future<bool> updateUser(UserModel user);
   Future<bool> deleteUser(String id);
+  Future<void> saveUser(UserModel user);
 }
 
+/// Implementation of local authentication data source
 class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   final UserSessionService _sessionService;
   final HiveService _hiveService;
@@ -161,6 +171,15 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
       return true;
     } catch (e) {
       return false;
+    }
+  }
+
+  @override
+  Future<void> saveUser(UserModel user) async {
+    try {
+      await _hiveService.saveUser(user);
+    } catch (e) {
+      throw Exception('Failed to save user: $e');
     }
   }
 }

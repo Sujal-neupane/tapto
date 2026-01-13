@@ -6,7 +6,6 @@ import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../app/widgets/custom_app_bar.dart';
 import '../../../../app/widgets/logout_dialog.dart';
-import '../../../../core/utils/responsive_utils.dart';
 import '../../../auth/presentation/viewmodel/auth_viewmodel.dart';
 import '../../../auth/presentation/state/auth_state.dart';
 
@@ -50,162 +49,152 @@ class ProfileScreen extends ConsumerWidget {
         showLogo: false,
         showBackButton: false,
       ),
-      body: Center(
-        child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxWidth: ResponsiveUtils.getMaxContentWidth(context),
-          ),
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: ResponsiveUtils.getResponsivePadding(context),
-              child: Column(
-                children: [
-                  const SizedBox(height: AppSpacing.md),
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            children: [
+              const SizedBox(height: AppSpacing.md),
 
-                  // Profile Header
-                  Container(
-                    padding: const EdgeInsets.all(AppSpacing.lg),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          AppColors.primary.withOpacity(0.1),
-                          AppColors.primary.withOpacity(0.05),
-                        ],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Column(
-                      children: [
-                        CircleAvatar(
-                          radius: 50,
-                          backgroundColor: AppColors.primary,
-                          child: Text(
-                            userInitial,
-                            style: const TextStyle(
-                              fontSize: 36,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        Text(
-                          userName,
-                          style: AppTextStyles.subHeading.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.xs),
-                        Text(
-                          userEmail,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                          ),
-                        ),
-                      ],
-                    ),
+              // Profile Header
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.primary.withOpacity(0.1),
+                      AppColors.primary.withOpacity(0.05),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
                   ),
-
-                  const SizedBox(height: AppSpacing.xl),
-
-                  // Menu Items
-                  _ProfileMenuItem(
-                    icon: Icons.shopping_bag_outlined,
-                    title: 'My Orders',
-                    subtitle: 'Track your orders',
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Orders feature coming soon!'),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  _ProfileMenuItem(
-                    icon: Icons.favorite_outline,
-                    title: 'Wishlist',
-                    subtitle: 'Your favorite items',
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Wishlist feature coming soon!'),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  _ProfileMenuItem(
-                    icon: Icons.location_on_outlined,
-                    title: 'Addresses',
-                    subtitle: 'Manage your addresses',
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Addresses feature coming soon!'),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  _ProfileMenuItem(
-                    icon: Icons.settings_outlined,
-                    title: 'Settings',
-                    subtitle: 'App preferences',
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Settings feature coming soon!'),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.sm),
-                  _ProfileMenuItem(
-                    icon: Icons.help_outline,
-                    title: 'Help & Support',
-                    subtitle: 'Get assistance',
-                    onTap: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Support feature coming soon!'),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-
-                  // Logout Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: OutlinedButton.icon(
-                      onPressed: () => _handleLogout(context, ref),
-                      icon: const Icon(Icons.logout, color: Colors.red),
-                      label: const Text(
-                        'Logout',
-                        style: TextStyle(
-                          color: Colors.red,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.red, width: 1.5),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Column(
+                  children: [
+                    CircleAvatar(
+                      radius: 50,
+                      backgroundColor: AppColors.primary,
+                      child: Text(
+                        userInitial,
+                        style: const TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                ],
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
+                      userName,
+                      style: AppTextStyles.subHeading.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      userEmail,
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    ),
+                  ],
+                ),
               ),
-            ),
+
+              const SizedBox(height: AppSpacing.xl),
+
+              // Menu Items
+              _ProfileMenuItem(
+                icon: Icons.shopping_bag_outlined,
+                title: 'My Orders',
+                subtitle: 'Track your orders',
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Orders feature coming soon!'),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              _ProfileMenuItem(
+                icon: Icons.favorite_outline,
+                title: 'Wishlist',
+                subtitle: 'Your favorite items',
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Wishlist feature coming soon!'),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              _ProfileMenuItem(
+                icon: Icons.location_on_outlined,
+                title: 'Addresses',
+                subtitle: 'Manage your addresses',
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Addresses feature coming soon!'),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              _ProfileMenuItem(
+                icon: Icons.settings_outlined,
+                title: 'Settings',
+                subtitle: 'App preferences',
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Settings feature coming soon!'),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: AppSpacing.sm),
+              _ProfileMenuItem(
+                icon: Icons.help_outline,
+                title: 'Help & Support',
+                subtitle: 'Get assistance',
+                onTap: () {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Support feature coming soon!'),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: AppSpacing.xl),
+
+              // Logout Button
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: OutlinedButton.icon(
+                  onPressed: () => _handleLogout(context, ref),
+                  icon: const Icon(Icons.logout, color: Colors.red),
+                  label: const Text(
+                    'Logout',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: Colors.red, width: 1.5),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+            ],
           ),
         ),
       ),

@@ -21,27 +21,17 @@ class UserModel extends HiveObject {
   @HiveField(4)
   final String? preference;
 
-  @HiveField(5)
-  final DateTime createdAt;
-
   UserModel({
     required this.id,
     required this.name,
     required this.email,
     required this.password,
     this.preference,
-    required this.createdAt,
   });
 
   /// Convert to domain entity
   User toEntity() {
-    return User(
-      id: id,
-      name: name,
-      email: email,
-      preference: preference,
-      createdAt: createdAt,
-    );
+    return User(id: id, name: name, email: email, preference: preference);
   }
 
   /// Create from domain entity
@@ -52,7 +42,6 @@ class UserModel extends HiveObject {
       email: user.email,
       password: password,
       preference: user.preference,
-      createdAt: user.createdAt,
     );
   }
 
@@ -69,7 +58,6 @@ class UserModel extends HiveObject {
       email: email,
       password: password,
       preference: preference,
-      createdAt: DateTime.now(),
     );
   }
 
@@ -92,7 +80,6 @@ class UserModel extends HiveObject {
       email: email ?? this.email,
       password: password ?? this.password,
       preference: preference ?? this.preference,
-      createdAt: createdAt ?? this.createdAt,
     );
   }
 }

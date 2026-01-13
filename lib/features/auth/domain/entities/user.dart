@@ -6,32 +6,35 @@ class User extends Equatable {
   final String name;
   final String email;
   final String? preference; // Shopping preference (Men/Women)
-  final DateTime createdAt;
+  final String? profilePicture;
+  final String? phoneNumber;
 
   const User({
     required this.id,
     required this.name,
     required this.email,
     this.preference,
-    required this.createdAt,
+    this.profilePicture,
+    this.phoneNumber,
   });
 
   @override
-  List<Object?> get props => [id, name, email, preference, createdAt];
-
+  List<Object?> get props => [id, name, email, preference, profilePicture];
   User copyWith({
     String? id,
     String? name,
     String? email,
     String? preference,
-    DateTime? createdAt,
+    String? profilePicture,
+    String? phoneNumber,
   }) {
     return User(
       id: id ?? this.id,
       name: name ?? this.name,
       email: email ?? this.email,
       preference: preference ?? this.preference,
-      createdAt: createdAt ?? this.createdAt,
+      profilePicture: profilePicture ?? this.profilePicture,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
     );
   }
 }
