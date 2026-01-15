@@ -17,25 +17,25 @@ class ApiEndpoints {
   static const Duration receiveTimeout = Duration(seconds: 10);
 
   // ========== Auth Endpoints ==========
-  static const String user = '/auth';
-  static const String userLogin = '/auth/login';
-  static const String userRegister = '/auth/register';
-  static String userById(String id) => '/auth/$id';
+  static const String user = '/api/auth';
+  static const String userLogin = '/api/auth/login';
+  static const String userRegister = '/api/auth/register';
+  static String userById(String id) => '/api/auth/$id';
 
   // ========== Product Endpoints =========
-  static const String products = '/products';
-  static String productById(String id) => '/products/$id';
-  static const String productsByCategory = '/products/category';
+  static const String products = '/api/products';
+  static String productById(String id) => '/api/products/$id';
+  static const String productsByCategory = '/api/products/category';
 
   // ========== Category Endpoints =========
-  static const String categories = '/categories';
-  static String categoryById(String id) => '/categories/$id';
+  static const String categories = '/api/categories';
+  static String categoryById(String id) => '/api/categories/$id';
 
   // ========== Order Endpoints =========
-  static const String orders = '/orders';
-  static String orderById(String id) => '/orders/$id';
+  static const String orders = '/api/orders';
+  static String orderById(String id) => '/api/orders/$id';
 
   // ========== Cart Endpoints =========
-  static const String cart = '/cart';
-  static String cartItemById(String id) => '/cart/$id';
+  static const String cart = '/api/cart';
+  static String cartItemById(String id) => '/api/cart/$id';
 }
