@@ -60,9 +60,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           final data = response.data['data'] as Map<String, dynamic>;
           final loggedInUser = AuthApiModel.fromJson(data);
 
-          // Set auth token if available
-          if (data['token'] != null) {
-            _apiClient.setAuthToken(data['token']);
+          // Set auth token if available - token is at root level in response
+          if (response.data['token'] != null) {
+            _apiClient.setAuthToken(response.data['token']);
           }
 
           return loggedInUser;
@@ -101,9 +101,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           final data = response.data['data'] as Map<String, dynamic>;
           final registeredUser = AuthApiModel.fromJson(data);
 
-          // Set auth token if available
-          if (data['token'] != null) {
-            _apiClient.setAuthToken(data['token']);
+          // Set auth token if available - token is at root level in response
+          if (response.data['token'] != null) {
+            _apiClient.setAuthToken(response.data['token']);
           }
 
           return registeredUser;

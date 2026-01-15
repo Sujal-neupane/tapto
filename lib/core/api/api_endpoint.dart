@@ -5,22 +5,22 @@ class ApiEndpoints {
   // Uncomment the one that matches your setup:
 
   // For Android Emulator use:
-  static const String baseUrl = 'http://10.0.2.2:9000/tapto';
+  static const String baseUrl = 'http://10.0.2.2:3000';
 
   // For iOS Simulator use:
-  // static const String baseUrl = 'http://localhost:9000/tapto';
+  // static const String baseUrl = 'http://localhost:3000';
 
   // For Physical Device - replace 192.168.x.x with your actual machine IP:
-  // static const String baseUrl = 'http://192.168.x.x:9000/tapto';
+  // static const String baseUrl = 'http://192.168.x.x:3000';
 
   static const Duration connectionTimeout = Duration(seconds: 10);
   static const Duration receiveTimeout = Duration(seconds: 10);
 
   // ========== Auth Endpoints ==========
-  static const String user = '/users';
-  static const String userLogin = '/users/login';
-  static const String userRegister = '/users/register';
-  static String userById(String id) => '/users/$id';
+  static const String user = '/auth';
+  static const String userLogin = '/auth/login';
+  static const String userRegister = '/auth/register';
+  static String userById(String id) => '/auth/$id';
 
   // ========== Product Endpoints =========
   static const String products = '/products';
