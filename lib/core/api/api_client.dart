@@ -206,4 +206,6 @@ class ApiClient {
   void updateBaseUrl(String newBaseUrl) {
     _dio.options.baseUrl = newBaseUrl;
   }
+
+  Future<dynamic> request({required String method, required String endpoint}) async {}
 }

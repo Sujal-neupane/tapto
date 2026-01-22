@@ -4,6 +4,7 @@ import 'package:tapto/features/auth/presentation/pages/otp_screen.dart';
 import 'package:tapto/features/dashboard/presentation/pages/cart_screen.dart';
 import 'package:tapto/features/dashboard/presentation/pages/dashboard_screen.dart';
 import 'package:tapto/features/dashboard/presentation/pages/filter_screen.dart';
+import 'package:tapto/features/dashboard/presentation/pages/setting_screen.dart';
 import 'package:tapto/features/onboarding/presentation/pages/onboarding_screen.dart';
 import 'package:tapto/features/dashboard/presentation/pages/search_screen.dart';
 import 'package:tapto/features/auth/presentation/pages/signup_screen.dart';
@@ -25,6 +26,7 @@ class AppRoutes {
   static const String search = '/search';
   static const String cart = '/cart';
   static const String wishlist = '/wish-list';
+  static const String setting = '/setting';
 
   /// Route map
   static final Map<String, WidgetBuilder> routes = {
@@ -39,5 +41,6 @@ class AppRoutes {
     search: (context) => const SearchScreen(),
     cart: (context) => const CartScreen(),
     wishlist: (context) => const WishlistScreen(),
+    setting: (context) => const SettingScreen(),
   };
 }
