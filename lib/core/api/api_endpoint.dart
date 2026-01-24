@@ -43,7 +43,14 @@ class ApiEndpoints {
 
   // ========== Order Endpoints =========
   static const String orders = '/api/orders';
+  static const String userOrders = '/api/orders/user';
   static String orderById(String id) => '/api/orders/$id';
+  static const String orderStatusUpdate = '/api/orders/status';
+  static const String liveTrackingUpdate = '/api/orders/:id/track';
+  static const String cancelOrder = '/api/orders/cancel';
+  static const String updateorderStatus  = '/api/orders/:id/status';
+  static const String updateLiveLocation  = '/api/orders/:id/location';
+
 
   // ========== Cart Endpoints =========
   static const String cart = '/api/cart';

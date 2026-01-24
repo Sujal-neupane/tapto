@@ -1,11 +1,12 @@
-// lib/features/orders/domain/usecases/get_my_orders.dart
 import 'package:dartz/dartz.dart';
-import 'package:tapto/features/dashboard/domain/repository/order_repository.dart';
-
+import 'package:tapto/core/usecases/app_usecases.dart';
+import 'package:tapto/features/orders/domain/enitites/order_entity.dart';
+import 'package:tapto/features/orders/domain/repository/order_repository.dart';
 import '../../../../core/error/failures.dart';
-import '../entities/order_entity.dart';
 
-class GetMyOrders {
+
+
+class GetMyOrders implements UseCase<List<OrderEntity>, NoParams> {
   final OrderRepository repository;
 
   GetMyOrders(this.repository);

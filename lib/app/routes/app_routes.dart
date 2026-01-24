@@ -8,6 +8,7 @@ import 'package:tapto/features/dashboard/presentation/pages/setting_screen.dart'
 import 'package:tapto/features/onboarding/presentation/pages/onboarding_screen.dart';
 import 'package:tapto/features/dashboard/presentation/pages/search_screen.dart';
 import 'package:tapto/features/auth/presentation/pages/signup_screen.dart';
+import 'package:tapto/features/orders/presentation/pages/my_orders_screen.dart';
 import 'package:tapto/features/splash/presentation/pages/splash_screen.dart';
 import 'package:tapto/features/auth/presentation/pages/login_screen.dart';
 import 'package:tapto/features/dashboard/presentation/pages/wish_list_screen.dart';
@@ -27,6 +28,7 @@ class AppRoutes {
   static const String cart = '/cart';
   static const String wishlist = '/wish-list';
   static const String setting = '/setting';
+  static const String myOrders = '/my-orders';
 
   /// Route map
   static final Map<String, WidgetBuilder> routes = {
@@ -42,5 +44,6 @@ class AppRoutes {
     cart: (context) => const CartScreen(),
     wishlist: (context) => const WishlistScreen(),
     setting: (context) => const SettingScreen(),
+    myOrders: (context) => const MyOrdersScreen(),
   };
 }

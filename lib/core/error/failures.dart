@@ -20,3 +20,27 @@ class ApiFailure extends Failure {
   const ApiFailure({String message = "API Failure", this.statusCode})
     : super(message);
 }
+class AuthenticationFailure extends Failure {
+  const AuthenticationFailure({String message = "Authentication Failure"})
+    : super(message);
+}
+class ServerFailure extends Failure {
+  final int? statusCode;
+  final dynamic data;
+
+  const ServerFailure({
+    String message = "Server Failure",
+    this.statusCode,
+    this.data,
+  }) : super(message);
+}
+class CacheFailure extends Failure {
+  const CacheFailure({String message = "Cache Failure"})
+    : super(message);
+}
+class NetworkFailure extends Failure {
+  const NetworkFailure({String message = "Network Failure"})
+    : super(message);
+}
+
+

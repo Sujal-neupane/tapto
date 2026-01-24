@@ -135,7 +135,7 @@ class ProfileScreen extends ConsumerWidget {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Quick Actions',
-                  style: AppTextStyles.body?.copyWith(
+                  style: AppTextStyles.body.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -151,10 +151,7 @@ class ProfileScreen extends ConsumerWidget {
                       title: 'My Orders',
                       color: Colors.blue,
                       onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Orders feature coming soon!'),
-                          ),
+                        Navigator.pushNamed(context, AppRoutes.myOrders
                         );
                       },
                     ),
@@ -166,10 +163,7 @@ class ProfileScreen extends ConsumerWidget {
                       title: 'Wishlist',
                       color: Colors.red,
                       onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Wishlist feature coming soon!'),
-                          ),
+                        Navigator.pushNamed(context, AppRoutes.wishlist
                         );
                       },
                     ),
@@ -185,11 +179,8 @@ class ProfileScreen extends ConsumerWidget {
                       title: 'Track Order',
                       color: Colors.orange,
                       onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Tracking feature coming soon!'),
-                          ),
-                        );
+                        // Navigator.pushNamed(context, AppRoutes.trackOrderLiveScreen
+                        // );
                       },
                     ),
                   ),
@@ -218,7 +209,7 @@ class ProfileScreen extends ConsumerWidget {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   'Account',
-                  style: AppTextStyles.body?.copyWith(
+                  style: AppTextStyles.body.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
                 ),
