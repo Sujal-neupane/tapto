@@ -5,12 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tapto/core/api/api_client.dart';
 import 'package:tapto/core/api/api_endpoint.dart';
+import 'package:tapto/core/services/storage/storage_provider.dart';
 import 'package:tapto/core/services/storage/token_storage_service.dart';
 import 'package:tapto/features/auth/data/models/auth_api_model.dart';
 
 /// Provider for AuthRemoteDatasource
 final authRemoteDataSourceProvider = Provider<AuthRemoteDataSource>((ref) {
-  return AuthRemoteDataSourceImpl(apiClient: ref.read(apiClientProvider));
+  return AuthRemoteDataSourceImpl(apiClient: ref.read(apiClientProvider), tokenService: ref.read(tokenStorageServiceProvider));
 });
 
 /// Abstract interface for remote authentication data source
@@ -32,9 +33,11 @@ abstract class AuthRemoteDataSource {
 /// Implementation of remote authentication data source
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final ApiClient _apiClient;
+  final TokenStorageService _tokenService;
 
-  AuthRemoteDataSourceImpl({required ApiClient apiClient})
-      : _apiClient = apiClient;
+  AuthRemoteDataSourceImpl({required ApiClient apiClient, required TokenStorageService tokenService})
+      : _apiClient = apiClient,
+        _tokenService = tokenService;
 
   @override
   Future<AuthApiModel> getUserById(String authId) async {
@@ -71,9 +74,9 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
             _apiClient.setAuthToken(response.data['token']);
 
             // Save token to storage for later use
-            final prefs = await SharedPreferences.getInstance();
-            final tokenService = TokenStorageService(prefs);
-            await tokenService.saveToken(response.data['token']);
+            final token = response.data['token'] as String;
+            await _tokenService.saveToken(token);
+            await _tokenService.saveUserId(loggedInUser.id!);
           }
 
           return loggedInUser;

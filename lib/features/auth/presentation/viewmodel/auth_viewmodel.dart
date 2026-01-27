@@ -89,45 +89,38 @@ class AuthViewModel extends Notifier<AuthState> {
   }
 
   Future<void> getCurrentUser() async {
-    state = state.copyWith(status: AuthStatus.loading);
+  state = state.copyWith(status: AuthStatus.loading);
 
-    final tokenStorage = ref.read(tokenStorageServiceProvider);
-    final userId = tokenStorage.getUserId();
-    if (userId != null) {
-      final hiveService = ref.read(hiveServiceProvider);
-      final userModel = await hiveService.getUserById(userId);
-      if (userModel != null) {
-        state = state.copyWith(
-          status: AuthStatus.authenticated,
-          user: userModel.toEntity(),
-        );
-        return;
-      }
-    }
+  final tokenStorage = ref.read(tokenStorageServiceProvider);
+  final String? token = tokenStorage.getToken();
 
-    final result = await _getCurrentUserUsecase();
-    result.fold(
-      (failure) => state = state.copyWith(
-        status: AuthStatus.unauthenticated,
-        errorMessage: failure.message,
-      ),
-      (user) async {
-        if (user != null) {
-          final hiveService = ref.read(hiveServiceProvider);
-          // Save as UserModel, password unknown from API, so use empty string
-          await hiveService.saveUser(
-            UserModel.fromEntity(user, ''),
-          );
-        }
-        state = state.copyWith(
-          status: user != null
-              ? AuthStatus.authenticated
-              : AuthStatus.unauthenticated,
-          user: user,
-        );
-      },
-    );
+  if (token == null || token.isEmpty) {
+    state = state.copyWith(status: AuthStatus.unauthenticated, user: null);
+    return;
   }
+
+  // Always fetch from backend for freshness
+  final result = await _getCurrentUserUsecase();
+
+  result.fold(
+    (failure) => state = state.copyWith(
+      status: AuthStatus.unauthenticated,
+      errorMessage: failure.message,
+    ),
+    (user) async {
+      if (user != null) {
+        final hiveService = ref.read(hiveServiceProvider);
+        await hiveService.saveUser(UserModel.fromEntity(user, ''));
+      }
+      state = state.copyWith(
+        status: user != null
+            ? AuthStatus.authenticated
+            : AuthStatus.unauthenticated,
+        user: user,
+      );
+    },
+  );
+}
 
   Future<void> logout() async {
     state = state.copyWith(status: AuthStatus.loading);
@@ -189,21 +182,22 @@ class AuthViewModel extends Notifier<AuthState> {
       );
 
       final data = response.data;
-      if (data['success'] == true && data['data'] != null) {
-        final profilePicturePath = data['data']['profilePicture'];
-        if (state.user != null) {
-          final updatedUser = state.user!.copyWith(profilePicture: profilePicturePath);
-          final hiveService = ref.read(hiveServiceProvider);
-          // Save as UserModel, password unknown, so use empty string
-          await hiveService.saveUser(
-            UserModel.fromEntity(updatedUser, ''),
-          );
-          state = state.copyWith(
-            status: AuthStatus.authenticated,
-            user: updatedUser,
-          );
-        }
-      } else {
+   if (data['success'] == true && data['data'] != null) {
+  final profilePicturePath = data['data']['profilePicture'];
+  if (state.user != null) {
+    final updatedUser = state.user!.copyWith(profilePicture: profilePicturePath);
+    final hiveService = ref.read(hiveServiceProvider);
+    await hiveService.saveUser(
+      UserModel.fromEntity(updatedUser, ''),
+    );
+    // Refresh user from backend to ensure latest info
+    await getCurrentUser();
+    state = state.copyWith(
+      status: AuthStatus.authenticated,
+      user: updatedUser,
+    );
+  }
+} else {
         throw Exception(data['message'] ?? 'Upload failed');
       }
     } catch (e) {

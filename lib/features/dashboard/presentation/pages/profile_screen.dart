@@ -22,6 +22,7 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final ImagePicker _picker = ImagePicker();
+  
 
   // Show bottom sheet for image source selection
   Future<void> _showPickOptions() async {
@@ -186,6 +187,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+
     final currentUser = ref.watch(currentUserProvider);
 
     final userName = currentUser?.name ?? 'Guest User';
@@ -193,10 +195,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final userInitial =
         userName.isNotEmpty ? userName[0].toUpperCase() : 'G';
 
-    // Construct full image URL using your backend baseUrl
-   final profileImageUrl = currentUser?.profilePicture != null
+    final profileImageUrl = currentUser?.profilePicture != null
     ? "${ApiEndpoints.baseUrl}${currentUser!.profilePicture}"
     : null;
+    print('Profile picture path: ${currentUser?.profilePicture}');
 
     return Scaffold(
       backgroundColor: AppColors.surface,

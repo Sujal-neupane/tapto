@@ -22,7 +22,11 @@ final dioProvider = Provider<Dio>((ref) {
       },
     ),
   );
-  
+
+  final token = tokenService.getToken();
+    if (token != null) {
+        dio.options.headers['Authorization'] = 'Bearer $token';
+  }
 
   // Get the tokenService from its provider
  final savedToken = tokenService.getToken();

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../models/onboarding_model.dart';
+import 'package:tapto/features/onboarding/data/models/onboarding_model.dart';
 
 /// Reusable widget for a single onboarding page
 /// This follows the DRY principle - we create one widget and reuse it
