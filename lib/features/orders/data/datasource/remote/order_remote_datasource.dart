@@ -20,7 +20,6 @@ abstract class OrderRemoteDataSource {
   Future<bool> cancelOrder(String orderId, String reason);
 }
 
-/// ===== IMPLEMENTATION =====
 class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
   final ApiClient apiClient;
 
@@ -29,17 +28,51 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
   @override
   Future<List<OrderModel>> getMyOrders() async {
     try {
+      // ✅ FIXED: Changed from /orders/user to /orders/my-orders
       final response = await apiClient.get(ApiEndpoints.userOrders);
+
       final data = response.data;
+      List<dynamic> ordersJson;
 
-      final List list =
-          data is Map<String, dynamic> ? (data['data'] ?? []) : data;
+      if (data is Map) {
+        if (data['success'] == false) {
+          throw ServerException(
+            message: data['message'] ?? 'Failed to fetch orders',
+            statusCode: response.statusCode,
+            data: data,
+          );
+        }
+        ordersJson = data['data'] ?? [];
+      } else if (data is List) {
+        ordersJson = data;
+      } else {
+        throw ServerException(message: 'Unexpected response format');
+      }
 
-      return list
-          .map((e) => OrderModel.fromJson(e as Map<String, dynamic>))
+      return ordersJson
+          .map((json) => OrderModel.fromJson(json as Map<String, dynamic>))
           .toList();
-    } catch (e) {
-      throw ServerException(message: e.toString());
+    } on DioException catch (e) {
+      throw ServerException(
+        message: _getDioErrorMessage(e),
+        statusCode: e.response?.statusCode,
+        data: e.response?.data,
+      );
+    }
+  }
+
+  String _getDioErrorMessage(DioException e) {
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+        return 'Connection timeout';
+      case DioExceptionType.receiveTimeout:
+        return 'Receive timeout';
+      case DioExceptionType.badResponse:
+        return e.response?.data['message'] ?? 'Server error';
+      case DioExceptionType.connectionError:
+        return 'No internet connection';
+      default:
+        return 'An error occurred';
     }
   }
 
@@ -55,13 +88,13 @@ class OrderRemoteDataSourceImpl implements OrderRemoteDataSource {
   }
 
   @override
-  Future<OrderModel> createOrder({
-    required List<OrderItemModel> items,
-    required String addressId,
-    required String paymentMethodId,
-    required Map<String, dynamic> shippingAddress,
-    required Map<String, dynamic> paymentMethod,
-  }) async {
+ Future<OrderModel> createOrder({
+  required List<OrderItemModel> items,
+  required String addressId,
+  required String paymentMethodId,
+  required Map<String, dynamic> shippingAddress,
+  required Map<String, dynamic> paymentMethod,
+}) async {
     try {
       final response = await apiClient.post(
         ApiEndpoints.orders,

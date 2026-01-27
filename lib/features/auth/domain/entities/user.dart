@@ -8,6 +8,7 @@ class User extends Equatable {
   final String? preference; // Shopping preference (Men/Women)
   final String? profilePicture;
   final String? phoneNumber;
+  final bool isAdmin;
 
   const User({
     required this.id,
@@ -16,6 +17,7 @@ class User extends Equatable {
     this.preference,
     this.profilePicture,
     this.phoneNumber,
+    this.isAdmin = false,
   });
 
   @override
@@ -27,6 +29,7 @@ class User extends Equatable {
     String? preference,
     String? profilePicture,
     String? phoneNumber,
+    bool? isAdmin,
   }) {
     return User(
       id: id ?? this.id,
@@ -35,6 +38,7 @@ class User extends Equatable {
       preference: preference ?? this.preference,
       profilePicture: profilePicture ?? this.profilePicture,
       phoneNumber: phoneNumber ?? this.phoneNumber,
+      isAdmin: isAdmin ?? this.isAdmin,
     );
   }
 }

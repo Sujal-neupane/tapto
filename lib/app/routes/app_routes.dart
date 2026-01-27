@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:tapto/features/admin/presentation/pages/admin_dashboard_screen.dart';
 import 'package:tapto/features/auth/presentation/pages/forgot_password_screen.dart';
 import 'package:tapto/features/auth/presentation/pages/otp_screen.dart';
 import 'package:tapto/features/dashboard/presentation/pages/cart_screen.dart';
+import 'package:tapto/features/dashboard/presentation/pages/checkout_screen.dart';
 import 'package:tapto/features/dashboard/presentation/pages/dashboard_screen.dart';
 import 'package:tapto/features/dashboard/presentation/pages/filter_screen.dart';
 import 'package:tapto/features/dashboard/presentation/pages/setting_screen.dart';
@@ -29,6 +31,10 @@ class AppRoutes {
   static const String wishlist = '/wish-list';
   static const String setting = '/setting';
   static const String myOrders = '/my-orders';
+  static const String adminDashboard = '/admin-dashboard';
+  static const String checkOut = '/check-out';
+  static const String orderDetails = '/order-details';
+  static const String orderTracking = '/order-tracking';
 
   /// Route map
   static final Map<String, WidgetBuilder> routes = {
@@ -45,5 +51,7 @@ class AppRoutes {
     wishlist: (context) => const WishlistScreen(),
     setting: (context) => const SettingScreen(),
     myOrders: (context) => const MyOrdersScreen(),
+    adminDashboard: (context) => const AdminDashboardScreen(),
+    checkOut: (context) => const CheckoutScreen(),
   };
 }

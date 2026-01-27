@@ -13,6 +13,7 @@ class OrderEntity {
   final DateTime createdAt;
   final DateTime? deliveredAt;
   final String? cancellationReason;
+  final List<TrackingEntity> tracking;
 
   OrderEntity({
     required this.id,
@@ -29,6 +30,7 @@ class OrderEntity {
     required this.createdAt,
     this.deliveredAt,
     this.cancellationReason,
+    required this.tracking
   });
 
   double get itemCount => items.fold(0, (sum, item) => sum + item.quantity);
@@ -95,4 +97,17 @@ enum OrderStatus {
   delivered,
   cancelled,
   refunded,
+}
+class TrackingEntity{
+  final String status;
+  final String description;
+  final DateTime timestamp;
+  final String? location;
+
+  TrackingEntity({
+    required this.status,
+    required this.description,
+    required this.timestamp,
+    this.location,
+  });
 }

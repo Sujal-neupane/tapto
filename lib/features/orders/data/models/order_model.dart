@@ -16,6 +16,7 @@ class OrderModel extends OrderEntity {
     required super.createdAt,
     super.deliveredAt,
     super.cancellationReason,
+    required super.tracking,
   });
 
   factory OrderModel.fromJson(Map<String, dynamic> json) {
@@ -54,6 +55,15 @@ class OrderModel extends OrderEntity {
           ? DateTime.parse(json['deliveredAt'])
           : null,
       cancellationReason: json['cancellationReason'],
+      tracking: (json['tracking'] as List<dynamic>?)
+        ?.map((e) => TrackingEntity(
+              status: e['status'] ?? '',
+              description: e['description'] ?? '',
+              timestamp: DateTime.parse(e['timestamp']),
+              location: e['location'],
+            ))
+        .toList() ??
+        [],
     );
   }
 
@@ -81,6 +91,12 @@ class OrderModel extends OrderEntity {
       'tax': tax,
       'total': total,
       'status': status.name,
+      'tracking': tracking.map((t) => {
+        'status': t.status,
+        'description': t.description,
+        'timestamp': t.timestamp.toIso8601String(),
+        'location': t.location,
+      }).toList(),
     };
   }
 
@@ -100,6 +116,7 @@ class OrderModel extends OrderEntity {
       createdAt: entity.createdAt,
       deliveredAt: entity.deliveredAt,
       cancellationReason: entity.cancellationReason,
+      tracking: entity.tracking,
     );
   }
 

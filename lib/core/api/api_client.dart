@@ -1,10 +1,16 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
+import 'package:tapto/core/services/storage/token_storage_service.dart';
 import 'api_endpoint.dart';
+
+// Import your token service and its provider
+import 'package:tapto/core/services/storage/storage_provider.dart';
+
 
 /// Provider for Dio instance
 final dioProvider = Provider<Dio>((ref) {
+  final tokenService = ref.watch(tokenStorageServiceProvider);
   final dio = Dio(
     BaseOptions(
       baseUrl: ApiEndpoints.baseUrl,
@@ -16,6 +22,13 @@ final dioProvider = Provider<Dio>((ref) {
       },
     ),
   );
+  
+
+  // Get the tokenService from its provider
+ final savedToken = tokenService.getToken();
+ if (savedToken != null) {
+    dio.options.headers['Authorization'] = 'Bearer $savedToken';
+  }
 
   // Add pretty logger for development
   dio.interceptors.add(
@@ -34,14 +47,16 @@ final dioProvider = Provider<Dio>((ref) {
 
 /// Provider for ApiClient
 final apiClientProvider = Provider<ApiClient>((ref) {
-  return ApiClient(ref.read(dioProvider));
+  return ApiClient(ref.read(dioProvider), ref.read(tokenStorageServiceProvider));
 });
 
 /// API Client for handling HTTP requests
 class ApiClient {
   final Dio _dio;
+  final TokenStorageService _tokenStorage;
 
-  ApiClient(this._dio);
+
+  ApiClient(this._dio, this._tokenStorage);
 
   /// GET request
   Future<Response> get(
@@ -140,6 +155,7 @@ class ApiClient {
       throw _handleError(e);
     }
   }
+  // ...
 
   /// Handle Dio errors and convert to user-friendly messages
   Exception _handleError(DioException error) {
@@ -191,17 +207,15 @@ class ApiClient {
         return 'Something went wrong. Status code: $statusCode';
     }
   }
-
-  /// Set authorization token
-  void setAuthToken(String token) {
-    _dio.options.headers['Authorization'] = 'Bearer $token';
+  void setAuthToken(String token){
+    _dio.options.headers['Authorization']= 'Bearer $token';
+    _tokenStorage.saveToken(token);
   }
 
-  /// Remove authorization token
-  void removeAuthToken() {
+  void removeAuthToken(){
     _dio.options.headers.remove('Authorization');
+    _tokenStorage.clearAuthData();
   }
-
   /// Update base URL (useful for switching environments)
   void updateBaseUrl(String newBaseUrl) {
     _dio.options.baseUrl = newBaseUrl;

@@ -43,7 +43,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   Widget build(BuildContext context) {
     final authState = ref.watch(authViewModelProvider);
 
-    ref.listen<AuthState>(authViewModelProvider, (previous, next) {
+    ref.listen<AuthState>(authViewModelProvider, (previous, next) async {
       if (!mounted) return;
       if (next.status == AuthStatus.authenticated) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -52,7 +52,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
+        if (next.user?.isAdmin == true) {
+          Navigator.pushReplacementNamed(context, AppRoutes.adminDashboard);
+        } else {
+          Navigator.pushReplacementNamed(context, AppRoutes.dashboard);
+        }
       } else if (next.status == AuthStatus.error) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(

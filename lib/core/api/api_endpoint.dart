@@ -31,11 +31,12 @@ class ApiEndpoints {
   static const String userLogin = '/api/auth/login';
   static const String userRegister = '/api/auth/register';
   static String userById(String id) => '/api/auth/$id';
+  static const String uploadImage = '/api/auth/upload-profile-picture';
 
   // ========== Product Endpoints =========
-  static const String products = '/api/products';
-  static String productById(String id) => '/api/products/$id';
-  static const String productsByCategory = '/api/products/category';
+  static const String products = '/admin/products';
+  static String productById(String id) => '/admin/products/$id';
+  static const String productsByCategory = '/admin/products/category';
 
   // ========== Category Endpoints =========
   static const String categories = '/api/categories';
@@ -43,13 +44,14 @@ class ApiEndpoints {
 
   // ========== Order Endpoints =========
   static const String orders = '/api/orders';
-  static const String userOrders = '/api/orders/user';
+  static const String userOrders = '/api/orders/my-orders';
   static String orderById(String id) => '/api/orders/$id';
   static const String orderStatusUpdate = '/api/orders/status';
   static const String liveTrackingUpdate = '/api/orders/:id/track';
   static const String cancelOrder = '/api/orders/cancel';
   static const String updateorderStatus  = '/api/orders/:id/status';
   static const String updateLiveLocation  = '/api/orders/:id/location';
+  static String orderTracking(String id) => '/api/orders/$id/track';
 
 
   // ========== Cart Endpoints =========

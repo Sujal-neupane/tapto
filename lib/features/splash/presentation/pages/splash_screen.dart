@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/app/routes/app_routes.dart';
 import 'package:tapto/core/services/storage/user_session_service.dart';
 import 'package:tapto/features/auth/presentation/viewmodel/auth_viewmodel.dart';
+import 'package:tapto/features/auth/presentation/state/auth_state.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -31,19 +32,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
   }
 
   void _setupAnimations() {
-    // Fade controller for overall content
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
 
-    // Slide controller for text elements
     _slideController = AnimationController(
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     );
 
-    // Scale controller for logo
     _scaleController = AnimationController(
       duration: const Duration(milliseconds: 1200),
       vsync: this,
@@ -67,8 +65,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     _slideAnimation =
         Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
-        );
+      CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+    );
   }
 
   void _startAnimations() async {
@@ -85,30 +83,54 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     try {
       final userSessionService = UserSessionService();
 
-      // Add timeout to prevent infinite waiting
+      // Check if user is logged in (token/session)
       final isLoggedIn = await userSessionService.isLoggedIn().timeout(
         const Duration(seconds: 5),
         onTimeout: () => false,
       );
 
       if (isLoggedIn) {
-        // Load current user into auth state
+        // Load user from Hive (and API fallback if needed)
         await ref.read(authViewModelProvider.notifier).getCurrentUser();
 
-        final isOnboardingComplete = await userSessionService
-            .isOnboardingComplete()
-            .timeout(const Duration(seconds: 5), onTimeout: () => false);
-
-        if (mounted) {
-          Navigator.pushReplacementNamed(
-            context,
-            isOnboardingComplete ? AppRoutes.dashboard : AppRoutes.onboarding,
-          );
+        // Wait for the AuthState to update (max 2 seconds)
+        int waited = 0;
+        while (waited < 2000) {
+          final authState = ref.read(authViewModelProvider);
+          if (authState.status == AuthStatus.authenticated && authState.user != null) {
+            break;
+          }
+          await Future.delayed(const Duration(milliseconds: 100));
+          waited += 100;
         }
-      } else {
-        if (mounted) {
+
+        if (!mounted) return;
+
+        final authState = ref.read(authViewModelProvider);
+        final user = authState.user;
+
+        if (authState.status == AuthStatus.authenticated && user != null) {
+          if (user.isAdmin) {
+            debugPrint('Admin user detected: ${user.email}');
+            Navigator.pushReplacementNamed(context, AppRoutes.adminDashboard);
+          } else {
+            final isOnboardingComplete = await userSessionService
+                .isOnboardingComplete()
+                .timeout(const Duration(seconds: 5), onTimeout: () => false);
+
+            debugPrint('Regular user detected: ${user.email}');
+            Navigator.pushReplacementNamed(
+              context,
+              isOnboardingComplete
+                  ? AppRoutes.dashboard
+                  : AppRoutes.onboarding,
+            );
+          }
+        } else {
           Navigator.pushReplacementNamed(context, AppRoutes.login);
         }
+      } else {
+        Navigator.pushReplacementNamed(context, AppRoutes.login);
       }
     } catch (e) {
       debugPrint('Error checking auth status: $e');
@@ -131,7 +153,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
-    // Responsive sizes
     final logoSize = screenWidth < 360 ? 100.0 : 120.0;
     final titleFontSize = screenWidth < 360 ? 26.0 : 32.0;
     final subtitleFontSize = screenWidth < 360 ? 14.0 : 16.0;

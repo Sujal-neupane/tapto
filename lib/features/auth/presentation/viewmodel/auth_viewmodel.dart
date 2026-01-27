@@ -1,10 +1,17 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tapto/core/api/api_endpoint.dart';
+import 'package:tapto/core/services/hive/hive_services.dart';
+import 'package:tapto/core/services/storage/storage_provider.dart';
 import 'package:tapto/features/auth/domain/usecases/get_current_user_usecase.dart';
 import 'package:tapto/features/auth/domain/usecases/login_usecase.dart';
 import 'package:tapto/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:tapto/features/auth/domain/usecases/register_usecase.dart';
 import 'package:tapto/features/auth/domain/usecases/auth_params.dart';
 import 'package:tapto/features/auth/presentation/state/auth_state.dart';
+import 'package:tapto/features/auth/data/models/user_model.dart'; // <-- Import UserModel
 
 final authViewModelProvider = NotifierProvider<AuthViewModel, AuthState>(
   AuthViewModel.new,
@@ -47,8 +54,14 @@ class AuthViewModel extends Notifier<AuthState> {
         status: AuthStatus.error,
         errorMessage: failure.message,
       ),
-      (user) =>
-          state = state.copyWith(status: AuthStatus.registered, user: user),
+      (user) async {
+        final hiveService = ref.read(hiveServiceProvider);
+        // Save as UserModel, using the password provided at registration
+        await hiveService.saveUser(
+          UserModel.fromEntity(user, password),
+        );
+        state = state.copyWith(status: AuthStatus.registered, user: user);
+      },
     );
   }
 
@@ -64,27 +77,55 @@ class AuthViewModel extends Notifier<AuthState> {
         status: AuthStatus.error,
         errorMessage: failure.message,
       ),
-      (user) =>
-          state = state.copyWith(status: AuthStatus.authenticated, user: user),
+      (user) async {
+        final hiveService = ref.read(hiveServiceProvider);
+        // Save as UserModel, using the password provided at login
+        await hiveService.saveUser(
+          UserModel.fromEntity(user, password),
+        );
+        state = state.copyWith(status: AuthStatus.authenticated, user: user);
+      },
     );
   }
 
   Future<void> getCurrentUser() async {
     state = state.copyWith(status: AuthStatus.loading);
 
-    final result = await _getCurrentUserUsecase();
+    final tokenStorage = ref.read(tokenStorageServiceProvider);
+    final userId = tokenStorage.getUserId();
+    if (userId != null) {
+      final hiveService = ref.read(hiveServiceProvider);
+      final userModel = await hiveService.getUserById(userId);
+      if (userModel != null) {
+        state = state.copyWith(
+          status: AuthStatus.authenticated,
+          user: userModel.toEntity(),
+        );
+        return;
+      }
+    }
 
+    final result = await _getCurrentUserUsecase();
     result.fold(
       (failure) => state = state.copyWith(
         status: AuthStatus.unauthenticated,
         errorMessage: failure.message,
       ),
-      (user) => state = state.copyWith(
-        status: user != null
-            ? AuthStatus.authenticated
-            : AuthStatus.unauthenticated,
-        user: user,
-      ),
+      (user) async {
+        if (user != null) {
+          final hiveService = ref.read(hiveServiceProvider);
+          // Save as UserModel, password unknown from API, so use empty string
+          await hiveService.saveUser(
+            UserModel.fromEntity(user, ''),
+          );
+        }
+        state = state.copyWith(
+          status: user != null
+              ? AuthStatus.authenticated
+              : AuthStatus.unauthenticated,
+          user: user,
+        );
+      },
     );
   }
 
@@ -98,7 +139,15 @@ class AuthViewModel extends Notifier<AuthState> {
         status: AuthStatus.error,
         errorMessage: failure.message,
       ),
-      (_) => state = state.copyWith(status: AuthStatus.loggedOut, user: null),
+      (_) async {
+        final tokenStorage = ref.read(tokenStorageServiceProvider);
+        final userId = tokenStorage.getUserId();
+        if (userId != null) {
+          final hiveService = ref.read(hiveServiceProvider);
+          await hiveService.deleteUser(userId);
+        }
+        state = state.copyWith(status: AuthStatus.loggedOut, user: null);
+      },
     );
   }
 
@@ -109,29 +158,83 @@ class AuthViewModel extends Notifier<AuthState> {
   void resetAuthState() {
     state = const AuthState();
   }
+
+  Future<void> uploadProfilePicture(File image) async {
+    state = state.copyWith(status: AuthStatus.loading);
+
+    try {
+      final dio = Dio();
+      final String url = "${ApiEndpoints.baseUrl}${ApiEndpoints.uploadImage}";
+
+      final tokenStorage = ref.read(tokenStorageServiceProvider);
+      final String? token = tokenStorage.getToken();
+
+      if (token == null || token.isEmpty) {
+        throw Exception('No auth token found');
+      }
+
+      final formData = FormData.fromMap({
+        'profilePicture': await MultipartFile.fromFile(image.path),
+      });
+
+      final response = await dio.post(
+        url,
+        data: formData,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'multipart/form-data',
+          },
+        ),
+      );
+
+      final data = response.data;
+      if (data['success'] == true && data['data'] != null) {
+        final profilePicturePath = data['data']['profilePicture'];
+        if (state.user != null) {
+          final updatedUser = state.user!.copyWith(profilePicture: profilePicturePath);
+          final hiveService = ref.read(hiveServiceProvider);
+          // Save as UserModel, password unknown, so use empty string
+          await hiveService.saveUser(
+            UserModel.fromEntity(updatedUser, ''),
+          );
+          state = state.copyWith(
+            status: AuthStatus.authenticated,
+            user: updatedUser,
+          );
+        }
+      } else {
+        throw Exception(data['message'] ?? 'Upload failed');
+      }
+    } catch (e) {
+      state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: e.toString(),
+      );
+    }
+  }
 }
 
-/// ==================== CONVENIENCE PROVIDERS ====================
-
-/// Provider to check if user is authenticated
 final isAuthenticatedProvider = Provider<bool>((ref) {
   final authState = ref.watch(authViewModelProvider);
   return authState.status == AuthStatus.authenticated;
 });
 
-/// Provider to get current user
 final currentUserProvider = Provider((ref) {
   final authState = ref.watch(authViewModelProvider);
   return authState.user;
 });
 
-/// Provider to get auth error message
+final isAdminProvider = Provider<bool>((ref) {
+  final user = ref.watch(currentUserProvider);  
+  return user?.isAdmin ?? false;
+});
+
 final authErrorProvider = Provider<String?>((ref) {
   final authState = ref.watch(authViewModelProvider);
   return authState.errorMessage;
 });
 
-/// Provider to check if loading
 final isLoadingProvider = Provider<bool>((ref) {
   final authState = ref.watch(authViewModelProvider);
   return authState.status == AuthStatus.loading;

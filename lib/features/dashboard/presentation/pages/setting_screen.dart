@@ -262,7 +262,7 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
-      style: AppTextStyles.body?.copyWith(
+      style: AppTextStyles.body.copyWith(
         color: AppColors.textPrimary,
         fontWeight: FontWeight.bold,
       ),
@@ -367,7 +367,7 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
         ),
         value: value,
         onChanged: onChanged,
-        activeColor: AppColors.primary,
+        activeThumbColor: AppColors.primary,
       ),
     );
   }
