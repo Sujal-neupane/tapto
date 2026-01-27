@@ -312,7 +312,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
     if (stats == null) return const SizedBox.shrink();
 
     double avgOrderValue = 0;
-    if ((stats.totalOrders != null && stats.totalOrders > 0)) {
+    if ((stats.totalOrders > 0)) {
       avgOrderValue = stats.totalRevenue / stats.totalOrders;
     }
 

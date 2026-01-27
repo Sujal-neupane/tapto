@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import '../../domain/entities/product_entity.dart';
-import 'package:state_notifier/state_notifier.dart';
 
 // Minimal ProductViewModel implementation to fix the missing type error
 class ProductViewModel extends StateNotifier<AsyncValue<List<ProductEntity>>> {

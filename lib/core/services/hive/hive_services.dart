@@ -22,24 +22,29 @@ class HiveService {
   bool _isInitialized = false;
 
   /// Initialize Hive and register adapters
-  Future<void> init() async {
-    if (_isInitialized) return;
-
+// In HiveService
+Future<void> init({bool useFlutter = true, String? testPath}) async {
+  if (_isInitialized) return;
+  
+  if (useFlutter) {
     await Hive.initFlutter();
-
-    // Register UserModel adapter (generated from user_model.g.dart)
-    if (!Hive.isAdapterRegistered(0)) {
-      Hive.registerAdapter(UserModelAdapter());
-    }
-
-    // Open boxes
-    _userBox = await Hive.openBox<UserModel>(_userBoxName);
-    _ordersBox = await Hive.openBox(_ordersBoxName);
-    _orderCacheBox = await Hive.openBox(_orderCacheBoxName);
-    _generalBox = await Hive.openBox(_generalBoxName);
-
-    _isInitialized = true;
+  } else if (testPath != null) {
+    Hive.init(testPath);
   }
+
+  // Register UserModel adapter (generated from user_model.g.dart)
+  if (!Hive.isAdapterRegistered(0)) {
+    Hive.registerAdapter(UserModelAdapter());
+  }
+
+  // Open boxes
+  _userBox = await Hive.openBox<UserModel>(_userBoxName);
+  _ordersBox = await Hive.openBox(_ordersBoxName);
+  _orderCacheBox = await Hive.openBox(_orderCacheBoxName);
+  _generalBox = await Hive.openBox(_generalBoxName);
+
+  _isInitialized = true;
+}
 
   /// Ensure initialization before operations
   Future<void> _ensureInitialized() async {
@@ -48,9 +53,7 @@ class HiveService {
     }
   }
 
-  // ========================================
-  // USER METHODS
-  // ========================================
+ 
 
   /// Save a new user
   Future<void> saveUser(UserModel user) async {

@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/app/theme/app_colors.dart';
-import 'package:tapto/app/theme/app_spacing.dart';
 import 'package:tapto/features/orders/domain/enitites/order_entity.dart';
 import 'package:intl/intl.dart';
 import 'order_tracking_screen.dart';
