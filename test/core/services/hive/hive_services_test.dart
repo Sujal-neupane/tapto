@@ -1,7 +1,5 @@
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:hive/hive.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:tapto/core/services/hive/hive_services.dart';
 import 'package:tapto/features/auth/data/models/user_model.dart';
 import 'dart:io';

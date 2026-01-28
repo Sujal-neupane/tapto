@@ -16,10 +16,8 @@ void main() {
       ),
     );
 
-    // Check label
     expect(find.text('Tapto'), findsOneWidget);
 
-    // Tap and check callback
     await tester.tap(find.text('Tapto'));
     expect(tapped, true);
   });
