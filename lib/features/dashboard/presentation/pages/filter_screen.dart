@@ -19,6 +19,7 @@ class _FilterScreenState extends State<FilterScreen> {
     'Accessories',
     'Bags',
     'Sports',
+    'Formal',
   ];
   final Set<String> _selectedCategories = {};
 
@@ -47,8 +48,8 @@ class _FilterScreenState extends State<FilterScreen> {
                   RangeSlider(
                     values: _priceRange,
                     min: 0,
-                    max: 500,
-                    divisions: 50,
+                    max: 5000,
+                    divisions: 25,
                     activeColor: AppColors.primary,
                     inactiveColor: AppColors.border,
                     onChanged: (RangeValues values) {

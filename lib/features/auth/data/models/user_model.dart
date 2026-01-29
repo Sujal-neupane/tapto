@@ -21,17 +21,21 @@ class UserModel extends HiveObject {
   @HiveField(4)
   final String? preference;
 
+  @HiveField(5)
+  final bool isAdmin;
+
   UserModel({
     required this.id,
     required this.name,
     required this.email,
     required this.password,
     this.preference,
+    this.isAdmin = false,
   });
 
   /// Convert to domain entity
   User toEntity() {
-    return User(id: id, name: name, email: email, preference: preference);
+    return User(id: id, name: name, email: email, preference: preference, isAdmin: isAdmin);
   }
 
   /// Create from domain entity
@@ -42,6 +46,7 @@ class UserModel extends HiveObject {
       email: user.email,
       password: password,
       preference: user.preference,
+      isAdmin: user.isAdmin,
     );
   }
 
@@ -51,6 +56,7 @@ class UserModel extends HiveObject {
     required String email,
     required String password,
     String? preference,
+    String? id,
   }) {
     return UserModel(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -58,6 +64,7 @@ class UserModel extends HiveObject {
       email: email,
       password: password,
       preference: preference,
+      isAdmin: false,
     );
   }
 
@@ -72,7 +79,7 @@ class UserModel extends HiveObject {
     String? email,
     String? password,
     String? preference,
-    DateTime? createdAt,
+    bool? isAdmin,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -80,6 +87,7 @@ class UserModel extends HiveObject {
       email: email ?? this.email,
       password: password ?? this.password,
       preference: preference ?? this.preference,
+      isAdmin: isAdmin ?? this.isAdmin,
     );
   }
 }

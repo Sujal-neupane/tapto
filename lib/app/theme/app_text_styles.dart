@@ -38,4 +38,6 @@ class AppTextStyles {
   static TextStyle? get hint => null;
 
   static TextStyle? get caption => null;
+
+  static get h3 => null;
 }

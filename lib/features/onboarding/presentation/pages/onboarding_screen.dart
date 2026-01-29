@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../../models/onboarding_model.dart';
+import 'package:tapto/features/onboarding/data/models/onboarding_model.dart';
 import '../../../../core/widgets/onboarding_page_widget.dart';
 import '../../../../core/widgets/page_indicator_widget.dart';
 import '../../../../core/services/storage/user_session_service.dart';

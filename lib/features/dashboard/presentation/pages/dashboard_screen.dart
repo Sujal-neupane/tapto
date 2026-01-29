@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tapto/features/dashboard/presentation/viewmodel/cart_viewmodel.dart';
 import '../../presentation/pages/home_swipe_screen.dart';
 import '../../presentation/pages/wish_list_screen.dart';
 import '../../presentation/pages/profile_screen.dart';
@@ -19,10 +20,10 @@ class DashboardScreen extends ConsumerStatefulWidget {
 class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   int _currentIndex = 0;
 
-  final _pages = const <Widget>[
-    HomeSwipeScreen(),
-    WishlistScreen(),
-    ProfileScreen(),
+  final _pages = <Widget>[
+    const HomeSwipeScreen(),
+    const WishlistScreen(),
+    const ProfileScreen(),
   ];
 
   String _getTitle() {
@@ -38,6 +39,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final cartState = ref.watch(cartViewModelProvider);
+    final cartItemCount = cartState.itemCount;
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -70,18 +74,13 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
             const SizedBox(width: AppSpacing.md),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _getTitle(),
-                    style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87,
-                    ),
-                  ),
-                ],
+              child: Text(
+                _getTitle(),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
               ),
             ),
           ],
@@ -124,30 +123,31 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   );
                 },
               ),
-              Positioned(
-                top: 8,
-                right: 8,
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                  constraints: const BoxConstraints(
-                    minWidth: 16,
-                    minHeight: 16,
-                  ),
-                  child: const Text(
-                    '0',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
+              if (cartItemCount > 0)
+                Positioned(
+                  top: 2,
+                  right: 8,
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
                     ),
-                    textAlign: TextAlign.center,
+                    constraints: const BoxConstraints(
+                      minWidth: 16,
+                      minHeight: 9,
+                    ),
+                    child: Text(
+                      '$cartItemCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
                 ),
-              ),
             ],
           ),
           const SizedBox(width: 8),
@@ -165,45 +165,44 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
           ],
         ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _NavItem(
-                  icon: Icons.explore_rounded,
-                  label: 'Discover',
-                  isSelected: _currentIndex == 0,
-                  onTap: () {
-                    if (_currentIndex != 0) {
-                      setState(() => _currentIndex = 0);
-                    }
-                  },
-                ),
-                _NavItem(
-                  icon: Icons.favorite_rounded,
-                  label: 'Wishlist',
-                  isSelected: _currentIndex == 1,
-                  badge: 0,
-                  onTap: () {
-                    if (_currentIndex != 1) {
-                      setState(() => _currentIndex = 1);
-                    }
-                  },
-                ),
-                _NavItem(
-                  icon: Icons.person_rounded,
-                  label: 'Profile',
-                  isSelected: _currentIndex == 2,
-                  onTap: () {
-                    if (_currentIndex != 2) {
-                      setState(() => _currentIndex = 2);
-                    }
-                  },
-                ),
-              ],
-            ),
+        // Removed SafeArea to avoid infinite size error
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _NavItem(
+                icon: Icons.explore_rounded,
+                label: 'Discover',
+                isSelected: _currentIndex == 0,
+                onTap: () {
+                  if (_currentIndex != 0) {
+                    setState(() => _currentIndex = 0);
+                  }
+                },
+              ),
+              _NavItem(
+                icon: Icons.favorite_rounded,
+                label: 'Wishlist',
+                isSelected: _currentIndex == 1,
+                badge: 0,
+                onTap: () {
+                  if (_currentIndex != 1) {
+                    setState(() => _currentIndex = 1);
+                  }
+                },
+              ),
+              _NavItem(
+                icon: Icons.person_rounded,
+                label: 'Profile',
+                isSelected: _currentIndex == 2,
+                onTap: () {
+                  if (_currentIndex != 2) {
+                    setState(() => _currentIndex = 2);
+                  }
+                },
+              ),
+            ],
           ),
         ),
       ),
@@ -228,31 +227,15 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-        decoration: BoxDecoration(
-          gradient: isSelected
-              ? LinearGradient(
-                  colors: [
-                    AppColors.primary,
-                    AppColors.primary.withOpacity(0.8),
-                  ],
-                )
-              : null,
-          color: isSelected ? AppColors.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-        ),
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           decoration: BoxDecoration(
-            color: isSelected
-                ? AppColors.primary.withOpacity(0.15)
-                : Colors.transparent,
+            color: isSelected ? AppColors.primary : Colors.transparent,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
@@ -302,6 +285,8 @@ class _NavItem extends StatelessWidget {
                   fontWeight: FontWeight.w600,
                   color: isSelected ? Colors.white : Colors.grey[400],
                 ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
             ],
           ),

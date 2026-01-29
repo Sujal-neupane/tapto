@@ -1,11 +1,17 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tapto/core/api/api_client.dart';
 import 'package:tapto/core/api/api_endpoint.dart';
+import 'package:tapto/core/services/storage/storage_provider.dart';
+import 'package:tapto/core/services/storage/token_storage_service.dart';
 import 'package:tapto/features/auth/data/models/auth_api_model.dart';
 
 /// Provider for AuthRemoteDatasource
 final authRemoteDataSourceProvider = Provider<AuthRemoteDataSource>((ref) {
-  return AuthRemoteDataSourceImpl(apiClient: ref.read(apiClientProvider));
+  return AuthRemoteDataSourceImpl(apiClient: ref.read(apiClientProvider), tokenService: ref.read(tokenStorageServiceProvider));
 });
 
 /// Abstract interface for remote authentication data source
@@ -21,14 +27,17 @@ abstract class AuthRemoteDataSource {
   Future<AuthApiModel> login(String email, String password);
   Future<AuthApiModel> getUserById(String authId);
   Future<AuthApiModel> updateUser(AuthApiModel user);
+  Future<AuthApiModel> uploadProfilePicture(File image);
 }
 
 /// Implementation of remote authentication data source
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   final ApiClient _apiClient;
+  final TokenStorageService _tokenService;
 
-  AuthRemoteDataSourceImpl({required ApiClient apiClient})
-    : _apiClient = apiClient;
+  AuthRemoteDataSourceImpl({required ApiClient apiClient, required TokenStorageService tokenService})
+      : _apiClient = apiClient,
+        _tokenService = tokenService;
 
   @override
   Future<AuthApiModel> getUserById(String authId) async {
@@ -63,6 +72,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           // Set auth token if available - token is at root level in response
           if (response.data['token'] != null) {
             _apiClient.setAuthToken(response.data['token']);
+
+            // Save token to storage for later use
+            final token = response.data['token'] as String;
+            await _tokenService.saveToken(token);
+            await _tokenService.saveUserId(loggedInUser.id!);
           }
 
           return loggedInUser;
@@ -104,6 +118,11 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
           // Set auth token if available - token is at root level in response
           if (response.data['token'] != null) {
             _apiClient.setAuthToken(response.data['token']);
+
+            // Save token to storage for later use
+            final prefs = await SharedPreferences.getInstance();
+            final tokenService = TokenStorageService(prefs);
+            await tokenService.saveToken(response.data['token']);
           }
 
           return registeredUser;
@@ -136,6 +155,32 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       throw Exception(response.data['message'] ?? 'Update failed');
     } catch (e) {
       throw Exception('Update failed: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<AuthApiModel> uploadProfilePicture(File image) async {
+    try {
+      String fileName = image.path.split('/').last;
+      AuthApiModel formData = AuthApiModel.fromJson({
+        "profileImage": await MultipartFile.fromFile(
+          image.path,
+          filename: fileName,
+        ),
+      });
+
+      final response = await _apiClient.post(
+        ApiEndpoints.uploadImage, // Ensure this exists in your ApiEndpoints
+        data: formData,
+      );
+
+      if (response.statusCode == 200) {
+        // Return the image name returned by backend (e.g., "123-profile.jpg")
+        return response.data['data'];
+      }
+      throw Exception('Upload failed');
+    } catch (e) {
+      throw Exception('Failed to upload image: ${e.toString()}');
     }
   }
 }

@@ -8,6 +8,7 @@ class AuthApiModel {
   final String? preference;
   final String phoneNumber;
   final String? profilePicture;
+  final bool isAdmin;
 
   AuthApiModel({
     this.id,
@@ -17,6 +18,7 @@ class AuthApiModel {
     this.preference,
     required this.phoneNumber,
     this.profilePicture,
+    this.isAdmin = false,
   });
 
   // toJson
@@ -29,6 +31,7 @@ class AuthApiModel {
       'shoppingPreference': preference,
       'phoneNumber': phoneNumber,
       'profilePicture': profilePicture,
+      'isAdmin': isAdmin,
     };
   }
 
@@ -44,6 +47,7 @@ class AuthApiModel {
           json['preference'] as String?,
       phoneNumber: json['phoneNumber'] as String? ?? '',
       profilePicture: json['profilePicture'] as String?,
+      isAdmin: json['isAdmin'] as bool? ?? false,
     );
   }
 
@@ -56,6 +60,7 @@ class AuthApiModel {
       preference: preference,
       phoneNumber: phoneNumber,
       profilePicture: profilePicture,
+      isAdmin: isAdmin,
     );
   }
 
@@ -69,6 +74,8 @@ class AuthApiModel {
       preference: user.preference,
       phoneNumber: user.phoneNumber ?? '',
       profilePicture: user.profilePicture,
+      isAdmin: user.isAdmin,
+
     );
   }
 
