@@ -20,7 +20,7 @@ void main() {
     Directory(testPath).deleteSync(recursive: true);
   });
 
-  test('save and get user', () async {
+  test('save and get user', () async { 
     final user = UserModel(
       id: '1',
       name: 'Test User',
@@ -41,7 +41,7 @@ void main() {
       email: 'a@b.com',
       password: '123',
       preference: 'Women',
-      isAdmin: false,
+      isAdmin: false, 
     );
     await hiveService.saveUser(user);
     await hiveService.clearAllUsers();
