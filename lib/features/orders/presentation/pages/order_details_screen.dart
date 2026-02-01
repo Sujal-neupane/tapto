@@ -1,22 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:printing/printing.dart';
 import 'package:tapto/app/theme/app_colors.dart';
 import 'package:tapto/features/orders/domain/enitites/order_entity.dart';
+import 'package:tapto/features/orders/domain/services/invoice_service.dart';
+import 'package:tapto/features/orders/presentation/viewmodel/order_viewmodel.dart';
 import 'package:intl/intl.dart';
 import 'order_tracking_screen.dart';
 
-class OrderDetailsScreen extends StatefulWidget {
+class OrderDetailsScreen extends ConsumerStatefulWidget {
   final OrderEntity order;
 
   const OrderDetailsScreen({super.key, required this.order});
 
   @override
-  State<OrderDetailsScreen> createState() => _OrderDetailsScreenState();
+  ConsumerState<OrderDetailsScreen> createState() => _OrderDetailsScreenState();
 }
 
-class _OrderDetailsScreenState extends State<OrderDetailsScreen> with SingleTickerProviderStateMixin {
+class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> with SingleTickerProviderStateMixin {
   late AnimationController _animController;
   late Animation<double> _fadeAnimation;
+  bool _isCancelling = false;
 
   @override
   void initState() {
@@ -38,6 +43,70 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> with SingleTick
     super.dispose();
   }
 
+  Future<void> _generateAndShowInvoice() async {
+    try {
+      // Show loading indicator
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Row(
+            children: [
+              SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              ),
+              SizedBox(width: 16),
+              Text('Generating invoice...'),
+            ],
+          ),
+          duration: Duration(seconds: 2),
+        ),
+      );
+
+      // Generate and show PDF
+      await Printing.layoutPdf(
+        onLayout: (format) => InvoiceService.generateInvoice(widget.order),
+        name: 'TapTo_Invoice_${widget.order.id.substring(widget.order.id.length - 8)}',
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to generate invoice: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  void _shareOrder() {
+    final orderInfo = '''
+🛍️ TapTo Order Details
+━━━━━━━━━━━━━━━━━━━━
+📦 Order #${widget.order.id.substring(widget.order.id.length - 6)}
+📅 Date: ${DateFormat('MMM dd, yyyy').format(widget.order.createdAt)}
+📊 Status: ${widget.order.status.name.toUpperCase()}
+💰 Total: \$${widget.order.total.toStringAsFixed(2)}
+🚚 Tracking: ${widget.order.trackingNumber}
+━━━━━━━━━━━━━━━━━━━━
+Items: ${widget.order.items.length}
+${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').join('\n')}
+    ''';
+
+    // For now, just copy to clipboard
+    Clipboard.setData(ClipboardData(text: orderInfo));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Order details copied to clipboard!'),
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -49,12 +118,41 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> with SingleTick
         elevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle.light,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.share_outlined),
-            onPressed: () {
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert),
+            onSelected: (value) {
               HapticFeedback.lightImpact();
-              // TODO: Implement share
+              switch (value) {
+                case 'invoice':
+                  _generateAndShowInvoice();
+                  break;
+                case 'share':
+                  _shareOrder();
+                  break;
+              }
             },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'invoice',
+                child: Row(
+                  children: [
+                    Icon(Icons.receipt_long, color: AppColors.primary),
+                    SizedBox(width: 12),
+                    Text('Download Invoice'),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'share',
+                child: Row(
+                  children: [
+                    Icon(Icons.share, color: AppColors.primary),
+                    SizedBox(width: 12),
+                    Text('Share Order'),
+                  ],
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -196,10 +294,11 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> with SingleTick
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             padding: const EdgeInsets.all(16),
-            itemCount: widget.order.tracking.length,
+            itemCount: _getFilteredTracking().length,
             itemBuilder: (context, index) {
-              final track = widget.order.tracking[index];
-              final isLast = index == widget.order.tracking.length - 1;
+              final filteredTracking = _getFilteredTracking();
+              final track = filteredTracking[index];
+              final isLast = index == filteredTracking.length - 1;
               return _buildTimelineItem(track, isLast);
             },
           ),
@@ -208,7 +307,56 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> with SingleTick
     );
   }
 
+  /// Filter tracking events - for cancelled orders, only show events up to and including cancellation
+  List<TrackingEntity> _getFilteredTracking() {
+    final tracking = widget.order.tracking;
+    
+    if (widget.order.status != OrderStatus.cancelled) {
+      return tracking;
+    }
+    
+    // Find the cancellation event index
+    int cancelIndex = -1;
+    for (int i = 0; i < tracking.length; i++) {
+      if (tracking[i].status.toLowerCase().contains('cancel')) {
+        cancelIndex = i;
+        break;
+      }
+    }
+    
+    // If cancellation event found, only show events up to and including it
+    if (cancelIndex >= 0) {
+      return tracking.sublist(0, cancelIndex + 1);
+    }
+    
+    // If no cancellation event but order is cancelled, show all events
+    return tracking;
+  }
+
   Widget _buildTimelineItem(dynamic track, bool isLast) {
+    final isCancelled = widget.order.status == OrderStatus.cancelled;
+    final isCancelledEvent = track.status.toLowerCase().contains('cancel');
+    
+    // Determine colors based on order status
+    Color circleColor;
+    Color lineColor;
+    IconData iconData;
+    
+    if (isCancelledEvent) {
+      circleColor = Colors.red;
+      lineColor = Colors.red.withOpacity(0.3);
+      iconData = Icons.close;
+    } else if (isCancelled) {
+      // For cancelled orders, show past events as grey
+      circleColor = Colors.grey;
+      lineColor = Colors.grey.withOpacity(0.3);
+      iconData = Icons.check;
+    } else {
+      circleColor = AppColors.primary;
+      lineColor = AppColors.primary;
+      iconData = Icons.check;
+    }
+    
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -218,17 +366,17 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> with SingleTick
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: AppColors.primary,
+                color: circleColor,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
+                    color: circleColor.withOpacity(0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
                 ],
               ),
-              child: const Icon(Icons.check, color: Colors.white, size: 18),
+              child: Icon(iconData, color: Colors.white, size: 18),
             ),
             if (!isLast)
               Container(
@@ -237,7 +385,7 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> with SingleTick
                 margin: const EdgeInsets.symmetric(vertical: 4),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [AppColors.primary, Colors.grey[300]!],
+                    colors: [lineColor, Colors.grey[300]!],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
@@ -254,9 +402,10 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> with SingleTick
               children: [
                 Text(
                   track.status,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
+                    color: isCancelledEvent ? Colors.red : null,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -695,18 +844,21 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> with SingleTick
               const SizedBox(width: 12),
               Expanded(
                 child: OutlinedButton.icon(
-                  icon: const Icon(Icons.cancel_outlined),
-                  label: const Text('Cancel'),
+                  icon: _isCancelling 
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.red),
+                      )
+                    : const Icon(Icons.cancel_outlined),
+                  label: Text(_isCancelling ? 'Cancelling...' : 'Cancel'),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.red,
                     side: const BorderSide(color: Colors.red),
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
-                  onPressed: () {
-                    HapticFeedback.mediumImpact();
-                    // TODO: Implement cancel logic
-                  },
+                  onPressed: _isCancelling ? null : () => _showCancelDialog(),
                 ),
               ),
             ],
@@ -714,6 +866,102 @@ class _OrderDetailsScreenState extends State<OrderDetailsScreen> with SingleTick
         ),
       ),
     );
+  }
+
+  void _showCancelDialog() {
+    final reasonController = TextEditingController();
+    
+    HapticFeedback.mediumImpact();
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: Colors.orange),
+            SizedBox(width: 12),
+            Text('Cancel Order'),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Are you sure you want to cancel this order? This action cannot be undone.'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: reasonController,
+              decoration: InputDecoration(
+                labelText: 'Reason for cancellation',
+                hintText: 'e.g., Changed my mind',
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              maxLines: 2,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              HapticFeedback.lightImpact();
+              Navigator.pop(dialogContext);
+            },
+            child: const Text('No, Keep it'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final reason = reasonController.text.trim();
+              if (reason.isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please provide a reason')),
+                );
+                return;
+              }
+              
+              Navigator.pop(dialogContext);
+              await _cancelOrder(reason);
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: const Text('Yes, Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _cancelOrder(String reason) async {
+    setState(() => _isCancelling = true);
+    
+    try {
+      await ref.read(orderViewModelProvider.notifier).cancelOrder(widget.order.id, reason);
+      
+      if (mounted) {
+        HapticFeedback.heavyImpact();
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Order cancelled successfully'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to cancel: ${e.toString()}'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() => _isCancelling = false);
+      }
+    }
   }
 }
 

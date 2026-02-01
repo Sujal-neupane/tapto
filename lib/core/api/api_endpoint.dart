@@ -6,14 +6,16 @@ class ApiEndpoints {
   ApiEndpoints._();
 
   static const bool isPhysicalDevice = false;
-  static const String compIpAddress= "192.168.x.x"; // Replace with your computer's local IP address
+  static const String compIpAddress= "192.168.1.215"; // Replace with your computer's local IP address
 
   static String get baseUrl{
     if(isPhysicalDevice){
       return 'http://$compIpAddress:4000';
     }
     if(kIsWeb){
-      return 'http://10.2.2.2:4000';
+      // For web builds, localhost won't work on physical devices.
+      // Use your computer's LAN IP to reach the backend from browsers on the same network.
+      return 'http://$compIpAddress:4000';
     } else if (Platform.isAndroid) {
       return 'http://10.0.2.2:4000';
     } else if (Platform.isIOS) {
@@ -26,35 +28,40 @@ class ApiEndpoints {
   static const Duration connectionTimeout = Duration(seconds: 10);
   static const Duration receiveTimeout = Duration(seconds: 10);
 
-  // ========== Auth Endpoints ==========
+  // Auth Endpoints 
   static const String user = '/api/auth';
   static const String userLogin = '/api/auth/login';
   static const String userRegister = '/api/auth/register';
   static String userById(String id) => '/api/auth/$id';
   static const String uploadImage = '/api/auth/upload-profile-picture';
 
-  // ========== Product Endpoints =========
-  static const String products = '/admin/products';
-  static String productById(String id) => '/admin/products/$id';
-  static const String productsByCategory = '/admin/products/category';
+  // Product Endpoints (Public - for users)
+  static const String products = '/api/products';
+  static String productById(String id) => '/api/products/$id';
+  static const String productCategories = '/api/products/categories';
+  static String productsByCategory(String category) => '/api/products/category/$category';
+  static String productsByFashionType(String fashionType) => '/api/products?category=$fashionType';
+  
+  // Admin Product Endpoints
+  static const String adminProducts = '/admin/products';
+  static String adminProductById(String id) => '/admin/products/$id';
 
-  // ========== Category Endpoints =========
+  // Category Endpoints 
   static const String categories = '/api/categories';
   static String categoryById(String id) => '/api/categories/$id';
 
-  // ========== Order Endpoints =========
+  // Order Endpoints 
   static const String orders = '/api/orders';
   static const String userOrders = '/api/orders/my-orders';
   static String orderById(String id) => '/api/orders/$id';
-  static const String orderStatusUpdate = '/api/orders/status';
-  static const String liveTrackingUpdate = '/api/orders/:id/track';
-  static const String cancelOrder = '/api/orders/cancel';
-  static const String updateorderStatus  = '/api/orders/:id/status';
-  static const String updateLiveLocation  = '/api/orders/:id/location';
+  // Admin/authorized updates (id required)
+  static String orderStatusById(String id) => '/api/orders/$id/status';
   static String orderTracking(String id) => '/api/orders/$id/track';
+  static String orderLocationById(String id) => '/api/orders/$id/location';
+  static String orderCancelById(String id) => '/api/orders/$id/cancel';
 
 
-  // ========== Cart Endpoints =========
+  // Cart Endpoints 
   static const String cart = '/api/cart';
   static String cartItemById(String id) => '/api/cart/$id';
 }

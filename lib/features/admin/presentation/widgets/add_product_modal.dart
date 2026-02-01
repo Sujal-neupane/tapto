@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:dio/dio.dart';
+import 'package:tapto/core/api/api_client.dart';
 import 'package:tapto/core/api/api_endpoint.dart';
-import 'package:tapto/core/services/storage/storage_provider.dart';
 import 'package:tapto/app/theme/app_colors.dart';
 import 'package:tapto/app/theme/app_spacing.dart';
 
@@ -19,7 +19,7 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
   int _currentStep = 0;
   String? _fashionType;
   String? _category;
-  
+
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
@@ -28,7 +28,8 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
   final _discountController = TextEditingController();
   final _tagsController = TextEditingController();
   final _sizesController = TextEditingController();
-  
+  final _colorsController = TextEditingController();
+
   List<XFile> _selectedImages = [];
   bool _isLoading = false;
 
@@ -40,7 +41,7 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
     'Shoes',
     'Formal Wear',
     'Jackets',
-    'Accessories'
+    'Accessories',
   ];
 
   static const _womenCategories = [
@@ -51,7 +52,7 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
     'Heels',
     'Flats',
     'Bags',
-    'Accessories'
+    'Accessories',
   ];
 
   @override
@@ -63,6 +64,7 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
     _discountController.dispose();
     _tagsController.dispose();
     _sizesController.dispose();
+    _colorsController.dispose();
     super.dispose();
   }
 
@@ -70,7 +72,7 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
   Widget build(BuildContext context) {
     return Container(
       height: MediaQuery.of(context).size.height * 0.85,
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -79,9 +81,7 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
           _buildHeader(),
           _buildProgressIndicator(),
           Expanded(
-            child: _isLoading
-                ? _buildLoadingState()
-                : _buildCurrentStep(),
+            child: _isLoading ? _buildLoadingState() : _buildCurrentStep(),
           ),
         ],
       ),
@@ -91,15 +91,15 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
   // ==================== HEADER ====================
   Widget _buildHeader() {
     return Container(
-      padding: EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
-            offset: Offset(0, 2),
+            offset: const Offset(0, 2),
           ),
         ],
       ),
@@ -114,29 +114,29 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          SizedBox(height: AppSpacing.md),
-          
+          const SizedBox(height: AppSpacing.md),
+
           // Title
           Row(
             children: [
               Container(
-                padding: EdgeInsets.all(10),
+                padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
+                child: const Icon(
                   Icons.add_shopping_cart,
                   color: AppColors.primary,
                   size: 24,
                 ),
               ),
-              SizedBox(width: AppSpacing.md),
+              const SizedBox(width: AppSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
+                    const Text(
                       'Add New Product',
                       style: TextStyle(
                         fontSize: 20,
@@ -146,16 +146,13 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
                     ),
                     Text(
                       'Step ${_currentStep + 1} of 4',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                     ),
                   ],
                 ),
               ),
               IconButton(
-                icon: Icon(Icons.close),
+                icon: const Icon(Icons.close),
                 onPressed: () => Navigator.pop(context),
               ),
             ],
@@ -168,7 +165,7 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
   // ==================== PROGRESS INDICATOR ====================
   Widget _buildProgressIndicator() {
     return Container(
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.lg,
         vertical: AppSpacing.md,
       ),
@@ -176,7 +173,7 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
         children: List.generate(4, (index) {
           final isActive = index <= _currentStep;
           final isCompleted = index < _currentStep;
-          
+
           return Expanded(
             child: Row(
               children: [
@@ -184,32 +181,26 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
                   child: Container(
                     height: 4,
                     decoration: BoxDecoration(
-                      color: isActive
-                          ? AppColors.primary
-                          : Colors.grey[200],
+                      color: isActive ? AppColors.primary : Colors.grey[200],
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
                 ),
                 if (index < 3)
                   Container(
-                    margin: EdgeInsets.symmetric(horizontal: 4),
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
                     width: 20,
                     height: 20,
                     decoration: BoxDecoration(
                       color: isCompleted
                           ? AppColors.primary
                           : isActive
-                              ? AppColors.primary.withOpacity(0.3)
-                              : Colors.grey[200],
+                          ? AppColors.primary.withOpacity(0.3)
+                          : Colors.grey[200],
                       shape: BoxShape.circle,
                     ),
                     child: isCompleted
-                        ? Icon(
-                            Icons.check,
-                            size: 12,
-                            color: Colors.white,
-                          )
+                        ? const Icon(Icons.check, size: 12, color: Colors.white)
                         : null,
                   ),
               ],
@@ -226,22 +217,16 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          CircularProgressIndicator(),
-          SizedBox(height: AppSpacing.lg),
+          const CircularProgressIndicator(),
+          const SizedBox(height: AppSpacing.lg),
           Text(
             'Adding product...',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-            ),
+            style: TextStyle(fontSize: 16, color: Colors.grey[600]),
           ),
-          SizedBox(height: AppSpacing.sm),
+          const SizedBox(height: AppSpacing.sm),
           Text(
             'Please wait while we upload your product',
-            style: TextStyle(
-              fontSize: 13,
-              color: Colors.grey[500],
-            ),
+            style: TextStyle(fontSize: 13, color: Colors.grey[500]),
           ),
         ],
       ),
@@ -260,7 +245,7 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
       case 3:
         return _buildImagesStep();
       default:
-        return SizedBox.shrink();
+        return const SizedBox.shrink();
     }
   }
 
@@ -270,11 +255,11 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
       children: [
         Expanded(
           child: SingleChildScrollView(
-            padding: EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Select Fashion Category',
                   style: TextStyle(
                     fontSize: 18,
@@ -284,13 +269,9 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
                 ),
                 Text(
                   'Choose the primary category for your product',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                 ),
-                SizedBox(height: AppSpacing.xl),
-                
+                const SizedBox(height: AppSpacing.xl),
                 _buildFashionTypeCard(
                   'Men\'s Fashion',
                   'Clothing and accessories for men',
@@ -298,9 +279,7 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
                   'Men',
                   Colors.blue,
                 ),
-                
-                SizedBox(height: AppSpacing.md),
-                
+                const SizedBox(height: AppSpacing.md),
                 _buildFashionTypeCard(
                   'Women\'s Fashion',
                   'Clothing and accessories for women',
@@ -327,16 +306,14 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
     Color color,
   ) {
     final isSelected = _fashionType == value;
-    
+
     return InkWell(
       onTap: () => setState(() => _fashionType = value),
       borderRadius: BorderRadius.circular(16),
       child: Container(
-        padding: EdgeInsets.all(AppSpacing.lg),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         decoration: BoxDecoration(
-          color: isSelected
-              ? color.withOpacity(0.1)
-              : Colors.white,
+          color: isSelected ? color.withOpacity(0.1) : Colors.white,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
             color: isSelected ? color : AppColors.border,
@@ -346,49 +323,39 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
         child: Row(
           children: [
             Container(
-              padding: EdgeInsets.all(12),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color, size: 32),
             ),
-            SizedBox(width: AppSpacing.md),
+            const SizedBox(width: AppSpacing.md),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                   ),
                 ],
               ),
             ),
             if (isSelected)
               Container(
-                padding: EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.check,
-                  color: Colors.white,
-                  size: 16,
-                ),
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+                child: const Icon(Icons.check, color: Colors.white, size: 16),
               ),
           ],
         ),
@@ -406,11 +373,11 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
       children: [
         Expanded(
           child: SingleChildScrollView(
-            padding: EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Select Product Category',
                   style: TextStyle(
                     fontSize: 18,
@@ -420,17 +387,13 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
                 ),
                 Text(
                   'Choose the specific category for your product',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                 ),
-                SizedBox(height: AppSpacing.lg),
-                
+                const SizedBox(height: AppSpacing.lg),
                 GridView.builder(
                   shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     crossAxisSpacing: AppSpacing.md,
                     mainAxisSpacing: AppSpacing.md,
@@ -440,12 +403,12 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
                   itemBuilder: (context, index) {
                     final cat = categories[index];
                     final isSelected = _category == cat;
-                    
+
                     return InkWell(
                       onTap: () => setState(() => _category = cat),
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
-                        padding: EdgeInsets.all(AppSpacing.md),
+                        padding: const EdgeInsets.all(AppSpacing.md),
                         decoration: BoxDecoration(
                           color: isSelected
                               ? AppColors.primary.withOpacity(0.1)
@@ -468,7 +431,7 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
                                   : Colors.grey[600],
                               size: 28,
                             ),
-                            SizedBox(height: 8),
+                            const SizedBox(height: 8),
                             Text(
                               cat,
                               style: TextStyle(
@@ -540,11 +503,11 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
         children: [
           Expanded(
             child: SingleChildScrollView(
-              padding: EdgeInsets.all(AppSpacing.lg),
+              padding: const EdgeInsets.all(AppSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  const Text(
                     'Product Information',
                     style: TextStyle(
                       fontSize: 18,
@@ -554,13 +517,9 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
                   ),
                   Text(
                     'Fill in the details about your product',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                   ),
-                  SizedBox(height: AppSpacing.xl),
-                  
+                  const SizedBox(height: AppSpacing.xl),
                   _buildTextField(
                     controller: _nameController,
                     label: 'Product Name',
@@ -570,22 +529,17 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
                         ? 'Product name is required'
                         : null,
                   ),
-                  
-                  SizedBox(height: AppSpacing.md),
-                  
+                  const SizedBox(height: AppSpacing.md),
                   _buildTextField(
                     controller: _descriptionController,
                     label: 'Description',
                     hint: 'Describe your product...',
                     icon: Icons.description_outlined,
                     maxLines: 4,
-                    validator: (val) => val?.isEmpty ?? true
-                        ? 'Description is required'
-                        : null,
+                    validator: (val) =>
+                        val?.isEmpty ?? true ? 'Description is required' : null,
                   ),
-                  
-                  SizedBox(height: AppSpacing.md),
-                  
+                  const SizedBox(height: AppSpacing.md),
                   Row(
                     children: [
                       Expanded(
@@ -594,7 +548,7 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
                           label: 'Price (\$)',
                           hint: '0.00',
                           icon: Icons.attach_money,
-                          keyboardType: TextInputType.numberWithOptions(
+                          keyboardType: const TextInputType.numberWithOptions(
                             decimal: true,
                           ),
                           validator: (val) {
@@ -608,7 +562,7 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
                           },
                         ),
                       ),
-                      SizedBox(width: AppSpacing.md),
+                      const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: _buildTextField(
                           controller: _stockController,
@@ -629,35 +583,36 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
                       ),
                     ],
                   ),
-                  
-                  SizedBox(height: AppSpacing.md),
-                  
+                  const SizedBox(height: AppSpacing.md),
                   _buildTextField(
                     controller: _discountController,
                     label: 'Discount (%)',
                     hint: '0',
                     icon: Icons.percent,
-                    keyboardType: TextInputType.numberWithOptions(
+                    keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
                   ),
-                  
-                  SizedBox(height: AppSpacing.md),
-                  
+                  const SizedBox(height: AppSpacing.md),
                   _buildTextField(
                     controller: _tagsController,
                     label: 'Tags',
                     hint: 'e.g., summer, casual, cotton',
                     icon: Icons.tag,
                   ),
-                  
-                  SizedBox(height: AppSpacing.md),
-                  
+                  const SizedBox(height: AppSpacing.md),
                   _buildTextField(
                     controller: _sizesController,
                     label: 'Available Sizes',
                     hint: 'e.g., S, M, L, XL',
                     icon: Icons.straighten,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  _buildTextField(
+                    controller: _colorsController,
+                    label: 'Available Colors',
+                    hint: 'e.g., Black, White, Red, Blue',
+                    icon: Icons.palette,
                   ),
                 ],
               ),
@@ -697,19 +652,19 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
         prefixIcon: Icon(icon, size: 20),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.border),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.border),
+          borderSide: const BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.primary, width: 2),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: AppColors.error),
+          borderSide: const BorderSide(color: AppColors.error),
         ),
         filled: true,
         fillColor: Colors.grey[50],
@@ -727,11 +682,11 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
       children: [
         Expanded(
           child: SingleChildScrollView(
-            padding: EdgeInsets.all(AppSpacing.lg),
+            padding: const EdgeInsets.all(AppSpacing.lg),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'Product Images',
                   style: TextStyle(
                     fontSize: 18,
@@ -741,13 +696,10 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
                 ),
                 Text(
                   'Upload up to 5 high-quality images',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                 ),
-                SizedBox(height: AppSpacing.xl),
-                
+                const SizedBox(height: AppSpacing.xl),
+
                 // Upload Button
                 InkWell(
                   onTap: _pickImages,
@@ -767,19 +719,19 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Container(
-                          padding: EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: AppColors.primary.withOpacity(0.1),
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(
+                          child: const Icon(
                             Icons.add_photo_alternate,
                             color: AppColors.primary,
                             size: 32,
                           ),
                         ),
-                        SizedBox(height: AppSpacing.md),
-                        Text(
+                        const SizedBox(height: AppSpacing.md),
+                        const Text(
                           'Tap to select images',
                           style: TextStyle(
                             fontSize: 15,
@@ -787,7 +739,7 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
                             color: AppColors.primary,
                           ),
                         ),
-                        SizedBox(height: 4),
+                        const SizedBox(height: 4),
                         Text(
                           '${_selectedImages.length}/5 images selected',
                           style: TextStyle(
@@ -799,10 +751,10 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
                     ),
                   ),
                 ),
-                
+
                 if (_selectedImages.isNotEmpty) ...[
-                  SizedBox(height: AppSpacing.xl),
-                  Text(
+                  const SizedBox(height: AppSpacing.xl),
+                  const Text(
                     'Selected Images',
                     style: TextStyle(
                       fontSize: 16,
@@ -810,16 +762,16 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
                       color: AppColors.textPrimary,
                     ),
                   ),
-                  SizedBox(height: AppSpacing.md),
-                  
+                  const SizedBox(height: AppSpacing.md),
                   GridView.builder(
                     shrinkWrap: true,
-                    physics: NeverScrollableScrollPhysics(),
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 3,
-                      crossAxisSpacing: AppSpacing.sm,
-                      mainAxisSpacing: AppSpacing.sm,
-                    ),
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 3,
+                          crossAxisSpacing: AppSpacing.sm,
+                          mainAxisSpacing: AppSpacing.sm,
+                        ),
                     itemCount: _selectedImages.length,
                     itemBuilder: (context, index) {
                       return Stack(
@@ -843,12 +795,12 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
                                 });
                               },
                               child: Container(
-                                padding: EdgeInsets.all(4),
+                                padding: const EdgeInsets.all(4),
                                 decoration: BoxDecoration(
                                   color: Colors.black.withOpacity(0.6),
                                   shape: BoxShape.circle,
                                 ),
-                                child: Icon(
+                                child: const Icon(
                                   Icons.close,
                                   color: Colors.white,
                                   size: 16,
@@ -874,21 +826,20 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
     );
   }
 
-  // ==================== NAVIGATION BUTTONS ====================
   Widget _buildNavigationButtons({
     VoidCallback? onBack,
     VoidCallback? onNext,
     String nextLabel = 'Next',
   }) {
     return Container(
-      padding: EdgeInsets.all(AppSpacing.lg),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       decoration: BoxDecoration(
         color: Colors.white,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
             blurRadius: 10,
-            offset: Offset(0, -2),
+            offset: const Offset(0, -2),
           ),
         ],
       ),
@@ -900,13 +851,13 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
                 onPressed: onBack,
                 style: OutlinedButton.styleFrom(
                   iconColor: AppColors.primary,
-                  padding: EdgeInsets.symmetric(vertical: 16),
-                  side: BorderSide(color: AppColors.border),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  side: const BorderSide(color: AppColors.border),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: Row(
+                child: const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(Icons.arrow_back, size: 18),
@@ -916,14 +867,14 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.primary
+                        color: AppColors.primary,
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-            SizedBox(width: AppSpacing.md),
+            const SizedBox(width: AppSpacing.md),
           ],
           Expanded(
             flex: onBack != null ? 1 : 2,
@@ -932,7 +883,7 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 16),
+                padding: const EdgeInsets.symmetric(vertical: 16),
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -944,12 +895,12 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
                 children: [
                   Text(
                     nextLabel,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  SizedBox(width: 8),
+                  const SizedBox(width: 8),
                   Icon(
                     nextLabel == 'Submit Product'
                         ? Icons.check
@@ -986,7 +937,7 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
       if (picked.isNotEmpty) {
         if (picked.length > 5) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
+            const SnackBar(
               content: Text('Maximum 5 images allowed'),
               backgroundColor: Colors.orange,
             ),
@@ -1007,67 +958,87 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
   }
 
   Future<void> _submitProduct() async {
-    if (_formKey.currentState?.validate() ?? false) {
-      _formKey.currentState?.save();
-      setState(() => _isLoading = true);
+    // Form was already validated in step 3 before moving to step 4
+    // So we don't need to validate again here
+    setState(() => _isLoading = true);
 
-      try {
-        final tokenService = ref.read(tokenStorageServiceProvider);
-        final token = tokenService.getToken();
+    try {
+      // Use the Riverpod provider to get the configured ApiClient
+      final apiClient = ref.read(apiClientProvider);
+      final formData = FormData();
 
-        if (token == null) {
-          throw Exception('Authentication token not found');
-        }
-
-        final dio = Dio();
-        final formData = FormData();
-
-        // Add text fields
-        formData.fields.addAll([
-          MapEntry('name', _nameController.text),
-          MapEntry('description', _descriptionController.text),
-          MapEntry('price', _priceController.text),
-          MapEntry('category', _category ?? ''),
-          MapEntry('fashionType', _fashionType ?? ''),
-          MapEntry('stock', _stockController.text),
-          MapEntry('discount', _discountController.text.isEmpty
-              ? '0'
-              : _discountController.text),
-          MapEntry('tags', _tagsController.text),
-          MapEntry('sizes', _sizesController.text),
-        ]);
-
-        // Add images
-        for (var img in _selectedImages) {
-          formData.files.add(
+      // Add text fields
+      // Use fashionType as category since backend filters products by category (Men/Women)
+      formData.fields.addAll([
+        MapEntry('name', _nameController.text),
+        MapEntry('description', _descriptionController.text),
+        MapEntry('price', _priceController.text),
         MapEntry(
-          'images',
-          await MultipartFile.fromFile(
-            img.path,
-            filename: img.name,
-          ),
+          'category',
+          _fashionType ?? '',
+        ), // Use Men/Women as category for filtering
+        MapEntry(
+          'subcategory',
+          _category ?? '',
+        ), // Store the specific category as subcategory
+        MapEntry('stock', _stockController.text),
+        MapEntry(
+          'discount',
+          _discountController.text.isEmpty ? '0' : _discountController.text,
         ),
+      ]);
+
+      // Ensure arrays are sent correctly (repeat fields)
+      final tags = _tagsController.text
+          .split(',')
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty)
+          .toList();
+      for (final t in tags) {
+        formData.fields.add(MapEntry('tags', t));
+      }
+
+      final sizes = _sizesController.text
+          .split(',')
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty)
+          .toList();
+      for (final s in sizes) {
+        formData.fields.add(MapEntry('sizes', s));
+      }
+
+      // Add colors
+      final colors = _colorsController.text
+          .split(',')
+          .map((s) => s.trim())
+          .where((s) => s.isNotEmpty)
+          .toList();
+      for (final c in colors) {
+        formData.fields.add(MapEntry('colors', c));
+      }
+
+      // Add images
+      for (var img in _selectedImages) {
+        formData.files.add(
+          MapEntry(
+            'images',
+            await MultipartFile.fromFile(img.path, filename: img.name),
+          ),
+        );
+      }
+
+      // Use the ApiClient to make the post request.
+      // The base URL and auth headers are handled by the client's interceptors.
+      final response = await apiClient.post(
+        ApiEndpoints.adminProducts,
+        data: formData,
       );
-    }
 
-    final response = await dio.post(
-      '${ApiEndpoints.baseUrl}/admin/products',
-      data: formData,
-      options: Options(
-        contentType: 'multipart/form-data',
-        headers: {
-          'Authorization': 'Bearer $token',
-        },
-      ),
-    );
-
-    if (response.statusCode == 201 ||
-        response.data['success'] == true) {
       if (mounted) {
         Navigator.pop(context, true); // Return true to indicate success
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Row(
+            content: const Row(
               children: [
                 Icon(Icons.check_circle, color: Colors.white),
                 SizedBox(width: 8),
@@ -1082,32 +1053,28 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
           ),
         );
       }
-    } else {
-      throw Exception(response.data['message'] ?? 'Failed to add product');
-    }
-  } catch (e) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.error_outline, color: Colors.white),
-              SizedBox(width: 8),
-              Expanded(child: Text('Error: ${e.toString()}')),
-            ],
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.error_outline, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(child: Text('Error: ${e.toString()}')),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            duration: const Duration(seconds: 5),
           ),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-          duration: Duration(seconds: 5),
-        ),
-      );
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
     }
-  } finally {
-    if (mounted) setState(() => _isLoading = false);
   }
-}
-}
 }
