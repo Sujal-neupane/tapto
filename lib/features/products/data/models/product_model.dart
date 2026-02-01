@@ -8,6 +8,7 @@ class ProductModel extends ProductEntity {
     required super.price,
     required super.images,
     required super.category,
+    super.subcategory,
     required super.stock,
     required super.isActive,
     super.discount,
@@ -27,6 +28,7 @@ class ProductModel extends ProductEntity {
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
       images: List<String>.from(json['images'] ?? []),
       category: json['category'] ?? '',
+      subcategory: json['subcategory'],
       stock: json['stock'] ?? 0,
       isActive: json['isActive'] ?? true,
       discount: (json['discount'] as num?)?.toDouble(),
@@ -46,6 +48,7 @@ class ProductModel extends ProductEntity {
       'price': price,
       'images': images,
       'category': category,
+      'subcategory': subcategory,
       'stock': stock,
       'isActive': isActive,
       'sizes': sizes,
@@ -53,7 +56,6 @@ class ProductModel extends ProductEntity {
       'discount': discount,
       'tags': tags,
       'createdBy': createdBy,
-      
     };
   }
 }

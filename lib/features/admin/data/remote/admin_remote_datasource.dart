@@ -48,7 +48,7 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
   Future<OrderModel> updateOrderStatus(String orderId, String status) async {
     try {
       final response = await apiClient.patch(
-        '/orders/$orderId/status',
+        '/admin/orders/$orderId/status',
         data: {'status': status},
       );
       

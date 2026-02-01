@@ -372,9 +372,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       title: 'Invoices',
                       color: Colors.green,
                       onTap: () {
+                        // Navigate to orders screen where invoices can be downloaded
+                        Navigator.pushNamed(context, AppRoutes.myOrders);
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Invoices feature coming soon!'),
+                            content: Text('Tap on an order to download its invoice'),
+                            behavior: SnackBarBehavior.floating,
                           ),
                         );
                       },

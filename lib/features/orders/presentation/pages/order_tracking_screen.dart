@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:tapto/app/theme/app_colors.dart';
 import 'package:tapto/core/api/api_client.dart';
 import 'package:intl/intl.dart';
@@ -16,9 +19,11 @@ class OrderTrackingScreen extends ConsumerStatefulWidget {
 
 class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with TickerProviderStateMixin {
   Map<String, dynamic>? trackingData;
+  LatLng? _destinationCoords;
   bool isLoading = true;
   String? error;
   Timer? _refreshTimer;
+  final MapController _mapController = MapController();
   
   late AnimationController _pulseController;
   late AnimationController _fadeController;
@@ -61,6 +66,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
   void dispose() {
     _pulseController.dispose();
     _fadeController.dispose();
+    _mapController.dispose();
     _refreshTimer?.cancel();
     super.dispose();
   }
@@ -78,11 +84,69 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
         isLoading = false;
       });
       _fadeController.forward();
+      
+      // Geocode shipping address to get destination coordinates
+      _geocodeShippingAddress();
     } catch (e) {
       setState(() {
         error = e.toString();
         isLoading = false;
       });
+    }
+  }
+
+  Future<void> _geocodeShippingAddress() async {
+    if (trackingData == null) return;
+    
+    // First check if destination is already provided
+    final destLat = trackingData!['destinationLocation']?['lat'];
+    final destLng = trackingData!['destinationLocation']?['lng'];
+    if (destLat != null && destLng != null) {
+      setState(() {
+        _destinationCoords = LatLng(
+          (destLat as num).toDouble(),
+          (destLng as num).toDouble(),
+        );
+      });
+      return;
+    }
+
+    // Otherwise, try to geocode from shipping address
+    final shippingAddress = trackingData!['shippingAddress'];
+    if (shippingAddress == null) return;
+
+    final street = shippingAddress['street'] ?? '';
+    final city = shippingAddress['city'] ?? '';
+    final state = shippingAddress['state'] ?? '';
+    final country = shippingAddress['country'] ?? 'Nepal';
+    
+    final fullAddress = '$street, $city, $state, $country';
+    
+    try {
+      final locations = await locationFromAddress(fullAddress);
+      if (locations.isNotEmpty && mounted) {
+        setState(() {
+          _destinationCoords = LatLng(
+            locations.first.latitude,
+            locations.first.longitude,
+          );
+        });
+      }
+    } catch (e) {
+      // Fallback: try just city and country
+      try {
+        final locations = await locationFromAddress('$city, $country');
+        if (locations.isNotEmpty && mounted) {
+          setState(() {
+            _destinationCoords = LatLng(
+              locations.first.latitude,
+              locations.first.longitude,
+            );
+          });
+        }
+      } catch (_) {
+        // Geocoding failed, destination won't be shown
+      }
     }
   }
 
@@ -147,11 +211,15 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
       );
     }
 
+    final orderStatus = trackingData!['status']?.toString().toLowerCase() ?? '';
+    final isCancelled = orderStatus.contains('cancel');
+    final isDelivered = orderStatus.contains('deliver');
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
         title: const Text('Order Tracking'),
-        backgroundColor: AppColors.primary,
+        backgroundColor: isCancelled ? Colors.red : AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle.light,
@@ -172,14 +240,22 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
           child: ListView(
             padding: const EdgeInsets.all(16),
             children: [
-              _buildLiveTrackingCard(),
+              if (isCancelled)
+                _buildCancelledCard()
+              else
+                _buildLiveTrackingCard(),
               const SizedBox(height: 16),
-              if (trackingData!['deliveryPerson'] != null) ...[
+              // Only show map for active orders (not cancelled/delivered)
+              if (!isCancelled && !isDelivered && trackingData!['currentLocation'] != null) ...[
+                _buildMapCard(),
+                const SizedBox(height: 16),
+              ],
+              if (!isCancelled && trackingData!['deliveryPerson'] != null) ...[
                 _buildDeliveryPersonCard(),
                 const SizedBox(height: 16),
               ],
-              if (trackingData!['currentLocation'] != null || 
-                  trackingData!['estimatedTime'] != null) ...[
+              if (!isCancelled && (trackingData!['currentLocation'] != null || 
+                  trackingData!['estimatedTime'] != null)) ...[
                 _buildEstimateCard(),
                 const SizedBox(height: 16),
               ],
@@ -187,6 +263,253 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildCancelledCard() {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Colors.red.shade400, Colors.red.shade600],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.red.withOpacity(0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.cancel_outlined,
+              color: Colors.white,
+              size: 48,
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'ORDER CANCELLED',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            trackingData!['cancellationReason'] ?? 'This order has been cancelled',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 14,
+            ),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMapCard() {
+    final location = trackingData!['currentLocation'];
+    final lat = (location?['lat'] as num?)?.toDouble() ?? 27.7172;  // Default: Kathmandu
+    final lng = (location?['lng'] as num?)?.toDouble() ?? 85.3240;
+    
+    // Get shipping address for display
+    final shippingAddress = trackingData!['shippingAddress'];
+    final destinationName = shippingAddress != null 
+        ? '${shippingAddress['city'] ?? ''}, ${shippingAddress['street'] ?? ''}'
+        : 'Destination';
+
+    return Container(
+      height: 250,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Stack(
+        children: [
+          FlutterMap(
+            mapController: _mapController,
+            options: MapOptions(
+              initialCenter: LatLng(lat, lng),
+              initialZoom: 14.0,
+              interactionOptions: const InteractionOptions(
+                flags: InteractiveFlag.all & ~InteractiveFlag.rotate,
+              ),
+            ),
+            children: [
+              TileLayer(
+                urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                userAgentPackageName: 'com.tapto.app',
+              ),
+              MarkerLayer(
+                markers: [
+                  // Delivery person marker
+                  Marker(
+                    point: LatLng(lat, lng),
+                    width: 50,
+                    height: 50,
+                    child: ScaleTransition(
+                      scale: _pulseAnimation,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 3),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.green.withOpacity(0.4),
+                              blurRadius: 10,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.delivery_dining,
+                          color: Colors.white,
+                          size: 28,
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Destination marker - from geocoded shipping address
+                  if (_destinationCoords != null)
+                    Marker(
+                      point: _destinationCoords!,
+                      width: 80,
+                      height: 80,
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(4),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 4,
+                                ),
+                              ],
+                            ),
+                            child: Text(
+                              destinationName,
+                              style: const TextStyle(
+                                fontSize: 8,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 3),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary.withOpacity(0.4),
+                                  blurRadius: 10,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.home,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
+              ),
+            ],
+          ),
+          // Map overlay with live indicator
+          Positioned(
+            top: 12,
+            left: 12,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.green,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 8,
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ScaleTransition(
+                    scale: _pulseAnimation,
+                    child: Container(
+                      width: 8,
+                      height: 8,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  const Text(
+                    'LIVE',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          // Center on location button
+          Positioned(
+            bottom: 12,
+            right: 12,
+            child: FloatingActionButton.small(
+              heroTag: 'centerMap',
+              backgroundColor: Colors.white,
+              onPressed: () {
+                _mapController.move(LatLng(lat, lng), 14.0);
+              },
+              child: const Icon(Icons.my_location, color: AppColors.primary),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -496,8 +819,36 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
     );
   }
 
-  Widget _buildTimelineCard() {
+  /// Filter timeline events - for cancelled orders, only show events up to and including cancellation
+  List<Map<String, dynamic>> _getFilteredTimeline() {
     final timeline = trackingData!['timeline'] as List<dynamic>? ?? [];
+    final orderStatus = trackingData!['status']?.toString().toLowerCase() ?? '';
+    final isCancelled = orderStatus.contains('cancel');
+    
+    if (!isCancelled) {
+      return timeline.cast<Map<String, dynamic>>();
+    }
+    
+    // Find the cancellation event index
+    int cancelIndex = -1;
+    for (int i = 0; i < timeline.length; i++) {
+      final eventStatus = (timeline[i]['status'] ?? '').toString().toLowerCase();
+      if (eventStatus.contains('cancel')) {
+        cancelIndex = i;
+        break;
+      }
+    }
+    
+    // If cancellation event found, only show events up to and including it
+    if (cancelIndex >= 0) {
+      return timeline.sublist(0, cancelIndex + 1).cast<Map<String, dynamic>>();
+    }
+    
+    return timeline.cast<Map<String, dynamic>>();
+  }
+
+  Widget _buildTimelineCard() {
+    final filteredTimeline = _getFilteredTimeline();
 
     return Container(
       decoration: BoxDecoration(
@@ -535,7 +886,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
             ),
           ),
           const Divider(height: 1),
-          if (timeline.isEmpty)
+          if (filteredTimeline.isEmpty)
             const Padding(
               padding: EdgeInsets.all(32),
               child: Center(
@@ -550,10 +901,10 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               padding: const EdgeInsets.all(16),
-              itemCount: timeline.length,
+              itemCount: filteredTimeline.length,
               itemBuilder: (context, index) {
-                final event = timeline[index];
-                final isLast = index == timeline.length - 1;
+                final event = filteredTimeline[index];
+                final isLast = index == filteredTimeline.length - 1;
                 return _buildTimelineItem(event, isLast);
               },
             ),
@@ -563,6 +914,31 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
   }
 
   Widget _buildTimelineItem(Map<String, dynamic> event, bool isLast) {
+    final orderStatus = trackingData!['status']?.toString().toLowerCase() ?? '';
+    final isCancelled = orderStatus.contains('cancel');
+    final eventStatus = (event['status'] ?? '').toString().toLowerCase();
+    final isCancelledEvent = eventStatus.contains('cancel');
+    
+    // Determine colors based on order status
+    Color circleColor;
+    Color lineColor;
+    IconData iconData;
+    
+    if (isCancelledEvent) {
+      circleColor = Colors.red;
+      lineColor = Colors.red.withOpacity(0.3);
+      iconData = Icons.close;
+    } else if (isCancelled) {
+      // For cancelled orders, show past events as grey
+      circleColor = Colors.grey;
+      lineColor = Colors.grey.withOpacity(0.3);
+      iconData = Icons.check;
+    } else {
+      circleColor = AppColors.primary;
+      lineColor = AppColors.primary;
+      iconData = Icons.check;
+    }
+    
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -572,17 +948,17 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: AppColors.primary,
+                color: circleColor,
                 shape: BoxShape.circle,
                 boxShadow: [
                   BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
+                    color: circleColor.withOpacity(0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
                 ],
               ),
-              child: const Icon(Icons.check, color: Colors.white, size: 18),
+              child: Icon(iconData, color: Colors.white, size: 18),
             ),
             if (!isLast)
               Container(
@@ -591,7 +967,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
                 margin: const EdgeInsets.symmetric(vertical: 4),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
-                    colors: [AppColors.primary, Colors.grey[300]!],
+                    colors: [lineColor, Colors.grey[300]!],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
                   ),
@@ -608,9 +984,10 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
               children: [
                 Text(
                   event['status'] ?? '',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w600,
                     fontSize: 14,
+                    color: isCancelledEvent ? Colors.red : null,
                   ),
                 ),
                 const SizedBox(height: 4),

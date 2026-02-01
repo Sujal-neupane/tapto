@@ -4,7 +4,8 @@ class ProductEntity {
   final String description;
   final double price;
   final List<String> images;
-  final String category;
+  final String category; // Men or Women
+  final String? subcategory; // T-Shirts, Jeans, etc.
   final int stock;
   final bool isActive;
   final List<String> sizes;
@@ -22,6 +23,7 @@ class ProductEntity {
     required this.price,
     required this.images,
     required this.category,
+    this.subcategory,
     required this.stock,
     required this.isActive,
     required this.sizes,
