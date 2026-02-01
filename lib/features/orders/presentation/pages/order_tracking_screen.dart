@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:tapto/app/theme/app_colors.dart';
 import 'package:tapto/core/api/api_client.dart';
@@ -18,6 +19,7 @@ class OrderTrackingScreen extends ConsumerStatefulWidget {
 
 class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with TickerProviderStateMixin {
   Map<String, dynamic>? trackingData;
+  LatLng? _destinationCoords;
   bool isLoading = true;
   String? error;
   Timer? _refreshTimer;
@@ -82,11 +84,69 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
         isLoading = false;
       });
       _fadeController.forward();
+      
+      // Geocode shipping address to get destination coordinates
+      _geocodeShippingAddress();
     } catch (e) {
       setState(() {
         error = e.toString();
         isLoading = false;
       });
+    }
+  }
+
+  Future<void> _geocodeShippingAddress() async {
+    if (trackingData == null) return;
+    
+    // First check if destination is already provided
+    final destLat = trackingData!['destinationLocation']?['lat'];
+    final destLng = trackingData!['destinationLocation']?['lng'];
+    if (destLat != null && destLng != null) {
+      setState(() {
+        _destinationCoords = LatLng(
+          (destLat as num).toDouble(),
+          (destLng as num).toDouble(),
+        );
+      });
+      return;
+    }
+
+    // Otherwise, try to geocode from shipping address
+    final shippingAddress = trackingData!['shippingAddress'];
+    if (shippingAddress == null) return;
+
+    final street = shippingAddress['street'] ?? '';
+    final city = shippingAddress['city'] ?? '';
+    final state = shippingAddress['state'] ?? '';
+    final country = shippingAddress['country'] ?? 'Nepal';
+    
+    final fullAddress = '$street, $city, $state, $country';
+    
+    try {
+      final locations = await locationFromAddress(fullAddress);
+      if (locations.isNotEmpty && mounted) {
+        setState(() {
+          _destinationCoords = LatLng(
+            locations.first.latitude,
+            locations.first.longitude,
+          );
+        });
+      }
+    } catch (e) {
+      // Fallback: try just city and country
+      try {
+        final locations = await locationFromAddress('$city, $country');
+        if (locations.isNotEmpty && mounted) {
+          setState(() {
+            _destinationCoords = LatLng(
+              locations.first.latitude,
+              locations.first.longitude,
+            );
+          });
+        }
+      } catch (_) {
+        // Geocoding failed, destination won't be shown
+      }
     }
   }
 
@@ -267,8 +327,12 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
     final location = trackingData!['currentLocation'];
     final lat = (location?['lat'] as num?)?.toDouble() ?? 27.7172;  // Default: Kathmandu
     final lng = (location?['lng'] as num?)?.toDouble() ?? 85.3240;
-    final destinationLat = (trackingData!['destinationLocation']?['lat'] as num?)?.toDouble();
-    final destinationLng = (trackingData!['destinationLocation']?['lng'] as num?)?.toDouble();
+    
+    // Get shipping address for display
+    final shippingAddress = trackingData!['shippingAddress'];
+    final destinationName = shippingAddress != null 
+        ? '${shippingAddress['city'] ?? ''}, ${shippingAddress['street'] ?? ''}'
+        : 'Destination';
 
     return Container(
       height: 250,
@@ -329,30 +393,60 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
                       ),
                     ),
                   ),
-                  // Destination marker
-                  if (destinationLat != null && destinationLng != null)
+                  // Destination marker - from geocoded shipping address
+                  if (_destinationCoords != null)
                     Marker(
-                      point: LatLng(destinationLat, destinationLng),
-                      width: 50,
-                      height: 50,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 3),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppColors.primary.withOpacity(0.4),
-                              blurRadius: 10,
-                              spreadRadius: 2,
+                      point: _destinationCoords!,
+                      width: 80,
+                      height: 80,
+                      child: Column(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(4),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2),
+                                  blurRadius: 4,
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.home,
-                          color: Colors.white,
-                          size: 24,
-                        ),
+                            child: Text(
+                              destinationName,
+                              style: const TextStyle(
+                                fontSize: 8,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black87,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Container(
+                            width: 40,
+                            height: 40,
+                            decoration: BoxDecoration(
+                              color: AppColors.primary,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Colors.white, width: 3),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: AppColors.primary.withOpacity(0.4),
+                                  blurRadius: 10,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.home,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                 ],
