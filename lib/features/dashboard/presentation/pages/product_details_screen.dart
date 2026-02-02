@@ -11,7 +11,8 @@ import '../../../../app/widgets/custom_app_bar.dart';
 class ProductDetailsScreen extends ConsumerStatefulWidget {
   final String productId;
   final String productName;
-  final String productImage;
+  final String productImage;  // Primary image for backward compatibility
+  final List<String> productImages;  // All product images
   final double price;
   final String description;
   final List<String> sizes;
@@ -22,6 +23,7 @@ class ProductDetailsScreen extends ConsumerStatefulWidget {
     required this.productId,
     required this.productName,
     required this.productImage,
+    this.productImages = const [],  // Default to empty, will use productImage
     required this.price,
     required this.description,
     required this.sizes,
@@ -35,6 +37,27 @@ class ProductDetailsScreen extends ConsumerStatefulWidget {
 class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
   String? selectedSize;
   String? selectedColor;
+  int _currentImageIndex = 0;
+  late PageController _pageController;
+  
+  List<String> get _allImages {
+    if (widget.productImages.isNotEmpty) {
+      return widget.productImages;
+    }
+    return widget.productImage.isNotEmpty ? [widget.productImage] : [];
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +81,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Product Image with rounded corners and shadow
+                // Product Image Gallery with PageView
                 Card(
                   elevation: 4,
                   shape: RoundedRectangleBorder(
@@ -67,12 +90,66 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> {
                   margin: EdgeInsets.zero,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(20),
-                    child: widget.productImage.isNotEmpty
-                        ? Image.network(
-                            widget.productImage,
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            height: 240,
+                    child: _allImages.isNotEmpty
+                        ? Column(
+                            children: [
+                              SizedBox(
+                                height: 240,
+                                child: PageView.builder(
+                                  controller: _pageController,
+                                  itemCount: _allImages.length,
+                                  onPageChanged: (index) {
+                                    setState(() => _currentImageIndex = index);
+                                  },
+                                  itemBuilder: (context, index) {
+                                    return Image.network(
+                                      _allImages[index],
+                                      fit: BoxFit.cover,
+                                      width: double.infinity,
+                                      errorBuilder: (_, __, ___) => Container(
+                                        color: AppColors.primary.withOpacity(0.1),
+                                        child: const Icon(
+                                          Icons.image_not_supported,
+                                          size: 60,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              // Page indicator dots
+                              if (_allImages.length > 1)
+                                Padding(
+                                  padding: const EdgeInsets.all(12),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: List.generate(
+                                      _allImages.length,
+                                      (index) => GestureDetector(
+                                        onTap: () {
+                                          _pageController.animateToPage(
+                                            index,
+                                            duration: const Duration(milliseconds: 300),
+                                            curve: Curves.easeInOut,
+                                          );
+                                        },
+                                        child: Container(
+                                          width: _currentImageIndex == index ? 24 : 8,
+                                          height: 8,
+                                          margin: const EdgeInsets.symmetric(horizontal: 3),
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(4),
+                                            color: _currentImageIndex == index
+                                                ? AppColors.primary
+                                                : AppColors.primary.withOpacity(0.3),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                            ],
                           )
                         : Container(
                             height: 240,

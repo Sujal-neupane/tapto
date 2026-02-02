@@ -19,6 +19,35 @@ class OrderLocalDataSourceImpl implements OrderLocalDataSource {
 
   OrderLocalDataSourceImpl({required this.hiveService});
 
+  /// Helper to deeply cast Map<dynamic, dynamic> to Map<String, dynamic>
+  Map<String, dynamic> _deepCastMap(dynamic item) {
+    if (item == null) return {};
+    if (item is Map<String, dynamic>) return item;
+    if (item is Map) {
+      return item.map((key, value) {
+        if (value is Map) {
+          return MapEntry(key.toString(), _deepCastMap(value));
+        } else if (value is List) {
+          return MapEntry(key.toString(), _deepCastList(value));
+        }
+        return MapEntry(key.toString(), value);
+      });
+    }
+    return {};
+  }
+
+  /// Helper to deeply cast lists containing maps
+  List<dynamic> _deepCastList(List list) {
+    return list.map((item) {
+      if (item is Map) {
+        return _deepCastMap(item);
+      } else if (item is List) {
+        return _deepCastList(item);
+      }
+      return item;
+    }).toList();
+  }
+
   @override
   Future<List<OrderModel>> getCachedOrders() async {
     try {
@@ -29,10 +58,14 @@ class OrderLocalDataSourceImpl implements OrderLocalDataSource {
       }
 
       return cachedData
-          .map((json) => OrderModel.fromJson(Map<String, dynamic>.from(json)))
+          .map((json) => OrderModel.fromJson(_deepCastMap(json)))
           .toList();
     } catch (e) {
       if (e is CacheException) rethrow;
+      // If there's a type error, clear the corrupt cache
+      try {
+        await hiveService.clearOrders();
+      } catch (_) {}
       throw CacheException(message: 'Failed to get cached orders: $e');
     }
   }
@@ -52,7 +85,7 @@ class OrderLocalDataSourceImpl implements OrderLocalDataSource {
     try {
       final cachedData = hiveService.getOrder(orderId);
       if (cachedData == null) return null;
-      return OrderModel.fromJson(Map<String, dynamic>.from(cachedData));
+      return OrderModel.fromJson(_deepCastMap(cachedData));
     } catch (e) {
       throw CacheException(message: 'Failed to get cached order: $e');
     }
@@ -72,7 +105,7 @@ class OrderLocalDataSourceImpl implements OrderLocalDataSource {
     try {
       final cachedData = hiveService.getTracking(orderId);
       if (cachedData == null) return null;
-      return LiveTrackingModel.fromJson(Map<String, dynamic>.from(cachedData));
+      return LiveTrackingModel.fromJson(_deepCastMap(cachedData));
     } catch (e) {
       throw CacheException(message: 'Failed to get cached tracking: $e');
     }

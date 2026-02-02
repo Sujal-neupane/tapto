@@ -118,6 +118,15 @@ final productOperationProvider = NotifierProvider<ProductOperationNotifier, Prod
   ProductOperationNotifier.new,
 );
 
+/// Provider to delete a product by ID (returns a future)
+final deleteProductProvider = FutureProvider.family<bool, String>((ref, productId) async {
+  final dataSource = ref.read(productRemoteDataSourceProvider);
+  await dataSource.deleteProduct(productId);
+  ref.invalidate(adminProductsProvider);
+  ref.invalidate(userProductsProvider);
+  return true;
+});
+
 /// Search filter parameters
 class SearchFilters {
   final String query;

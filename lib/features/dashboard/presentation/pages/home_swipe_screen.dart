@@ -113,6 +113,9 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
     final imageUrl = product.images.isNotEmpty
         ? _getImageUrl(product.images.first)
         : '';
+    final allImageUrls = product.images
+        .map((img) => _getImageUrl(img))
+        .toList();
 
     showModalBottomSheet(
       context: context,
@@ -137,6 +140,7 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
             productId: product.id,
             productName: product.name,
             productImage: imageUrl,
+            productImages: allImageUrls,
             price: product.price,
             description: product.description,
             sizes: product.sizes,

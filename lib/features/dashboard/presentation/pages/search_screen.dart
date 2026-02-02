@@ -241,6 +241,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           product: product,
           imageUrl: product.images.isNotEmpty ? _getImageUrl(product.images.first) : '',
           onTap: () {
+            final allImageUrls = product.images
+                .map((img) => _getImageUrl(img))
+                .toList();
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -248,6 +251,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   productId: product.id,
                   productName: product.name,
                   productImage: product.images.isNotEmpty ? _getImageUrl(product.images.first) : '',
+                  productImages: allImageUrls,
                   price: product.price,
                   description: product.description,
                   sizes: product.sizes,

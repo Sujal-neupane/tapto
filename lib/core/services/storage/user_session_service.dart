@@ -117,7 +117,19 @@ class UserSessionService {
   Future<User?> getCurrentUser() async {
     await _ensureInitialized();
 
-    final userId = _sessionBox!.get(_currentUserKey) as String?;
+    String? userId = _sessionBox!.get(_currentUserKey) as String?;
+
+    // If no userId in session, try to get from SharedPreferences
+    if (userId == null) {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        userId = prefs.getString('user_id');
+        // If found, save to session for next time
+        if (userId != null) {
+          await _sessionBox!.put(_currentUserKey, userId);
+        }
+      } catch (_) {}
+    }
 
     if (userId == null) {
       return null;
@@ -126,13 +138,39 @@ class UserSessionService {
     final userModel = _usersBox!.get(userId);
     return userModel?.toEntity();
   }
+  
+  /// Save user session (called after successful login/register)
+  Future<void> saveUserSession({
+    required String userId,
+    required String token,
+  }) async {
+    await _ensureInitialized();
+    await _sessionBox!.put(_currentUserKey, userId);
+    
+    // Also save to SharedPreferences for persistence
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('user_id', userId);
+    await prefs.setString('auth_token', token);
+  }
 
-  /// Check if user is logged in
+  /// Check if user is logged in - checks both session and token storage
   Future<bool> isLoggedIn() async {
     await _ensureInitialized();
 
+    // First check if we have a user ID in session
     final userId = _sessionBox!.get(_currentUserKey);
-    return userId != null;
+    if (userId != null) return true;
+    
+    // Also check SharedPreferences for token (in case of app restart)
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+      if (token != null && token.isNotEmpty) {
+        return true;
+      }
+    } catch (_) {}
+    
+    return false;
   }
 
   /// Logout current user
@@ -210,16 +248,5 @@ class UserSessionService {
   Future<void> dispose() async {
     await _usersBox?.close();
     await _sessionBox?.close();
-  }
-
-  /// Save user session to session box
-  Future<void> saveUserSession({
-    required String userId,
-    required String email,
-    required String name,
-    String? preference,
-  }) async {
-    await _ensureInitialized();
-    await _sessionBox!.put(_currentUserKey, userId);
   }
 }

@@ -1,16 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hive_flutter/adapters.dart';
 import 'package:intl/intl.dart';
 import 'package:tapto/app/routes/app_routes.dart';
 import 'package:tapto/app/theme/app_colors.dart';
-import 'package:tapto/app/theme/app_spacing.dart';
 import 'package:tapto/features/admin/presentation/viewmodel/admin_viewmodel.dart';
 import 'package:tapto/features/admin/presentation/widgets/add_product_modal.dart';
+import 'package:tapto/features/admin/presentation/widgets/edit_product_modal.dart';
 import 'package:tapto/features/auth/presentation/viewmodel/auth_viewmodel.dart';
 import 'package:tapto/features/orders/domain/enitites/order_entity.dart';
-import 'dart:math' as math;
+import 'package:tapto/features/products/presentation/providers/product_providers.dart';
+import 'package:tapto/features/products/data/models/product_model.dart';
+import 'package:tapto/core/api/api_endpoint.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -32,7 +33,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    _tabController = TabController(length: 4, vsync: this);
 
     _fadeController = AnimationController(
       duration: const Duration(milliseconds: 300),
@@ -88,6 +89,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
                               children: [
                                 _buildDashboardTab(adminState),
                                 _buildOrdersTab(adminState),
+                                _buildProductsTab(),
                                 _buildUsersTab(adminState),
                               ],
                             ),
@@ -207,6 +209,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
         tabs: const [
           Tab(icon: Icon(Icons.dashboard_rounded, size: 22), text: 'OVERVIEW'),
           Tab(icon: Icon(Icons.receipt_long_rounded, size: 22), text: 'ORDERS'),
+          Tab(icon: Icon(Icons.inventory_2_rounded, size: 22), text: 'PRODUCTS'),
           Tab(icon: Icon(Icons.people_rounded, size: 22), text: 'USERS'),
         ],
       ),
@@ -448,6 +451,248 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
               },
             ),
     );
+  }
+
+  Widget _buildProductsTab() {
+    final productsAsync = ref.watch(adminProductsProvider);
+    
+    return RefreshIndicator(
+      onRefresh: () async {
+        HapticFeedback.mediumImpact();
+        ref.invalidate(adminProductsProvider);
+      },
+      child: productsAsync.when(
+        data: (products) {
+          if (products.isEmpty) {
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey[400]),
+                  const SizedBox(height: 16),
+                  Text(
+                    'No products yet',
+                    style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                  ),
+                  const SizedBox(height: 8),
+                  ElevatedButton.icon(
+                    onPressed: () => _showAddProductModal(context),
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add Your First Product'),
+                  ),
+                ],
+              ),
+            );
+          }
+          
+          return Padding(
+            padding: const EdgeInsets.all(16),
+            child: GridView.builder(
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                childAspectRatio: 0.72,
+                crossAxisSpacing: 12,
+                mainAxisSpacing: 12,
+              ),
+              itemCount: products.length,
+              itemBuilder: (context, index) {
+                final product = products[index];
+                return _buildProductCard(product);
+              },
+            ),
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (error, stack) => Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+              const SizedBox(height: 16),
+              Text('Failed to load products', style: TextStyle(color: Colors.grey[600])),
+              const SizedBox(height: 8),
+              ElevatedButton.icon(
+                onPressed: () => ref.invalidate(adminProductsProvider),
+                icon: const Icon(Icons.refresh),
+                label: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProductCard(ProductModel product) {
+    String getImageUrl(String imagePath) {
+      if (imagePath.startsWith('http')) return imagePath;
+      return '${ApiEndpoints.baseUrl}$imagePath';
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Product Image
+          Container(
+            height: 100,
+            decoration: BoxDecoration(
+              color: Colors.grey[200],
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+            ),
+            child: product.images.isNotEmpty
+                ? ClipRRect(
+                    borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+                    child: Image.network(
+                      getImageUrl(product.images.first),
+                      width: double.infinity,
+                      height: 100,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Center(
+                        child: Icon(Icons.image, size: 40, color: Colors.grey[400]),
+                      ),
+                    ),
+                  )
+                : Center(child: Icon(Icons.image, size: 40, color: Colors.grey[400])),
+          ),
+          
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    product.name,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    product.category,
+                    style: TextStyle(fontSize: 11, color: Colors.grey[600]),
+                  ),
+                  const Spacer(),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '\$${product.price.toStringAsFixed(2)}',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      Text(
+                        'Stock: ${product.stock}',
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: product.stock > 0 ? Colors.grey[600] : Colors.red,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: SizedBox(
+                          height: 28,
+                          child: OutlinedButton(
+                            onPressed: () => _showEditProductModal(product),
+                            style: OutlinedButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              textStyle: const TextStyle(fontSize: 11),
+                            ),
+                            child: const Text('Edit'),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: SizedBox(
+                          height: 28,
+                          child: ElevatedButton(
+                            onPressed: () => _deleteProduct(product),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
+                              padding: EdgeInsets.zero,
+                              textStyle: const TextStyle(fontSize: 11),
+                            ),
+                            child: const Text('Delete'),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditProductModal(ProductModel product) async {
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => EditProductModal(product: product),
+    );
+    if (result == true) {
+      ref.invalidate(adminProductsProvider);
+    }
+  }
+
+  Future<void> _deleteProduct(ProductModel product) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Delete Product'),
+        content: Text('Are you sure you want to delete "${product.name}"?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Cancel'),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(context, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('Delete', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      try {
+        await ref.read(deleteProductProvider(product.id).future);
+        ref.invalidate(adminProductsProvider);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Product deleted'), backgroundColor: Colors.green),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
   }
 
   Widget _buildUsersTab(AdminState state) {

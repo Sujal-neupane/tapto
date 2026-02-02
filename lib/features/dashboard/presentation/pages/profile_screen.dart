@@ -12,6 +12,8 @@ import '../../../../core/api/api_endpoint.dart';
 import '../../../auth/presentation/viewmodel/auth_viewmodel.dart';
 import '../../../orders/presentation/viewmodel/order_viewmodel.dart';
 import '../../../orders/presentation/pages/order_tracking_screen.dart';
+import '../provider/wishlist_provider.dart';
+import 'edit_profile_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -22,7 +24,15 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final ImagePicker _picker = ImagePicker();
-  
+
+  @override
+  void initState() {
+    super.initState();
+    // Fetch orders to get accurate count for profile stats
+    Future.microtask(() {
+      ref.read(orderViewModelProvider.notifier).fetchMyOrders();
+    });
+  }
 
   // Show bottom sheet for image source selection
   Future<void> _showPickOptions() async {
@@ -288,28 +298,36 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ),
                     const SizedBox(height: AppSpacing.lg),
 
-                    // Stats Row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: const [
-                        _StatItem(
-                          icon: Icons.shopping_bag_outlined,
-                          count: '12',
-                          label: 'Orders',
-                        ),
-                        _VerticalDivider(),
-                        _StatItem(
-                          icon: Icons.favorite_outline,
-                          count: '28',
-                          label: 'Wishlist',
-                        ),
-                        _VerticalDivider(),
-                        _StatItem(
-                          icon: Icons.star_outline,
-                          count: '4.8',
-                          label: 'Reviews',
-                        ),
-                      ],
+                    // Stats Row - using real data from providers
+                    Builder(
+                      builder: (context) {
+                        final orderState = ref.watch(orderViewModelProvider);
+                        final wishlistCount = ref.watch(wishlistCountProvider);
+                        final ordersCount = orderState.orders.length;
+
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _StatItem(
+                              icon: Icons.shopping_bag_outlined,
+                              count: '$ordersCount',
+                              label: 'Orders',
+                            ),
+                            const _VerticalDivider(),
+                            _StatItem(
+                              icon: Icons.favorite_outline,
+                              count: '$wishlistCount',
+                              label: 'Wishlist',
+                            ),
+                            const _VerticalDivider(),
+                            const _StatItem(
+                              icon: Icons.star_outline,
+                              count: '4.8',
+                              label: 'Reviews',
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -405,9 +423,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 title: 'Edit Profile',
                 subtitle: 'Update your personal information',
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Edit profile feature coming soon!'),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const EditProfileScreen(),
                     ),
                   );
                 },

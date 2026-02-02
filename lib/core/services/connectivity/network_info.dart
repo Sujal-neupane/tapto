@@ -49,10 +49,24 @@ class NetworkInfo implements INetworkInfo {
   /// Verify actual internet access by pinging a reliable host
   Future<bool> _hasInternetAccess() async {
     try {
-      final result = await InternetAddress.lookup('google.com');
-      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+      // On iOS simulator, InternetAddress.lookup can fail even with internet
+      // So we'll just trust the connectivity check result
+      final result = await _connectivity.checkConnectivity();
+      if (result.contains(ConnectivityResult.wifi) || 
+          result.contains(ConnectivityResult.ethernet) ||
+          result.contains(ConnectivityResult.mobile)) {
+        return true;
+      }
+      
+      // Fallback: try the lookup anyway
+      final lookupResult = await InternetAddress.lookup('google.com')
+          .timeout(const Duration(seconds: 3));
+      return lookupResult.isNotEmpty && lookupResult[0].rawAddress.isNotEmpty;
     } on SocketException catch (_) {
-      return false;
+      // If lookup fails but we have wifi/mobile, assume connected
+      final result = await _connectivity.checkConnectivity();
+      return result.contains(ConnectivityResult.wifi) || 
+             result.contains(ConnectivityResult.mobile);
     } catch (e) {
       return false;
     }
