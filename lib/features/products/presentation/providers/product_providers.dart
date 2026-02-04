@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:tapto/core/api/api_client.dart';
+import 'package:tapto/features/auth/presentation/state/auth_state.dart';
 import 'package:tapto/features/auth/presentation/viewmodel/auth_viewmodel.dart';
 import 'package:tapto/features/products/data/datasource/remote/product_remote_datasource.dart';
 import 'package:tapto/features/products/data/models/product_model.dart';
@@ -30,12 +31,20 @@ String? _preferenceToCategory(String? preference) {
 final userProductsProvider = FutureProvider<List<ProductModel>>((ref) async {
   final dataSource = ref.watch(productRemoteDataSourceProvider);
   final authState = ref.watch(authViewModelProvider);
-  
+
+  // Wait for user to be authenticated
+  if (authState.status != AuthStatus.authenticated || authState.user == null) {
+    return [];
+  }
+
   // Get user's preference and convert to category format
   final preference = authState.user?.preference;
   final category = _preferenceToCategory(preference);
-  
-  // Fetch products filtered by user's preference
+
+  // If no preference is set, return empty list or show a message
+  if (category == null) {
+    return [];
+  }
   return dataSource.fetchProducts(
     fashionType: category,
     isActive: true,

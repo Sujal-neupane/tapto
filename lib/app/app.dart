@@ -16,7 +16,7 @@ class MyApp extends ConsumerWidget {
       final themeMode = ref.watch(themeProvider);
       final language = ref.watch(languageProvider);
 
-      print('🔄 MyApp rebuild - Theme: $themeMode, Language: ${language.code}');
+     
 
       return MaterialApp(
         title: 'Tapto',
@@ -24,7 +24,7 @@ class MyApp extends ConsumerWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: themeMode,
-        locale: Locale(language.code),
+        locale: context.locale, // Use EasyLocalization's current locale
         supportedLocales: context.supportedLocales,
         localizationsDelegates: [
           GlobalMaterialLocalizations.delegate,

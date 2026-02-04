@@ -28,6 +28,8 @@ abstract class AuthRemoteDataSource {
   Future<AuthApiModel> getUserById(String authId);
   Future<AuthApiModel> updateUser(AuthApiModel user);
   Future<AuthApiModel> uploadProfilePicture(File image);
+  Future<void> requestPasswordReset(String email);
+  Future<void> resetPassword(String email, String otp, String newPassword);
 }
 
 /// Implementation of remote authentication data source
@@ -181,6 +183,44 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
       throw Exception('Upload failed');
     } catch (e) {
       throw Exception('Failed to upload image: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> requestPasswordReset(String email) async {
+    try {
+      final response = await _apiClient.post(
+        ApiEndpoints.requestPasswordReset,
+        data: {'email': email},
+      );
+
+      if (response.statusCode == 200) {
+        return;
+      }
+      throw Exception('Failed to request password reset');
+    } catch (e) {
+      throw Exception('Failed to request password reset: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> resetPassword(String email, String otp, String newPassword) async {
+    try {
+      final response = await _apiClient.post(
+        ApiEndpoints.resetPassword,
+        data: {
+          'email': email,
+          'otp': otp,
+          'newPassword': newPassword,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return;
+      }
+      throw Exception('Failed to reset password');
+    } catch (e) {
+      throw Exception('Failed to reset password: ${e.toString()}');
     }
   }
 }

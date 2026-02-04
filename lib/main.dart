@@ -37,7 +37,6 @@ void main() async {
   final savedLanguageCode = sharedPreferences.getString('languageCode') ?? 'en';
   final savedLocale = Locale(savedLanguageCode);
   
-  print('📱 Starting app with language: $savedLanguageCode');
   
   runApp(
     EasyLocalization(

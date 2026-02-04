@@ -83,7 +83,18 @@ class AuthViewModel extends Notifier<AuthState> {
         await hiveService.saveUser(
           UserModel.fromEntity(user, password),
         );
+        
+        // Set authenticated state immediately with login user data
         state = state.copyWith(status: AuthStatus.authenticated, user: user);
+        
+        // Fetch complete user data including preference from backend in background
+        // This will update the state with more complete data if available
+        try {
+          await getCurrentUser();
+        } catch (e) {
+          // If getCurrentUser fails, we already have the user from login
+          // so we can continue with the authenticated state
+        }
       },
     );
   }
