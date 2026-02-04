@@ -34,7 +34,6 @@ final userProductsProvider = FutureProvider<List<ProductModel>>((ref) async {
 
   // Wait for user to be authenticated
   if (authState.status != AuthStatus.authenticated || authState.user == null) {
-    print('⏳ Waiting for user authentication...');
     return [];
   }
 
@@ -42,12 +41,8 @@ final userProductsProvider = FutureProvider<List<ProductModel>>((ref) async {
   final preference = authState.user?.preference;
   final category = _preferenceToCategory(preference);
 
-  print('🔍 User preference: $preference, converted category: $category');
-  print('🔍 Auth state: ${authState.status}, user: ${authState.user?.email}');
-
   // If no preference is set, return empty list or show a message
   if (category == null) {
-    print('⚠️ No user preference found, returning empty list');
     return [];
   }
   return dataSource.fetchProducts(

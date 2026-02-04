@@ -33,16 +33,14 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
     bool? isActive,
   }) async {
     // Use public products endpoint for user-facing product listing
-    final queryParams = <String, dynamic>{};
-    if (category != null) queryParams['category'] = category;
-    if (fashionType != null) queryParams['category'] = fashionType; // Backend uses 'category' for filtering
-    if (isActive != null) queryParams['isActive'] = isActive;
-
-    print('🌐 API Call - fetchProducts with params: $queryParams');
-
     final response = await dio.get(
       ApiEndpoints.products,
-      queryParameters: queryParams,
+      queryParameters: {
+        if (category != null) 'category': category,
+        if (fashionType != null)
+          'category': fashionType, // Backend uses 'category' for filtering
+        if (isActive != null) 'isActive': isActive,
+      },
     );
 
     final data = response.data;
