@@ -83,7 +83,8 @@ class AuthViewModel extends Notifier<AuthState> {
         await hiveService.saveUser(
           UserModel.fromEntity(user, password),
         );
-        state = state.copyWith(status: AuthStatus.authenticated, user: user);
+        // Fetch complete user data including preference from backend
+        await getCurrentUser();
       },
     );
   }
