@@ -50,14 +50,7 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
     }
   }
 
-  String _getLanguageCode(String displayName) {
-    if (displayName == 'english'.tr()) return 'en';
-    if (displayName == 'spanish'.tr()) return 'es';
-    if (displayName == 'french'.tr()) return 'fr';
-    if (displayName == 'german'.tr()) return 'de';
-    if (displayName == 'nepali'.tr()) return 'ne';
-    return 'en';
-  }
+  
 
   Future<void> _changeLanguage(String languageCode) async {
     final locale = Locale(languageCode);

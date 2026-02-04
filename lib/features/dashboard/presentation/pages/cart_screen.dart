@@ -8,7 +8,7 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/widgets/custom_app_bar.dart';
 import 'package:tapto/core/utils/currency_formatter.dart';
-import 'package:tapto/core/utils/currency_formatter.dart';
+
 
 class CartScreen extends ConsumerStatefulWidget {
   const CartScreen({super.key});

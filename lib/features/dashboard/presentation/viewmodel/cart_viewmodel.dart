@@ -2,7 +2,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:convert';
 import 'package:tapto/core/services/storage/user_session_service.dart';
 import 'package:tapto/features/dashboard/data/models/cart_item_model.dart';
-import 'package:tapto/core/providers/currency_provider.dart';
 
 class CartState {
   final List<CartItemModel> items;
