@@ -34,6 +34,8 @@ class ApiEndpoints {
   static const String userRegister = '/api/auth/register';
   static String userById(String id) => '/api/auth/$id';
   static const String uploadImage = '/api/auth/upload-profile-picture';
+  static const String requestPasswordReset = '/api/auth/request-password-reset';
+  static const String resetPassword = '/api/auth/reset-password';
 
   // Product Endpoints (Public - for users)
   static const String products = '/api/products';
@@ -43,8 +45,8 @@ class ApiEndpoints {
   static String productsByFashionType(String fashionType) => '/api/products?category=$fashionType';
   
   // Admin Product Endpoints
-  static const String adminProducts = '/admin/products';
-  static String adminProductById(String id) => '/admin/products/$id';
+  static const String adminProducts = '/api/admin/products';
+  static String adminProductById(String id) => '/api/admin/products/$id';
 
   // Category Endpoints 
   static const String categories = '/api/categories';
