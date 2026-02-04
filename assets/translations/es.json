@@ -204,5 +204,13 @@
   "removedFromWishlist": "eliminado de la lista de deseos",
   "noProductsAvailable": "No hay productos disponibles",
   "checkBackLaterForNewArrivals": "Vuelve más tarde para nuevas llegadas",
-  "refresh": "Actualizar"
+  "refresh": "Actualizar",
+  "imageNotAvailable": "Imagen no disponible",
+  "noProductImage": "Sin imagen del producto",
+  "productDetails": "Detalles del Producto",
+  "description": "DESCRIPCIÓN",
+  "selectSize": "SELECCIONAR TAMAÑO",
+  "selectColor": "SELECCIONAR COLOR",
+  "totalPrice": "Precio Total",
+  "addToCart": "Agregar al Carrito"
 }

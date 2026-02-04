@@ -204,6 +204,14 @@
   "removedFromWishlist": "removed from wishlist",
   "noProductsAvailable": "No products available",
   "checkBackLaterForNewArrivals": "Check back later for new arrivals",
-  "refresh": "Refresh"
+  "refresh": "Refresh",
+  "imageNotAvailable": "Image not available",
+  "noProductImage": "No product image",
+  "productDetails": "Product Details",
+  "description": "DESCRIPTION",
+  "selectSize": "SELECT SIZE",
+  "selectColor": "SELECT COLOR",
+  "totalPrice": "Total Price",
+  "addToCart": "Add to Cart"
 }
 

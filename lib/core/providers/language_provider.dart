@@ -31,10 +31,10 @@ class LanguageNotifier extends StateNotifier<AppLanguage> {
 
   void setLanguage(AppLanguage language) {
     state = language;
-    print('🌐 Language Changed: ${language.displayName}');
+    print('Language Changed: ${language.displayName}');
     SharedPreferences.getInstance().then((prefs) {
       prefs.setString('languageCode', language.code);
-      print('✅ Language Saved: ${language.code}');
+      print(' Language Saved: ${language.code}');
     });
   }
 }

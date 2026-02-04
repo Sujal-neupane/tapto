@@ -1,6 +1,7 @@
 import 'dart:developer' as developer;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:tapto/features/dashboard/data/models/cart_item_model.dart';
 import 'package:tapto/features/dashboard/presentation/viewmodel/cart_viewmodel.dart';
 import '../../../../app/theme/app_colors.dart';
@@ -165,7 +166,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            'Image not available',
+                            'imageNotAvailable'.tr(),
                             style: TextStyle(
                               color: Colors.grey[600],
                               fontSize: 14,
@@ -192,7 +193,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'No product image',
+                    'noProductImage'.tr(),
                     style: TextStyle(
                       color: Colors.grey[600],
                       fontSize: 16,
@@ -338,7 +339,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
               ),
             ),
             Text(
-              'Product Details',
+              'productDetails'.tr(),
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w400,
@@ -442,14 +443,14 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'DESCRIPTION',
+          'description',
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w500,
             letterSpacing: 1.5,
             color: Color(0xFF999999),
           ),
-        ),
+        ).tr(),
         const SizedBox(height: 10),
         Text(
           widget.description,
@@ -472,14 +473,14 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
         Row(
           children: [
             const Text(
-              'SELECT SIZE',
+              'selectSize',
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
                 letterSpacing: 1.5,
                 color: Color(0xFF999999),
               ),
-            ),
+            ).tr(),
             if (selectedSize != null) ...[
               const SizedBox(width: 8),
               Container(
@@ -551,14 +552,14 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
         Row(
           children: [
             const Text(
-              'SELECT COLOR',
+              'selectColor',
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,
                 letterSpacing: 1.5,
                 color: Color(0xFF999999),
               ),
-            ),
+            ).tr(),
             if (selectedColor != null) ...[
               const SizedBox(width: 8),
               Container(
@@ -657,7 +658,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Total Price',
+                      'totalPrice'.tr(),
                       style: TextStyle(
                         fontSize: 11,
                         color: Colors.grey[600],
@@ -711,7 +712,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: Text(
-                                          '${widget.productName} added to cart',
+                                          '${widget.productName} ${'addedToCart'.tr()}',
                                           style: const TextStyle(
                                             fontWeight: FontWeight.w400,
                                             fontSize: 15,
@@ -751,7 +752,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
                         ),
                         const SizedBox(width: 10),
                         Text(
-                          'Add to Cart',
+                          'addToCart'.tr(),
                           style: TextStyle(
                             fontSize: 17,
                             fontWeight: FontWeight.w400,

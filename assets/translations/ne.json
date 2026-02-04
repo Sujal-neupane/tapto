@@ -204,5 +204,13 @@
   "removedFromWishlist": "इच्छा सूचीबाट हटाइयो",
   "noProductsAvailable": "कुनै उत्पादनहरू उपलब्ध छैनन्",
   "checkBackLaterForNewArrivals": "नयाँ आगमनहरूको लागि पछि फर्केर हेर्नुहोस्",
-  "refresh": "ताजा गर्नुहोस्"
+  "refresh": "ताजा गर्नुहोस्",
+  "imageNotAvailable": "छवि उपलब्ध छैन",
+  "noProductImage": "कुनै उत्पादन छवि छैन",
+  "productDetails": "उत्पादन विवरणहरू",
+  "description": "विवरण",
+  "selectSize": "आकार चयन गर्नुहोस्",
+  "selectColor": "रङ चयन गर्नुहोस्",
+  "totalPrice": "कुल मूल्य",
+  "addToCart": "कार्टमा थप्नुहोस्"
 }

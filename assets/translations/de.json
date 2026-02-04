@@ -204,5 +204,13 @@
   "removedFromWishlist": "von der Wunschliste entfernt",
   "noProductsAvailable": "Keine Produkte verfügbar",
   "checkBackLaterForNewArrivals": "Schauen Sie später nach neuen Produkten vorbei",
-  "refresh": "Aktualisieren"
+  "refresh": "Aktualisieren",
+  "imageNotAvailable": "Bild nicht verfügbar",
+  "noProductImage": "Kein Produktbild",
+  "productDetails": "Produktdetails",
+  "description": "BESCHREIBUNG",
+  "selectSize": "GRÖSSE AUSWÄHLEN",
+  "selectColor": "FARBE AUSWÄHLEN",
+  "totalPrice": "Gesamtpreis",
+  "addToCart": "In den Warenkorb"
 }
