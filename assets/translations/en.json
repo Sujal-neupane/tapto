@@ -240,6 +240,8 @@
   "category": "Category",
   "priceRange": "Price Range",
   "applyFilters": "Apply Filters",
-  "clearFilters": "Clear Filters"
+  "clearFilters": "Clear Filters",
+  "tags": "Tags",
+  "reset": "Reset"
 }
 

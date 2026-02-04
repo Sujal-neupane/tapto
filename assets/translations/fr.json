@@ -237,5 +237,7 @@
   "category": "Catégorie",
   "priceRange": "Fourchette de Prix",
   "applyFilters": "Appliquer les Filtres",
-  "clearFilters": "Effacer les Filtres"
+  "clearFilters": "Effacer les Filtres",
+  "tags": "Étiquettes",
+  "reset": "Réinitialiser"
 }

@@ -237,5 +237,7 @@
   "category": "Categoría",
   "priceRange": "Rango de Precio",
   "applyFilters": "Aplicar Filtros",
-  "clearFilters": "Limpiar Filtros"
+  "clearFilters": "Limpiar Filtros",
+  "tags": "Etiquetas",
+  "reset": "Restablecer"
 }
