@@ -158,5 +158,20 @@
   "profile": "Profil",
   "search": "Rechercher",
   "filter": "Filtrer",
-  "cart": "Panier"
+  "cart": "Panier",
+  "welcomeBack": "Bienvenue",
+  "curatedDeals": "Vos offres sélectionnées vous attendent",
+  "emailAddress": "Adresse Email",
+  "enterEmail": "Entrez votre email",
+  "enterPassword": "Entrez votre mot de passe",
+  "pleaseEnterEmail": "Veuillez entrer votre email",
+  "pleaseEnterValidEmail": "Veuillez entrer un email valide",
+  "pleaseEnterPassword": "Veuillez entrer votre mot de passe",
+  "passwordMinLength": "Le mot de passe doit contenir au moins 6 caractères",
+  "forgotPassword": "Mot de passe oublié?",
+  "logIn": "Se Connecter",
+  "dontHaveAccount": "Vous n'avez pas de compte?",
+  "signUp": "S'inscrire",
+  "welcomeBackMessage": "Bienvenue!",
+  "loginFailed": "Échec de la connexion"
 }

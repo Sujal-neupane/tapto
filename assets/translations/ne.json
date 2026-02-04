@@ -158,5 +158,20 @@
   "profile": "प्रोफाइल",
   "search": "खोज्नुहोस्",
   "filter": "फिल्टर गर्नुहोस्",
-  "cart": "कार्ट"
+  "cart": "कार्ट",
+  "welcomeBack": "फेरि स्वागतम",
+  "curatedDeals": "तपाईका क्युरेट गरिएका डिलहरू पर्खिरहेका छन्",
+  "emailAddress": "ईमेल ठेगाना",
+  "enterEmail": "आफ्नो ईमेल प्रविष्ट गर्नुहोस्",
+  "enterPassword": "आफ्नो पासवर्ड प्रविष्ट गर्नुहोस्",
+  "pleaseEnterEmail": "कृपया आफ्नो ईमेल प्रविष्ट गर्नुहोस्",
+  "pleaseEnterValidEmail": "कृपया मान्य ईमेल प्रविष्ट गर्नुहोस्",
+  "pleaseEnterPassword": "कृपया आफ्नो पासवर्ड प्रविष्ट गर्नुहोस्",
+  "passwordMinLength": "पासवर्ड कम्तिमा ६ वर्णको हुनुपर्छ",
+  "forgotPassword": "पासवर्ड भुल्नुभयो?",
+  "logIn": "लग इन गर्नुहोस्",
+  "dontHaveAccount": "खाता छैन?",
+  "signUp": "साइन अप गर्नुहोस्",
+  "welcomeBackMessage": "फेरि स्वागतम!",
+  "loginFailed": "लग इन असफल भयो"
 }

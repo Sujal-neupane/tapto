@@ -158,5 +158,20 @@
   "profile": "Perfil",
   "search": "Buscar",
   "filter": "Filtrar",
-  "cart": "Carrito"
+  "cart": "Carrito",
+  "welcomeBack": "Bienvenido de Vuelta",
+  "curatedDeals": "Tus ofertas curadas te esperan",
+  "emailAddress": "Dirección de Correo",
+  "enterEmail": "Ingresa tu correo",
+  "enterPassword": "Ingresa tu contraseña",
+  "pleaseEnterEmail": "Por favor ingresa tu correo",
+  "pleaseEnterValidEmail": "Por favor ingresa un correo válido",
+  "pleaseEnterPassword": "Por favor ingresa tu contraseña",
+  "passwordMinLength": "La contraseña debe tener al menos 6 caracteres",
+  "forgotPassword": "¿Olvidaste tu contraseña?",
+  "logIn": "Iniciar Sesión",
+  "dontHaveAccount": "¿No tienes cuenta?",
+  "signUp": "Registrarse",
+  "welcomeBackMessage": "¡Bienvenido de vuelta!",
+  "loginFailed": "Error al iniciar sesión"
 }

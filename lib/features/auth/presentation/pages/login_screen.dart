@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:tapto/app/routes/app_routes.dart';
 import 'package:tapto/features/auth/presentation/state/auth_state.dart';
 import 'package:tapto/features/auth/presentation/viewmodel/auth_viewmodel.dart';
@@ -47,8 +48,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       if (!mounted) return;
       if (next.status == AuthStatus.authenticated) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Welcome back!'),
+          SnackBar(
+            content: Text('welcomeBackMessage'.tr()),
             backgroundColor: Colors.green,
           ),
         );
@@ -60,7 +61,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
       } else if (next.status == AuthStatus.error) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(next.errorMessage ?? 'Login failed'),
+            content: Text(next.errorMessage ?? 'loginFailed'.tr()),
             backgroundColor: Colors.red,
           ),
         );
@@ -112,7 +113,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       ],
                     ).createShader(bounds),
                     child: Text(
-                      'Welcome Back',
+                      'welcomeBack'.tr(),
                       style: AppTextStyles.heading.copyWith(
                         fontSize: 32,
                         fontWeight: FontWeight.w800,
@@ -122,24 +123,24 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Your curated deals await',
+                    'curatedDeals'.tr(),
                     style: TextStyle(color: Colors.grey[600], fontSize: 16),
                   ),
                   const SizedBox(height: 48),
                   AuthTextField(
                     controller: email,
-                    label: 'Email Address',
-                    hint: 'Enter your email',
+                    label: 'emailAddress'.tr(),
+                    hint: 'enterEmail'.tr(),
                     prefixIcon: Icons.email_outlined,
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your email';
+                        return 'pleaseEnterEmail'.tr();
                       }
                       if (!RegExp(
                         r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
                       ).hasMatch(value)) {
-                        return 'Please enter a valid email';
+                        return 'pleaseEnterValidEmail'.tr();
                       }
                       return null;
                     },
@@ -147,8 +148,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   const SizedBox(height: 20),
                   AuthTextField(
                     controller: password,
-                    label: 'Password',
-                    hint: 'Enter your password',
+                    label: 'password'.tr(),
+                    hint: 'enterPassword'.tr(),
                     prefixIcon: Icons.lock_outline_rounded,
                     obscureText: !showPassword,
                     suffixIcon: IconButton(
@@ -163,10 +164,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your password';
+                        return 'pleaseEnterPassword'.tr();
                       }
                       if (value.length < 6) {
-                        return 'Password must be at least 6 characters';
+                        return 'passwordMinLength'.tr();
                       }
                       return null;
                     },
@@ -180,12 +181,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                         AppRoutes.forgotPassword,
                       ),
                       child: const Text(
-                        'Forgot Password?',
+                        'forgotPassword',
                         style: TextStyle(
                           color: AppColors.primary,
                           fontWeight: FontWeight.w700,
                         ),
-                      ),
+                      ).tr(),
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -240,13 +241,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                               ),
                             )
                           : const Text(
-                              'Log In',
+                              'logIn',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.white,
                               ),
-                            ),
+                            ).tr(),
                     ),
                   ),
                   const SizedBox(height: 40),
@@ -254,7 +255,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "Don't have an account? ",
+                        'dontHaveAccount'.tr(),
                         style: TextStyle(color: Colors.grey[700]),
                       ),
                       TextButton(
@@ -263,12 +264,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                           AppRoutes.signup,
                         ),
                         child: const Text(
-                          'Sign Up',
+                          'signUp',
                           style: TextStyle(
                             color: AppColors.primary,
                             fontWeight: FontWeight.bold,
                           ),
-                        ),
+                        ).tr(),
                       ),
                     ],
                   ),
