@@ -43,6 +43,8 @@ class AuthRepositoryImpl implements AuthRepository {
           email: authApiModel.email,
           password: password,
           preference: authApiModel.preference,
+          isAdmin: authApiModel.isAdmin,
+          country: authApiModel.country,
         );
 
         // Save user to local database for offline access
@@ -88,6 +90,7 @@ class AuthRepositoryImpl implements AuthRepository {
         email: authApiModel.email,
         password: password,
         preference: authApiModel.preference,
+        country: authApiModel.country,
       );
 
       await localDataSource.saveUser(userModel);
@@ -101,10 +104,25 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<User?> getCurrentUser() async {
     try {
-      final userModel = await localDataSource.getCurrentUser();
-      return userModel?.toEntity();
+      // First try to get from remote (fresh data)
+      final remoteUser = await remoteDataSource.getCurrentUser();
+      final user = remoteUser.toEntity();
+      
+      // Save to local storage for offline access
+      final userModel = UserModel.fromEntity(user, '');
+      await localDataSource.saveUser(userModel);
+      
+      return user;
     } catch (e) {
-      return null;
+      // If remote fails, fallback to local storage
+      print('Failed to get current user from remote, trying local: $e');
+      try {
+        final userModel = await localDataSource.getCurrentUser();
+        return userModel?.toEntity();
+      } catch (localError) {
+        print('Failed to get current user from local storage: $localError');
+        return null;
+      }
     }
   }
 

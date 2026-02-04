@@ -1,10 +1,13 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:tapto/core/utils/localization.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/app/theme/app_colors.dart';
 import 'package:tapto/app/widgets/custom_app_bar.dart';
 import 'package:tapto/features/orders/presentation/pages/order_details_screen.dart';
 import 'package:tapto/features/orders/presentation/viewmodel/order_viewmodel.dart';
+import 'package:tapto/core/utils/currency_formatter.dart';
 import 'package:tapto/features/orders/domain/enitites/order_entity.dart';
 import 'package:intl/intl.dart';
 
@@ -37,6 +40,8 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> with SingleTick
     _animController.dispose();
     super.dispose();
   }
+
+  String Function(double) get currencyFormatter => ref.watch(currencyFormatterProvider);
 
   List<OrderEntity> _getFilteredOrders(List<OrderEntity> orders) {
     if (_selectedFilter == 'All') return orders;
@@ -130,7 +135,7 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> with SingleTick
           final isSelected = filter == _selectedFilter;
           return FilterChip(
             selected: isSelected,
-            label: Text(filter),
+            label: Text(context.translate(filter)),
             onSelected: (_) {
               HapticFeedback.selectionClick();
               setState(() => _selectedFilter = filter);
@@ -168,12 +173,12 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> with SingleTick
           ),
           const SizedBox(height: 24),
           Text(
-            'No orders yet',
+            context.translate('No orders yet'),
             style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.grey[800]),
           ),
           const SizedBox(height: 8),
           Text(
-            'Start shopping to see your orders here',
+            context.translate('Start shopping to see your orders here'),
             style: TextStyle(color: Colors.grey[600]),
           ),
         ],
@@ -197,8 +202,8 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> with SingleTick
               child: const Icon(Icons.error_outline, size: 64, color: Colors.red),
             ),
             const SizedBox(height: 20),
-            const Text(
-              'Error loading orders',
+            Text(
+              context.translate('Error loading orders'),
               style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
@@ -214,7 +219,7 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> with SingleTick
                 ref.read(orderViewModelProvider.notifier).fetchMyOrders();
               },
               icon: const Icon(Icons.refresh),
-              label: const Text('Retry'),
+              label: Text(context.translate('Retry')),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
@@ -281,7 +286,7 @@ class _OrderCard extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Order #${order.id.substring(order.id.length - 6)}',
+                          context.translate('Order #${order.id.substring(order.id.length - 6)}'),
                           style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 15,
@@ -311,7 +316,7 @@ class _OrderCard extends ConsumerWidget {
                         Icon(Icons.shopping_cart_outlined, size: 16, color: Colors.grey[600]),
                         const SizedBox(width: 8),
                         Text(
-                          '${order.items.length} item(s)',
+                          context.translate('${order.items.length} item(s)'),
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
@@ -370,7 +375,7 @@ class _OrderCard extends ConsumerWidget {
                     style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                   ),
                   Text(
-                    '\$${order.total.toStringAsFixed(2)}',
+                    '${ref.watch(currencyFormatterProvider)(order.total)}',
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,

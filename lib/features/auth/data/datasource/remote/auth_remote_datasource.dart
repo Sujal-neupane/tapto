@@ -25,6 +25,7 @@ abstract class AuthRemoteDataSource {
   });
 
   Future<AuthApiModel> login(String email, String password);
+  Future<AuthApiModel> getCurrentUser();
   Future<AuthApiModel> getUserById(String authId);
   Future<AuthApiModel> updateUser(AuthApiModel user);
   Future<AuthApiModel> uploadProfilePicture(File image);
@@ -91,6 +92,23 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   }
 
   @override
+  Future<AuthApiModel> getCurrentUser() async {
+    try {
+      final response = await _apiClient.get(ApiEndpoints.currentUser);
+
+      if (response.statusCode == 200) {
+        if (response.data['success'] == true) {
+          final data = response.data['data'] as Map<String, dynamic>;
+          return AuthApiModel.fromJson(data);
+        }
+      }
+      throw Exception('Failed to get current user');
+    } catch (e) {
+      throw Exception('Failed to get current user: ${e.toString()}');
+    }
+  }
+
+  @override
   Future<AuthApiModel> register({
     required String email,
     required String password,
@@ -105,6 +123,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         password: password,
         preference: preference,
         phoneNumber: phoneNumber ?? '',
+        country: 'United States', // Default country for registration
       );
 
       final response = await _apiClient.post(

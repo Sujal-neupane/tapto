@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:tapto/features/dashboard/data/models/cart_item_model.dart';
 import 'package:tapto/features/dashboard/presentation/viewmodel/cart_viewmodel.dart';
+import 'package:tapto/core/utils/currency_formatter.dart';
 import '../../../../app/theme/app_colors.dart';
 
 
@@ -69,6 +70,8 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
     _animationController.dispose();
     super.dispose();
   }
+
+  String Function(double) get currencyFormatter => ref.watch(currencyFormatterProvider);
 
   @override
   Widget build(BuildContext context) {
@@ -401,7 +404,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                '\$${widget.price.toStringAsFixed(2)}',
+                '${currencyFormatter(widget.price)}',
                 style: const TextStyle(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w400,
@@ -667,7 +670,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      '\$${widget.price.toStringAsFixed(2)}',
+                      '${currencyFormatter(widget.price)}',
                       style: const TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.w500,

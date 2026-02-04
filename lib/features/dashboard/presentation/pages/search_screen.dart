@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/core/api/api_endpoint.dart';
+import 'package:tapto/core/utils/currency_formatter.dart';
 import 'package:tapto/features/dashboard/presentation/pages/product_details_screen.dart';
 import 'package:tapto/features/dashboard/presentation/provider/wishlist_provider.dart';
 import 'package:tapto/features/products/data/models/product_model.dart';
@@ -25,6 +26,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     _searchController.dispose();
     super.dispose();
   }
+
+  String Function(double) get currencyFormatter => ref.watch(currencyFormatterProvider);
 
   String _getImageUrl(String path) {
     if (path.startsWith('http')) return path;
@@ -272,6 +275,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             );
           },
           isInWishlist: ref.watch(wishlistProvider).any((p) => p.id == product.id),
+          currencyFormatter: currencyFormatter,
         );
       },
     );
@@ -333,6 +337,7 @@ class _ProductCard extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onFavorite;
   final bool isInWishlist;
+  final String Function(double) currencyFormatter;
 
   const _ProductCard({
     required this.product,
@@ -340,6 +345,7 @@ class _ProductCard extends StatelessWidget {
     required this.onTap,
     required this.onFavorite,
     required this.isInWishlist,
+    required this.currencyFormatter,
   });
 
   @override
@@ -441,7 +447,7 @@ class _ProductCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    '\$${product.price.toStringAsFixed(2)}',
+                    currencyFormatter(product.price),
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,

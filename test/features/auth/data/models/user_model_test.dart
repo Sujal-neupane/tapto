@@ -10,6 +10,7 @@ void main() {
       email: 'test@example.com',
       password: 'pass',
       isAdmin: true,
+      country: 'USA',
     );
     final user = userModel.toEntity();
     expect(user.id, '1');
@@ -26,6 +27,7 @@ void main() {
       name: 'Sujal',
       email: 'sujal@example.com',
       isAdmin: false,
+      country: 'Nepal',
     );
     final userModel = UserModel.fromEntity(user, 'secret');
     expect(userModel.id, '2');

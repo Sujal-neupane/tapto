@@ -8,6 +8,7 @@ class User extends Equatable {
   final String? preference; // Shopping preference (Men/Women)
   final String? profilePicture;
   final String? phoneNumber;
+  final String? country; // Country for currency and payment methods
   final bool isAdmin;
 
   const User({
@@ -17,11 +18,12 @@ class User extends Equatable {
     this.preference,
     this.profilePicture,
     this.phoneNumber,
+    this.country,
     this.isAdmin = false,
   });
 
   @override
-  List<Object?> get props => [id, name, email, preference, profilePicture];
+  List<Object?> get props => [id, name, email, preference, profilePicture, phoneNumber, country];
   User copyWith({
     String? id,
     String? name,
@@ -29,6 +31,7 @@ class User extends Equatable {
     String? preference,
     String? profilePicture,
     String? phoneNumber,
+    String? country,
     bool? isAdmin,
   }) {
     return User(
@@ -38,6 +41,7 @@ class User extends Equatable {
       preference: preference ?? this.preference,
       profilePicture: profilePicture ?? this.profilePicture,
       phoneNumber: phoneNumber ?? this.phoneNumber,
+      country: country ?? this.country,
       isAdmin: isAdmin ?? this.isAdmin,
     );
   }

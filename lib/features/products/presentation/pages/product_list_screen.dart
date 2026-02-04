@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:tapto/core/utils/currency_formatter.dart';
 
 import '../../domain/entities/product_entity.dart';
 
@@ -20,6 +21,7 @@ class ProductListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final productState = ref.watch(productViewModelProvider);
+    final currencyFormatter = ref.watch(currencyFormatterProvider);
 
     return Scaffold(
       appBar: AppBar(title: const Text('Products')),
@@ -31,7 +33,7 @@ class ProductListScreen extends ConsumerWidget {
             return ListTile(
               title: Text(product.name),
               subtitle: Text(product.category),
-              trailing: Text('\$${product.price.toStringAsFixed(2)}'),
+              trailing: Text(currencyFormatter(product.price)),
             );
           },
         ),

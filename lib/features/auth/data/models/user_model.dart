@@ -24,6 +24,9 @@ class UserModel extends HiveObject {
   @HiveField(5)
   final bool isAdmin;
 
+  @HiveField(6)
+  final String? country;
+
   UserModel({
     required this.id,
     required this.name,
@@ -31,11 +34,12 @@ class UserModel extends HiveObject {
     required this.password,
     this.preference,
     this.isAdmin = false,
+    this.country = 'United States',
   });
 
   /// Convert to domain entity
   User toEntity() {
-    return User(id: id, name: name, email: email, preference: preference, isAdmin: isAdmin);
+    return User(id: id, name: name, email: email, preference: preference, isAdmin: isAdmin, country: country);
   }
 
   /// Create from domain entity
@@ -47,6 +51,7 @@ class UserModel extends HiveObject {
       password: password,
       preference: user.preference,
       isAdmin: user.isAdmin,
+      country: user.country ?? 'United States',
     );
   }
 
@@ -57,6 +62,7 @@ class UserModel extends HiveObject {
     required String password,
     String? preference,
     String? id,
+    String country = 'United States',
   }) {
     return UserModel(
       id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -65,6 +71,7 @@ class UserModel extends HiveObject {
       password: password,
       preference: preference,
       isAdmin: false,
+      country: country,
     );
   }
 
@@ -80,6 +87,7 @@ class UserModel extends HiveObject {
     String? password,
     String? preference,
     bool? isAdmin,
+    String? country,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -88,6 +96,7 @@ class UserModel extends HiveObject {
       password: password ?? this.password,
       preference: preference ?? this.preference,
       isAdmin: isAdmin ?? this.isAdmin,
+      country: country ?? this.country,
     );
   }
 }

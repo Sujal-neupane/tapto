@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/features/products/presentation/providers/product_providers.dart';
+import 'package:tapto/core/utils/currency_formatter.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_text_styles.dart';
@@ -60,6 +61,8 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
     }
   }
 
+  String Function(double) get currencyFormatter => ref.watch(currencyFormatterProvider);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -99,7 +102,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '\$${_priceRange.start.toStringAsFixed(0)}',
+                        '${currencyFormatter(_priceRange.start)}',
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 14,
@@ -107,7 +110,7 @@ class _FilterScreenState extends ConsumerState<FilterScreen> {
                         ),
                       ),
                       Text(
-                        '\$${_priceRange.end.toStringAsFixed(0)}',
+                        '${currencyFormatter(_priceRange.end)}',
                         style: const TextStyle(
                           fontWeight: FontWeight.w600,
                           fontSize: 14,

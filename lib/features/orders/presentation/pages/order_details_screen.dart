@@ -1,8 +1,12 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+// import 'package:tapto/core/utils/localization.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:printing/printing.dart';
 import 'package:tapto/app/theme/app_colors.dart';
+import 'package:tapto/core/utils/localization.dart';
+import 'package:tapto/core/utils/currency_formatter.dart';
 import 'package:tapto/features/orders/domain/enitites/order_entity.dart';
 import 'package:tapto/features/orders/domain/services/invoice_service.dart';
 import 'package:tapto/features/orders/presentation/viewmodel/order_viewmodel.dart';
@@ -43,6 +47,8 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> with Si
     super.dispose();
   }
 
+  String Function(double) get currencyFormatter => ref.watch(currencyFormatterProvider);
+
   Future<void> _generateAndShowInvoice() async {
     try {
       // Show loading indicator
@@ -75,7 +81,7 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> with Si
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to generate invoice: ${e.toString()}'),
+            content: Text('${context.translate('Failed to generate invoice:')} ${e.toString()}'),
             backgroundColor: Colors.red,
           ),
         );
@@ -87,11 +93,11 @@ class _OrderDetailsScreenState extends ConsumerState<OrderDetailsScreen> with Si
     final orderInfo = '''
 🛍️ TapTo Order Details
 ━━━━━━━━━━━━━━━━━━━━
-📦 Order #${widget.order.id.substring(widget.order.id.length - 6)}
-📅 Date: ${DateFormat('MMM dd, yyyy').format(widget.order.createdAt)}
-📊 Status: ${widget.order.status.name.toUpperCase()}
-💰 Total: \$${widget.order.total.toStringAsFixed(2)}
-🚚 Tracking: ${widget.order.trackingNumber}
+Order #${widget.order.id.substring(widget.order.id.length - 6)}
+Date: ${DateFormat('MMM dd, yyyy').format(widget.order.createdAt)}
+Status: ${widget.order.status.name.toUpperCase()}
+Total: ${currencyFormatter(widget.order.total)}
+Tracking: ${widget.order.trackingNumber}
 ━━━━━━━━━━━━━━━━━━━━
 Items: ${widget.order.items.length}
 ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').join('\n')}
@@ -112,7 +118,7 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
     return Scaffold(
       backgroundColor: Colors.grey[50],
       appBar: AppBar(
-        title: Text('Order #${widget.order.id.substring(widget.order.id.length - 6)}'),
+        title: Text(context.translate('Order #${widget.order.id.substring(widget.order.id.length - 6)}')),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -221,7 +227,7 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
           ),
           const SizedBox(height: 12),
           Text(
-            'Placed on ${DateFormat('MMMM dd, yyyy').format(widget.order.createdAt)}',
+            '${context.translate('Placed on')} ${DateFormat('MMMM dd, yyyy').format(widget.order.createdAt)}',
             style: TextStyle(
               color: Colors.white.withOpacity(0.9),
               fontSize: 13,
@@ -235,21 +241,21 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
   String _getStatusMessage() {
     switch (widget.order.status) {
       case OrderStatus.pending:
-        return 'Your order is waiting for confirmation';
+        return context.translate('Your order is waiting for confirmation');
       case OrderStatus.confirmed:
-        return 'Your order has been confirmed!';
+        return context.translate('Your order has been confirmed!');
       case OrderStatus.processing:
-        return 'We\'re preparing your order';
+        return context.translate('We\'re preparing your order');
       case OrderStatus.shipped:
-        return 'Your order is on the way!';
+        return context.translate('Your order is on the way!');
       case OrderStatus.outForDelivery:
-        return 'Your order will arrive soon!';
+        return context.translate('Your order will arrive soon!');
       case OrderStatus.delivered:
-        return 'Your order has been delivered';
+        return context.translate('Your order has been delivered');
       case OrderStatus.cancelled:
-        return 'This order was cancelled';
+        return context.translate('This order was cancelled');
       case OrderStatus.refunded:
-        return 'Your order has been refunded';
+        return context.translate('Your order has been refunded');
     }
   }
 
@@ -512,7 +518,7 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
                       ),
                     ),
                     Text(
-                      '\$${(item.price * item.quantity).toStringAsFixed(2)}',
+                      '${currencyFormatter(item.price * item.quantity)}',
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
@@ -753,7 +759,7 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
               ),
               Text(
-                '\$${widget.order.total.toStringAsFixed(2)}',
+                currencyFormatter(widget.order.total),
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 20,
@@ -792,7 +798,7 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
                 ),
               )
             : Text(
-                '\$${amount.toStringAsFixed(2)}',
+                currencyFormatter(amount),
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.grey[800]),
               ),
       ],

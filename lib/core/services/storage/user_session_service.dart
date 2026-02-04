@@ -58,6 +58,7 @@ class UserSessionService {
     required String password,
     String? preference,
   }) async {
+
     await _ensureInitialized();
 
     // Check if email already exists
@@ -73,6 +74,7 @@ class UserSessionService {
       email: email,
       password: password,
       preference: preference,
+      country: 'United States', // Default country
     );
 
     // Save to Hive

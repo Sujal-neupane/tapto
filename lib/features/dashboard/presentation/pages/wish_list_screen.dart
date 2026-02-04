@@ -6,6 +6,7 @@ import 'package:tapto/core/api/api_endpoint.dart';
 import 'package:tapto/features/dashboard/data/models/cart_item_model.dart';
 import 'package:tapto/features/dashboard/presentation/provider/wishlist_provider.dart';
 import 'package:tapto/features/dashboard/presentation/viewmodel/cart_viewmodel.dart';
+import 'package:tapto/core/utils/currency_formatter.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 
@@ -229,7 +230,7 @@ class WishlistScreen extends ConsumerWidget {
   }
 }
 
-class _WishlistItemCard extends StatelessWidget {
+class _WishlistItemCard extends ConsumerWidget {
   final dynamic product;
   final String imageUrl;
   final VoidCallback onAddToCart;
@@ -243,7 +244,7 @@ class _WishlistItemCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -314,7 +315,7 @@ class _WishlistItemCard extends StatelessWidget {
                       Row(
                         children: [
                           Text(
-                            '\$${product.price.toStringAsFixed(2)}',
+                            '${ref.watch(currencyFormatterProvider)(product.price)}',
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,

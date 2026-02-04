@@ -2,10 +2,13 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/app/routes/app_routes.dart';
+import 'package:tapto/core/providers/currency_provider.dart';
 import 'package:tapto/features/dashboard/presentation/viewmodel/cart_viewmodel.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/widgets/custom_app_bar.dart';
+import 'package:tapto/core/utils/currency_formatter.dart';
+import 'package:tapto/core/utils/currency_formatter.dart';
 
 class CartScreen extends ConsumerStatefulWidget {
   const CartScreen({super.key});
@@ -22,10 +25,16 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       ref.read(cartViewModelProvider.notifier).loadCart();
     });
   }
+
+  String Function(double) get currencyFormatter => ref.watch(currencyFormatterProvider);
+
   @override
   Widget build(BuildContext context) {
     final cartState = ref.watch(cartViewModelProvider);
     final cart = ref.read(cartViewModelProvider.notifier);
+    final taxRate = ref.watch(taxRateProvider);
+    final tax = cartState.subtotal * taxRate;
+    final total = cartState.subtotal + cartState.shippingFee + tax;
 
     if (cartState.items.isEmpty) {
       return Scaffold(
@@ -135,7 +144,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                               ),
                               const SizedBox(height: AppSpacing.xs),
                               Text(
-                                '\$${item.price.toStringAsFixed(2)}',
+                                currencyFormatter(item.price),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w500,
                                   fontSize: 14,
@@ -299,7 +308,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                         ),
                       ).tr(),
                       Text(
-                        '\$${cartState.subtotal.toStringAsFixed(2)}',
+                        currencyFormatter(cartState.subtotal),
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[600],
@@ -321,7 +330,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                         ),
                       ).tr(),
                       Text(
-                        '\$${cartState.shippingFee.toStringAsFixed(2)}',
+                        currencyFormatter(cartState.shippingFee),
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[600],
@@ -343,7 +352,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                         ),
                       ).tr(),
                       Text(
-                        '\$${cartState.tax.toStringAsFixed(2)}',
+                        currencyFormatter(tax),
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[600],
@@ -367,7 +376,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                         ),
                       ).tr(),
                       Text(
-                        '\$${cartState.total.toStringAsFixed(2)}',
+                        currencyFormatter(total),
                         style: TextStyle(
                           fontSize: 22,
                           color: AppColors.primary,

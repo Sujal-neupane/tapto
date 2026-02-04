@@ -63,7 +63,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
     ref.listen<AuthState>(authViewModelProvider, (previous, next) {
       if (!mounted) return;
-      if (next.status == AuthStatus.registered) {
+      if (next.status == AuthStatus.authenticated) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('registrationSuccessful'.tr()),
@@ -475,13 +475,22 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                 return;
                               }
                               if (_formKey.currentState?.validate() == true) {
+                                // Map translation keys to backend values
+                                String? backendPreference;
+                                if (_selectedPreference == 'mensFashion') {
+                                  backendPreference = 'Mens Fashion';
+                                } else if (_selectedPreference == 'womensFashion') {
+                                  backendPreference = 'Womens Fashion';
+                                }
+
                                 ref
                                     .read(authViewModelProvider.notifier)
                                     .register(
                                       name: _nameController.text.trim(),
                                       email: _emailController.text.trim(),
                                       password: _passwordController.text,
-                                      preference: _selectedPreference,
+                                      preference: backendPreference,
+                                      country: _selectedCountry,
                                     );
                               }
                             },

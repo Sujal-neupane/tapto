@@ -37,6 +37,7 @@ class AuthViewModel extends Notifier<AuthState> {
     required String email,
     required String password,
     String? preference,
+    required String country,
   }) async {
     state = state.copyWith(status: AuthStatus.loading);
 
@@ -60,7 +61,9 @@ class AuthViewModel extends Notifier<AuthState> {
         await hiveService.saveUser(
           UserModel.fromEntity(user, password),
         );
-        state = state.copyWith(status: AuthStatus.registered, user: user);
+        // Save selected country for currency determination
+        await hiveService.put('user_country', country);
+        state = state.copyWith(status: AuthStatus.authenticated, user: user);
       },
     );
   }
@@ -122,6 +125,10 @@ class AuthViewModel extends Notifier<AuthState> {
       if (user != null) {
         final hiveService = ref.read(hiveServiceProvider);
         await hiveService.saveUser(UserModel.fromEntity(user, ''));
+        // Save country for currency determination
+        if (user.country != null && user.country!.isNotEmpty) {
+          await hiveService.put('user_country', user.country);
+        }
       }
       state = state.copyWith(
         status: user != null

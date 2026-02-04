@@ -3,12 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:tapto/app/theme/app_colors.dart';
+import 'package:tapto/core/providers/currency_provider.dart';
 import 'package:tapto/features/dashboard/presentation/viewmodel/cart_viewmodel.dart';
 import 'package:tapto/features/dashboard/data/models/cart_item_model.dart';
 import 'package:tapto/features/orders/presentation/pages/my_orders_screen.dart';
 import 'package:tapto/features/orders/presentation/viewmodel/order_viewmodel.dart';
 
-import '../../../../app/theme/app_colors.dart';
+import 'package:tapto/core/utils/currency_formatter.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
@@ -65,6 +67,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
     _fadeController.dispose();
     super.dispose();
   }
+
+  String Function(double) get currencyFormatter => ref.watch(currencyFormatterProvider);
 
   Future<void> _showAddressModal(BuildContext context) async {
     HapticFeedback.mediumImpact();
@@ -235,7 +239,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
                         const SizedBox(height: 16),
                         
                         // Order Details Summary
-                        _buildOrderDetails(total),
+                        _buildOrderDetails(cartItems),
                       ],
                     ),
                     
@@ -424,7 +428,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                '\$${item.price.toStringAsFixed(2)}',
+                ref.watch(currencyFormatterProvider)(item.price),
                 style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
               ),
               const SizedBox(height: 4),
@@ -700,7 +704,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
     );
   }
 
-  Widget _buildOrderDetails(double total) {
+  Widget _buildOrderDetails(List<CartItemModel> cartItems) {
+    final subtotal = cartItems.fold<double>(0, (sum, item) => sum + item.price * item.quantity);
+    final shipping = cartItems.isEmpty ? 0.0 : 10.0;
+    final taxRate = ref.watch(taxRateProvider);
+    final tax = subtotal * taxRate;
+    final total = subtotal + shipping + tax;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -716,11 +726,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
       ),
       child: Column(
         children: [
-          _buildPriceRow('Subtotal', total),
+          _buildPriceRow('Subtotal', subtotal),
           const SizedBox(height: 12),
-          _buildPriceRow('Shipping', 0, isFree: true),
+          _buildPriceRow('Shipping', shipping, isFree: shipping == 0),
           const SizedBox(height: 12),
-          _buildPriceRow('Tax', 0),
+          _buildPriceRow('Tax', tax),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -729,7 +739,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
                 style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
               ),
               Text(
-                '\$${total.toStringAsFixed(2)}',
+                ref.watch(currencyFormatterProvider)(total),
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 20,
@@ -768,14 +778,19 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
                 ),
               )
             : Text(
-                '\$${amount.toStringAsFixed(2)}',
+                '${currencyFormatter(amount)}',
                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.grey[800]),
               ),
       ],
     );
   }
 
-  Widget _buildBottomBar(List<CartItemModel> cartItems, double total) {
+  Widget _buildBottomBar(List<CartItemModel> cartItems, double cartTotal) {
+    final subtotal = cartItems.fold<double>(0, (sum, item) => sum + item.price * item.quantity);
+    final shipping = cartItems.isEmpty ? 0.0 : 10.0;
+    final taxRate = ref.watch(taxRateProvider);
+    final tax = subtotal * taxRate;
+    final total = subtotal + shipping + tax;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -822,7 +837,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '• \$${total.toStringAsFixed(2)}',
+                        '• ${currencyFormatter(total)}',
                         style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                       ),
                     ],

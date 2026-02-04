@@ -54,6 +54,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
         email: email,
         password: password,
         preference: preference,
+        country: 'United States', // Default country
       );
 
       // Save to Hive

@@ -2,6 +2,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:convert';
 import 'package:tapto/core/services/storage/user_session_service.dart';
 import 'package:tapto/features/dashboard/data/models/cart_item_model.dart';
+import 'package:tapto/core/providers/currency_provider.dart';
 
 class CartState {
   final List<CartItemModel> items;
@@ -19,7 +20,7 @@ class CartState {
 
   double get shippingFee => items.isEmpty ? 0 : 10.0;
 
-  double get tax => subtotal * 0.13;
+  double get tax => 0.0; // Will be calculated in viewmodel
 
   double get total => subtotal + shippingFee + tax;
 
@@ -43,7 +44,7 @@ class CartViewModel extends Notifier<CartState> {
 
   @override
   CartState build() {
-    // Don't read your own provider here!
+    // Return initial state
     return CartState();
   }
 

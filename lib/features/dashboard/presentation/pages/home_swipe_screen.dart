@@ -6,6 +6,7 @@ import 'package:tapto/features/dashboard/data/models/cart_item_model.dart';
 import 'package:tapto/features/dashboard/presentation/pages/product_details_screen.dart';
 import 'package:tapto/features/dashboard/presentation/provider/wishlist_provider.dart';
 import 'package:tapto/features/dashboard/presentation/viewmodel/cart_viewmodel.dart';
+import 'package:tapto/core/utils/currency_formatter.dart';
 import 'package:tapto/features/products/data/models/product_model.dart';
 import 'package:tapto/features/products/presentation/providers/product_providers.dart';
 
@@ -39,6 +40,8 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
     _animationController.dispose();
     super.dispose();
   }
+
+  String Function(double) get currencyFormatter => ref.watch(currencyFormatterProvider);
 
   void _resetDrag() {
     setState(() => _dragOffset = Offset.zero);
@@ -367,6 +370,7 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
               isTop: i == 0,
               dragOffset: i == 0 ? _dragOffset : Offset.zero,
               getImageUrl: _getImageUrl,
+              currencyFormatter: currencyFormatter,
               onPanUpdate: i == 0
                   ? (details) => setState(() => _dragOffset += details.delta)
                   : null,
@@ -392,6 +396,7 @@ class _SwipeCard extends StatelessWidget {
     required this.isTop,
     required this.dragOffset,
     required this.getImageUrl,
+    required this.currencyFormatter,
     this.onPanUpdate,
     this.onPanEnd,
     this.onDoubleTap,
@@ -403,6 +408,7 @@ class _SwipeCard extends StatelessWidget {
   final bool isTop;
   final Offset dragOffset;
   final String Function(String) getImageUrl;
+  final String Function(double) currencyFormatter;
   final GestureDragUpdateCallback? onPanUpdate;
   final GestureDragEndCallback? onPanEnd;
   final VoidCallback? onDoubleTap;
@@ -485,7 +491,7 @@ class _SwipeCard extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        '\$${product.price.toStringAsFixed(2)}',
+                        '${currencyFormatter(product.price)}',
                         style: const TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.bold,
