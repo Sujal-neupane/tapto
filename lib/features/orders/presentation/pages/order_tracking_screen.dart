@@ -611,7 +611,6 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
               ],
             ),
           ),
-          const Divider(height: 1),
           Padding(
             padding: const EdgeInsets.all(16),
             child: Row(

@@ -289,7 +289,6 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
               ],
             ),
           ),
-          const Divider(height: 1),
           ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -462,7 +461,7 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
               ],
             ),
           ),
-          const Divider(height: 1),
+
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -565,7 +564,6 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
               ],
             ),
           ),
-          const Divider(height: 1),
           Padding(
             padding: const EdgeInsets.all(16),
             child: Container(
@@ -658,7 +656,7 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
               ],
             ),
           ),
-          const Divider(height: 1),
+
           Padding(
             padding: const EdgeInsets.all(16),
             child: Container(
@@ -745,7 +743,7 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
           _buildSummaryRow('Tax', widget.order.tax),
           const Padding(
             padding: EdgeInsets.symmetric(vertical: 12),
-            child: Divider(height: 1),
+
           ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,

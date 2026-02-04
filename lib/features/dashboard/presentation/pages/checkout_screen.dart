@@ -363,7 +363,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
               ],
             ),
           ),
-          const Divider(height: 1),
           ListView.separated(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
@@ -504,7 +503,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
               ],
             ),
           ),
-          const Divider(height: 1),
           Padding(
             padding: const EdgeInsets.all(16),
             child: _shippingAddress == null
@@ -636,7 +634,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
               ],
             ),
           ),
-          const Divider(height: 1),
           _buildPaymentOption('COD', 'Cash on Delivery', Icons.money),
         ],
       ),
@@ -724,10 +721,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
           _buildPriceRow('Shipping', 0, isFree: true),
           const SizedBox(height: 12),
           _buildPriceRow('Tax', 0),
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 12),
-            child: Divider(height: 1),
-          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -1074,7 +1067,6 @@ class _AddressModalState extends State<_AddressModal> with SingleTickerProviderS
                   ],
                 ),
               ),
-              const Divider(height: 1),
               Expanded(
                 child: SingleChildScrollView(
                   controller: controller,
