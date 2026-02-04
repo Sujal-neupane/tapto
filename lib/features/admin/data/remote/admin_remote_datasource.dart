@@ -16,7 +16,7 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
   @override
   Future<DashboardStatsModel> getDashboardStats() async {
     try {
-      final response = await apiClient.get('/admin/dashboard/stats');
+      final response = await apiClient.get('/api/admin/dashboard/stats');
       
       if (response.data['success'] == true) {
         return DashboardStatsModel.fromJson(response.data['data']);
@@ -31,7 +31,7 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
   @override
   Future<List<OrderModel>> getAllOrders() async {
     try {
-      final response = await apiClient.get('/admin/orders');
+      final response = await apiClient.get('/api/admin/orders');
       
       if (response.data['success'] == true) {
         final List<dynamic> ordersJson = response.data['data'];
@@ -48,7 +48,7 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
   Future<OrderModel> updateOrderStatus(String orderId, String status) async {
     try {
       final response = await apiClient.patch(
-        '/admin/orders/$orderId/status',
+        '/api/admin/orders/$orderId/status',
         data: {'status': status},
       );
       
