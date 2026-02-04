@@ -9,9 +9,12 @@ import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_text_styles.dart';
 import '../../../../core/api/api_endpoint.dart';
+import '../../../../core/utils/image_utils.dart';
 import '../../../auth/presentation/viewmodel/auth_viewmodel.dart';
 import '../../../orders/presentation/viewmodel/order_viewmodel.dart';
 import '../../../orders/presentation/pages/order_tracking_screen.dart';
+import '../provider/wishlist_provider.dart';
+import 'edit_profile_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -22,7 +25,15 @@ class ProfileScreen extends ConsumerStatefulWidget {
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   final ImagePicker _picker = ImagePicker();
-  
+
+  @override
+  void initState() {
+    super.initState();
+    // Fetch orders to get accurate count for profile stats
+    Future.microtask(() {
+      ref.read(orderViewModelProvider.notifier).fetchMyOrders();
+    });
+  }
 
   // Show bottom sheet for image source selection
   Future<void> _showPickOptions() async {
@@ -39,10 +50,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               padding: EdgeInsets.all(16.0),
               child: Text(
                 'Profile Photo',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: AppColors.surface),
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: AppColors.surface,
+                ),
               ),
             ),
-            ListTile(  
+            ListTile(
               leading: const Icon(
                 Icons.camera_alt_rounded,
                 color: AppColors.primary,
@@ -98,9 +113,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     } else if (status.isPermanentlyDenied) {
       _showSettingsDialog();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Permission denied.')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Permission denied.')));
     }
   }
 
@@ -152,8 +167,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   itemBuilder: (context, index) {
                     final order = orders[index];
                     return ListTile(
-                      leading: Icon(Icons.shopping_bag, color: AppColors.primary),
-                      title: Text('Order #${order.id.substring(order.id.length - 6)}'),
+                      leading: Icon(
+                        Icons.shopping_bag,
+                        color: AppColors.primary,
+                      ),
+                      title: Text(
+                        'Order #${order.id.substring(order.id.length - 6)}',
+                      ),
                       subtitle: Text(
                         'Status: ${order.status.name[0].toUpperCase()}${order.status.name.substring(1)}',
                         style: const TextStyle(fontSize: 13),
@@ -164,15 +184,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
                         ),
                         onPressed: () {
                           Navigator.pop(context); // Close the sheet
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => OrderTrackingScreen(orderId: order.id),
+                              builder: (_) =>
+                                  OrderTrackingScreen(orderId: order.id),
                             ),
                           );
                         },
@@ -187,17 +213,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     final currentUser = ref.watch(currentUserProvider);
 
     final userName = currentUser?.name ?? 'Guest User';
     final userEmail = currentUser?.email ?? 'guest@tapto.com';
-    final userInitial =
-        userName.isNotEmpty ? userName[0].toUpperCase() : 'G';
+    final userInitial = userName.isNotEmpty ? userName[0].toUpperCase() : 'G';
 
     final profileImageUrl = currentUser?.profilePicture != null
-    ? "${ApiEndpoints.baseUrl}${currentUser!.profilePicture}"
-    : null;
+        ? "${ApiEndpoints.baseUrl}${currentUser!.profilePicture}"
+        : null;
     print('Profile picture path: ${currentUser?.profilePicture}');
 
     return Scaffold(
@@ -232,7 +256,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           radius: 50,
                           backgroundColor: AppColors.primary,
                           backgroundImage: profileImageUrl != null
-                              ? NetworkImage(profileImageUrl)
+                              ? NetworkImage(
+                                  ImageUtils.getImageUrl(profileImageUrl),
+                                )
                               : null,
                           child: profileImageUrl == null
                               ? Text(
@@ -281,35 +307,40 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     const SizedBox(height: AppSpacing.xs),
                     Text(
                       userEmail,
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.grey[600],
-                      ),
+                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                     ),
                     const SizedBox(height: AppSpacing.lg),
 
-                    // Stats Row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: const [
-                        _StatItem(
-                          icon: Icons.shopping_bag_outlined,
-                          count: '12',
-                          label: 'Orders',
-                        ),
-                        _VerticalDivider(),
-                        _StatItem(
-                          icon: Icons.favorite_outline,
-                          count: '28',
-                          label: 'Wishlist',
-                        ),
-                        _VerticalDivider(),
-                        _StatItem(
-                          icon: Icons.star_outline,
-                          count: '4.8',
-                          label: 'Reviews',
-                        ),
-                      ],
+                    // Stats Row - using real data from providers
+                    Builder(
+                      builder: (context) {
+                        final orderState = ref.watch(orderViewModelProvider);
+                        final wishlistCount = ref.watch(wishlistCountProvider);
+                        final ordersCount = orderState.orders.length;
+
+                        return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            _StatItem(
+                              icon: Icons.shopping_bag_outlined,
+                              count: '$ordersCount',
+                              label: 'Orders',
+                            ),
+                            const _VerticalDivider(),
+                            _StatItem(
+                              icon: Icons.favorite_outline,
+                              count: '$wishlistCount',
+                              label: 'Wishlist',
+                            ),
+                            const _VerticalDivider(),
+                            const _StatItem(
+                              icon: Icons.star_outline,
+                              count: '4.8',
+                              label: 'Reviews',
+                            ),
+                          ],
+                        );
+                      },
                     ),
                   ],
                 ),
@@ -376,7 +407,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         Navigator.pushNamed(context, AppRoutes.myOrders);
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
-                            content: Text('Tap on an order to download its invoice'),
+                            content: Text(
+                              'Tap on an order to download its invoice',
+                            ),
                             behavior: SnackBarBehavior.floating,
                           ),
                         );
@@ -405,9 +438,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 title: 'Edit Profile',
                 subtitle: 'Update your personal information',
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Edit profile feature coming soon!'),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const EditProfileScreen(),
                     ),
                   );
                 },
@@ -457,7 +491,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 }
 
-
 // --------------------
 // Stats Widget
 // --------------------
@@ -480,18 +513,9 @@ class _StatItem extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           count,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
         ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.grey[600],
-          ),
-        ),
+        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
       ],
     );
   }
@@ -503,11 +527,7 @@ class _VerticalDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 40,
-      width: 1,
-      color: Colors.grey[300],
-    );
+    return Container(height: 40, width: 1, color: Colors.grey[300]);
   }
 }
 

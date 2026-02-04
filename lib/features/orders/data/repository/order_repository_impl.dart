@@ -25,10 +25,21 @@ class OrderRepositoryImpl implements OrderRepository {
     if (await networkInfo.isConnected) {
       try {
         final orders = await remoteDataSource.getMyOrders();
-        await localDataSource.cacheOrders(orders);
+        // Try to cache but don't fail if caching fails
+        try {
+          await localDataSource.cacheOrders(orders);
+        } catch (_) {
+          // Ignore cache errors when we have fresh data
+        }
         return Right(orders);
       } on ServerException catch (e) {
-        return Left(ServerFailure(message: e.message));
+        // If server fails, try cache as fallback
+        try {
+          final cachedOrders = await localDataSource.getCachedOrders();
+          return Right(cachedOrders);
+        } catch (_) {
+          return Left(ServerFailure(message: e.message));
+        }
       }
     } else {
       try {
@@ -36,6 +47,12 @@ class OrderRepositoryImpl implements OrderRepository {
         return Right(cachedOrders);
       } on CacheException catch (e) {
         return Left(CacheFailure(message: e.message));
+      } catch (e) {
+        // Clear corrupt cache and return empty list
+        try {
+          await localDataSource.clearCache();
+        } catch (_) {}
+        return const Left(CacheFailure(message: 'No cached orders available'));
       }
     }
   }
@@ -64,13 +81,13 @@ class OrderRepositoryImpl implements OrderRepository {
   }
 
   @override
-Future<Either<Failure, OrderEntity>> createOrder({
-  required List<OrderItemEntity> items,
-  required String addressId,
-  required String paymentMethodId,
-  required Map<String, dynamic> shippingAddress,
-  required Map<String, dynamic> paymentMethod,
-}) async {
+  Future<Either<Failure, OrderEntity>> createOrder({
+    required List<OrderItemEntity> items,
+    required String addressId,
+    required String paymentMethodId,
+    required Map<String, dynamic> shippingAddress,
+    required Map<String, dynamic> paymentMethod,
+  }) async {
     if (!await networkInfo.isConnected) {
       return const Left(NetworkFailure());
     }

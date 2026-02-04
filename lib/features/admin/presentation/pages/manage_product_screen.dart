@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/core/api/api_endpoint.dart';
 import 'package:tapto/features/admin/presentation/widgets/add_product_modal.dart';
+import 'package:tapto/features/admin/presentation/widgets/edit_product_modal.dart';
 import 'package:tapto/features/products/data/models/product_model.dart';
 import 'package:tapto/features/products/presentation/providers/product_providers.dart';
 
@@ -31,6 +32,20 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
     );
 
     // Refresh the products list if a product was added
+    if (result == true) {
+      ref.invalidate(adminProductsProvider);
+    }
+  }
+
+  void _showEditProductModal(ProductModel product) async {
+    final result = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => EditProductModal(product: product),
+    );
+
+    // Refresh the products list if a product was updated
     if (result == true) {
       ref.invalidate(adminProductsProvider);
     }
@@ -179,6 +194,7 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
                     itemBuilder: (context, index) {
                       return _ProductCard(
                         product: filteredProducts[index],
+                        onEdit: () => _showEditProductModal(filteredProducts[index]),
                         onDelete: () => _deleteProduct(filteredProducts[index]),
                       );
                     },
@@ -221,10 +237,12 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
 
 class _ProductCard extends StatelessWidget {
   final ProductModel product;
+  final VoidCallback onEdit;
   final VoidCallback onDelete;
 
   const _ProductCard({
     required this.product,
+    required this.onEdit,
     required this.onDelete,
   });
 
@@ -326,9 +344,7 @@ class _ProductCard extends StatelessWidget {
                     children: [
                       Expanded(
                         child: OutlinedButton(
-                          onPressed: () {
-                            // TODO: Implement edit functionality
-                          },
+                          onPressed: onEdit,
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 4),
                           ),

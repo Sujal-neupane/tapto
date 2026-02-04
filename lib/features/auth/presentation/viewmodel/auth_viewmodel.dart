@@ -207,6 +207,53 @@ class AuthViewModel extends Notifier<AuthState> {
       );
     }
   }
+
+  Future<void> updateProfile({
+    required String name,
+    String? phoneNumber,
+    String? preference,
+  }) async {
+    state = state.copyWith(status: AuthStatus.loading);
+
+    try {
+      final dio = Dio();
+      final tokenStorage = ref.read(tokenStorageServiceProvider);
+      final String? token = tokenStorage.getToken();
+      final String? userId = tokenStorage.getUserId();
+
+      if (token == null || token.isEmpty || userId == null) {
+        throw Exception('No auth token or user ID found');
+      }
+
+      final response = await dio.put(
+        "${ApiEndpoints.baseUrl}${ApiEndpoints.userById(userId)}",
+        data: {
+          'fullName': name,
+          if (phoneNumber != null) 'phoneNumber': phoneNumber,
+          if (preference != null) 'shoppingPreference': preference,
+        },
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+
+      final data = response.data;
+      if (data['success'] == true && data['data'] != null) {
+        // Refresh user from backend to ensure latest info
+        await getCurrentUser();
+      } else {
+        throw Exception(data['message'] ?? 'Update failed');
+      }
+    } catch (e) {
+      state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: e.toString(),
+      );
+    }
+  }
 }
 
 final isAuthenticatedProvider = Provider<bool>((ref) {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:tapto/app/app.dart';
 import 'package:tapto/core/services/storage/storage_provider.dart';
 import 'package:tapto/core/services/storage/token_storage_service.dart';
@@ -10,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await EasyLocalization.ensureInitialized();
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -30,13 +32,26 @@ void main() async {
 
   final sharedPreferences = await SharedPreferences.getInstance();
   final tokenStorageService = TokenStorageService(sharedPreferences);
+  
+  // Get saved language preference
+  final savedLanguageCode = sharedPreferences.getString('languageCode') ?? 'en';
+  final savedLocale = Locale(savedLanguageCode);
+  
+  print('📱 Starting app with language: $savedLanguageCode');
+  
   runApp(
-    ProviderScope(
-      overrides: [
-        sharedPreferencesProvider.overrideWithValue(sharedPreferences ),
-        tokenStorageServiceProvider.overrideWithValue(tokenStorageService),
-      ],
-      child: const MyApp(),
+    EasyLocalization(
+      supportedLocales: const [Locale('en'), Locale('es'), Locale('fr'), Locale('de'), Locale('ne')],
+      path: 'assets/translations',
+      fallbackLocale: const Locale('en'),
+      startLocale: savedLocale,
+      child: ProviderScope(
+        overrides: [
+          sharedPreferencesProvider.overrideWithValue(sharedPreferences ),
+          tokenStorageServiceProvider.overrideWithValue(tokenStorageService),
+        ],
+        child: const MyApp(),
+      ),
     ),
   );
 }

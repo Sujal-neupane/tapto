@@ -30,44 +30,35 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<User> login(String email, String password) async {
     try {
-      // Check if network is available
-      final isConnected = await networkInfo.isConnected;
+      // Try remote login first - API call will fail naturally if no network
+      try {
+        final authApiModel = await remoteDataSource.login(email, password);
 
-      if (isConnected) {
-        // Try remote login first
-        try {
-          final authApiModel = await remoteDataSource.login(email, password);
+        // Convert to UserModel and save locally for caching
+        final userModel = UserModel(
+          id:
+              authApiModel.id ??
+              DateTime.now().millisecondsSinceEpoch.toString(),
+          name: authApiModel.fullName,
+          email: authApiModel.email,
+          password: password,
+          preference: authApiModel.preference,
+        );
 
-          // Convert to UserModel and save locally
-          final userModel = UserModel(
-            id:
-                authApiModel.id ??
-                DateTime.now().millisecondsSinceEpoch.toString(),
-            name: authApiModel.fullName,
-            email: authApiModel.email,
-            password: password, // Store hashed in production
-            preference: authApiModel.preference,
-          );
+        // Save user to local database for offline access
+        await localDataSource.saveUser(userModel);
 
-          // Save user to local database
-          await localDataSource.saveUser(userModel);
-
-          return authApiModel.toEntity();
-        } catch (e) {
-          // If remote login fails, try local login as fallback
+        return authApiModel.toEntity();
+      } catch (e) {
+        // If remote fails, check if we're offline and have local data
+        final isConnected = await networkInfo.isConnected;
+        if (!isConnected) {
           final userModel = await localDataSource.login(email, password);
-          if (userModel == null) {
-            throw Exception('Login failed: ${e.toString()}');
+          if (userModel != null) {
+            return userModel.toEntity();
           }
-          return userModel.toEntity();
         }
-      } else {
-        // No network, use local login
-        final userModel = await localDataSource.login(email, password);
-        if (userModel == null) {
-          throw Exception('No internet connection and user not found locally');
-        }
-        return userModel.toEntity();
+        rethrow;
       }
     } catch (e) {
       throw Exception('Login failed: ${e.toString()}');
@@ -82,57 +73,26 @@ class AuthRepositoryImpl implements AuthRepository {
     String? preference,
   }) async {
     try {
-      // Check if network is available
-      final isConnected = await networkInfo.isConnected;
+      // Register with remote server - API call will fail naturally if no network
+      final authApiModel = await remoteDataSource.register(
+        email: email,
+        password: password,
+        name: name,
+        preference: preference,
+      );
 
-      if (isConnected) {
-        // Try to register with remote server
-        try {
-          final authApiModel = await remoteDataSource.register(
-            email: email,
-            password: password,
-            name: name,
-            preference: preference,
-          );
+      // Convert to UserModel and save locally for caching
+      final userModel = UserModel(
+        id: authApiModel.id ?? DateTime.now().millisecondsSinceEpoch.toString(),
+        name: authApiModel.fullName,
+        email: authApiModel.email,
+        password: password,
+        preference: authApiModel.preference,
+      );
 
-          // Convert to UserModel and save locally
-          final userModel = UserModel(
-            id:
-                authApiModel.id ??
-                DateTime.now().millisecondsSinceEpoch.toString(),
-            name: authApiModel.fullName,
-            email: authApiModel.email,
-            password: password, // Store hashed in production
-            preference: authApiModel.preference,
-          );
+      await localDataSource.saveUser(userModel);
 
-          await localDataSource.saveUser(userModel);
-
-          return authApiModel.toEntity();
-        } catch (e) {
-          // If remote registration fails (backend not running), fall back to local registration
-          try {
-            final userModel = await localDataSource.register(
-              name: name,
-              email: email,
-              password: password,
-              preference: preference,
-            );
-            return userModel.toEntity();
-          } catch (localError) {
-            throw Exception('Registration failed: ${localError.toString()}');
-          }
-        }
-      } else {
-        // No network, register locally only
-        final userModel = await localDataSource.register(
-          name: name,
-          email: email,
-          password: password,
-          preference: preference,
-        );
-        return userModel.toEntity();
-      }
+      return authApiModel.toEntity();
     } catch (e) {
       throw Exception('Registration failed: ${e.toString()}');
     }

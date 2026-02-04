@@ -19,28 +19,40 @@ class OrderModel extends OrderEntity {
     required super.tracking,
   });
 
+  /// Helper to safely cast nested maps from Hive (Map<dynamic, dynamic> -> Map<String, dynamic>)
+  static Map<String, dynamic> _safeMap(dynamic value) {
+    if (value == null) return {};
+    if (value is Map<String, dynamic>) return value;
+    if (value is Map) return Map<String, dynamic>.from(value);
+    return {};
+  }
+
   factory OrderModel.fromJson(Map<String, dynamic> json) {
+    final shippingAddr = _safeMap(json['shippingAddress']);
+    final paymentMeth = _safeMap(json['paymentMethod']);
+
     return OrderModel(
       id: json['_id'] ?? json['id'] ?? '',
       userId: json['userId'] ?? '',
-      items: (json['items'] as List?)
-              ?.map((item) => OrderItemModel.fromJson(item))
+      items:
+          (json['items'] as List?)
+              ?.map((item) => OrderItemModel.fromJson(_safeMap(item)))
               .toList() ??
           [],
       shippingAddress: AddressEntity(
-        id: json['shippingAddress']?['id'] ?? '',
-        fullName: json['shippingAddress']?['fullName'] ?? '',
-        phone: json['shippingAddress']?['phone'] ?? '',
-        street: json['shippingAddress']?['street'] ?? '',
-        city: json['shippingAddress']?['city'] ?? '',
-        state: json['shippingAddress']?['state'] ?? '',
-        zipCode: json['shippingAddress']?['zipCode'] ?? '',
-        country: json['shippingAddress']?['country'] ?? '',
+        id: shippingAddr['id'] ?? '',
+        fullName: shippingAddr['fullName'] ?? '',
+        phone: shippingAddr['phone'] ?? '',
+        street: shippingAddr['street'] ?? '',
+        city: shippingAddr['city'] ?? '',
+        state: shippingAddr['state'] ?? '',
+        zipCode: shippingAddr['zipCode'] ?? '',
+        country: shippingAddr['country'] ?? '',
       ),
       paymentMethod: PaymentMethodEntity(
-        id: json['paymentMethod']?['id'] ?? '',
-        type: json['paymentMethod']?['type'] ?? '',
-        last4: json['paymentMethod']?['last4'],
+        id: paymentMeth['id'] ?? '',
+        type: paymentMeth['type'] ?? '',
+        last4: paymentMeth['last4'],
       ),
       subtotal: (json['subtotal'] as num?)?.toDouble() ?? 0.0,
       shippingFee: (json['shippingFee'] as num?)?.toDouble() ?? 0.0,
@@ -55,15 +67,17 @@ class OrderModel extends OrderEntity {
           ? DateTime.parse(json['deliveredAt'])
           : null,
       cancellationReason: json['cancellationReason'],
-      tracking: (json['tracking'] as List<dynamic>?)
-        ?.map((e) => TrackingEntity(
-              status: e['status'] ?? '',
-              description: e['description'] ?? '',
-              timestamp: DateTime.parse(e['timestamp']),
-              location: e['location'],
-            ))
-        .toList() ??
-        [],
+      tracking:
+          (json['tracking'] as List<dynamic>?)?.map((e) {
+            final trackingMap = _safeMap(e);
+            return TrackingEntity(
+              status: trackingMap['status'] ?? '',
+              description: trackingMap['description'] ?? '',
+              timestamp: DateTime.parse(trackingMap['timestamp']),
+              location: trackingMap['location'],
+            );
+          }).toList() ??
+          [],
     );
   }
 
@@ -91,12 +105,16 @@ class OrderModel extends OrderEntity {
       'tax': tax,
       'total': total,
       'status': status.name,
-      'tracking': tracking.map((t) => {
-        'status': t.status,
-        'description': t.description,
-        'timestamp': t.timestamp.toIso8601String(),
-        'location': t.location,
-      }).toList(),
+      'tracking': tracking
+          .map(
+            (t) => {
+              'status': t.status,
+              'description': t.description,
+              'timestamp': t.timestamp.toIso8601String(),
+              'location': t.location,
+            },
+          )
+          .toList(),
     };
   }
 

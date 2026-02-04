@@ -59,13 +59,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
       // Save to Hive
       await _hiveService.saveUser(userModel);
 
-      // Save session
-      await _sessionService.saveUserSession(
-        userId: userModel.id,
-        email: userModel.email,
-        name: userModel.name,
-        preference: userModel.preference,
-      );
+     
 
       return userModel;
     } catch (e) {
@@ -88,13 +82,7 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
         throw Exception('Invalid password');
       }
 
-      // Save session to SharedPreferences
-      await _sessionService.saveUserSession(
-        userId: user.id,
-        email: user.email,
-        name: user.name,
-        preference: user.preference,
-      );
+    
 
       return user;
     } catch (e) {

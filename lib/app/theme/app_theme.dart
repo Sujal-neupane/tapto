@@ -3,8 +3,23 @@ import 'app_colors.dart';
 
 class AppTheme {
   static ThemeData lightTheme = ThemeData(
-    scaffoldBackgroundColor: AppColors.background,
+    brightness: Brightness.light,
+    useMaterial3: true,
+    scaffoldBackgroundColor: AppColors.surface,
     primaryColor: AppColors.primary,
+    canvasColor: AppColors.background,
+    colorScheme: ColorScheme.light(
+      primary: AppColors.primary,
+      secondary: AppColors.secondary,
+      surface: AppColors.surface,
+      background: AppColors.background,
+      error: AppColors.error,
+      onPrimary: Colors.white,
+      onSecondary: Colors.white,
+      onSurface: AppColors.textPrimary,
+      onBackground: AppColors.textPrimary,
+      onError: Colors.white,
+    ),
     snackBarTheme: const SnackBarThemeData(backgroundColor: AppColors.primary),
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
@@ -13,10 +28,31 @@ class AppTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
     ),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: AppColors.primary,
+      foregroundColor: Colors.white,
+      elevation: 0,
+    ),
   );
+
   static ThemeData darkTheme = ThemeData(
-    scaffoldBackgroundColor: AppDarkColors.darkBackground,
+    brightness: Brightness.dark,
+    useMaterial3: true,
+    scaffoldBackgroundColor: AppDarkColors.darkSurface,
     primaryColor: AppDarkColors.darkPrimary,
+    canvasColor: AppDarkColors.darkBackground,
+    colorScheme: ColorScheme.dark(
+      primary: AppDarkColors.darkPrimary,
+      secondary: AppDarkColors.darkPrimary,
+      surface: AppDarkColors.darkSurface,
+      background: AppDarkColors.darkBackground,
+      error: AppDarkColors.darkError,
+      onPrimary: Colors.white,
+      onSecondary: Colors.white,
+      onSurface: AppDarkColors.darkTextPrimary,
+      onBackground: AppDarkColors.darkTextPrimary,
+      onError: Colors.white,
+    ),
     snackBarTheme: const SnackBarThemeData(
       backgroundColor: AppDarkColors.darkPrimary,
     ),
@@ -26,6 +62,11 @@ class AppTheme {
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
+    ),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: AppDarkColors.darkPrimary,
+      foregroundColor: Colors.white,
+      elevation: 0,
     ),
   );
 }
