@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -38,7 +39,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: AppBar(
-        title: const Text('Search Products'),
+        title: const Text('searchProducts').tr(),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -71,7 +72,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
-                hintText: 'Search products, brands...',
+                hintText: 'searchProductsBrands'.tr(),
                 prefixIcon: const Icon(Icons.search, color: AppColors.primary),
                 suffixIcon: _searchController.text.isNotEmpty
                     ? IconButton(
@@ -164,14 +165,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ),
           const SizedBox(height: 24),
           const Text(
-            'Search for products',
+            'searchForProducts',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-          ),
+          ).tr(),
           const SizedBox(height: 8),
           Text(
-            'Type in the search bar to find products',
+            'typeInSearchBar',
             style: TextStyle(color: Colors.grey[600]),
-          ),
+          ).tr(),
         ],
       ),
     );
@@ -192,14 +193,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           ),
           const SizedBox(height: 24),
           const Text(
-            'No products found',
+            'noProductsFound',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-          ),
+          ).tr(),
           const SizedBox(height: 8),
           Text(
-            'Try adjusting your search or filters',
+            'tryAdjustingSearch',
             style: TextStyle(color: Colors.grey[600]),
-          ),
+          ).tr(),
         ],
       ),
     );
@@ -212,13 +213,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         children: [
           const Icon(Icons.error_outline, size: 64, color: Colors.red),
           const SizedBox(height: 16),
-          const Text('Something went wrong'),
+          const Text('somethingWentWrong').tr(),
           const SizedBox(height: 8),
           Text(error, style: TextStyle(color: Colors.grey[600])),
           const SizedBox(height: 16),
           ElevatedButton(
             onPressed: () => ref.invalidate(searchResultsProvider),
-            child: const Text('Retry'),
+            child: const Text('retry').tr(),
           ),
         ],
       ),
@@ -491,9 +492,9 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Filters',
+                'filters',
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              ),
+              ).tr(),
               TextButton(
                 onPressed: () {
                   setState(() {
@@ -501,14 +502,14 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
                     _priceRange = const RangeValues(0, 1000);
                   });
                 },
-                child: const Text('Clear All'),
+                child: const Text('clearAll').tr(),
               ),
             ],
           ),
           const SizedBox(height: 24),
 
           // Category Filter
-          const Text('Category', style: TextStyle(fontWeight: FontWeight.w600)),
+          const Text('category', style: TextStyle(fontWeight: FontWeight.w600)).tr(),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -528,7 +529,7 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
           const SizedBox(height: 24),
 
           // Price Range Filter
-          const Text('Price Range', style: TextStyle(fontWeight: FontWeight.w600)),
+          const Text('priceRange', style: TextStyle(fontWeight: FontWeight.w600)).tr(),
           const SizedBox(height: 12),
           RangeSlider(
             values: _priceRange,
@@ -571,7 +572,7 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              child: const Text('Apply Filters'),
+              child: const Text('applyFilters').tr(),
             ),
           ),
           const SizedBox(height: 16),

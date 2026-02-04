@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
@@ -27,14 +28,14 @@ class _FilterScreenState extends State<FilterScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.surface,
-      appBar: CustomAppBar(title: 'Filters', showBackButton: true),
+      appBar: CustomAppBar(title: 'filters'.tr(), showBackButton: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Price Range Section
-            Text('Price Range', style: AppTextStyles.subHeading),
+            Text('priceRange', style: AppTextStyles.subHeading).tr(),
             const SizedBox(height: AppSpacing.md),
             Container(
               padding: const EdgeInsets.all(AppSpacing.md),
@@ -85,7 +86,7 @@ class _FilterScreenState extends State<FilterScreen> {
             const SizedBox(height: AppSpacing.xl),
 
             // Category Section
-            Text('Category', style: AppTextStyles.subHeading),
+            Text('category', style: AppTextStyles.subHeading).tr(),
             const SizedBox(height: AppSpacing.md),
             Container(
               padding: const EdgeInsets.all(AppSpacing.md),
@@ -147,13 +148,13 @@ class _FilterScreenState extends State<FilterScreen> {
                       ),
                     ),
                     child: const Text(
-                      'Reset',
+                      'reset',
                       style: TextStyle(
                         color: AppColors.primary,
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
                       ),
-                    ),
+                    ).tr(),
                   ),
                 ),
                 const SizedBox(width: AppSpacing.md),
@@ -169,13 +170,13 @@ class _FilterScreenState extends State<FilterScreen> {
                       ),
                     ),
                     child: const Text(
-                      'Apply Filters',
+                      'applyFilters',
                       style: TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.w600,
                         fontSize: 16,
                       ),
-                    ),
+                    ).tr(),
                   ),
                 ),
               ],

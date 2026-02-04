@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/app/routes/app_routes.dart';
@@ -41,9 +42,9 @@ class _CartScreenState extends ConsumerState<CartScreen> {
               Icon(Icons.shopping_cart_outlined, size: 100, color: Colors.grey),
               SizedBox(height: 16),
               Text(
-                'Your cart is empty',
+                'yourCartIsEmpty',
                 style: TextStyle(fontSize: 18, color: Colors.grey),
-              ),
+              ).tr(),
               SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () => Navigator.pop(context),
@@ -55,7 +56,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: Text('Continue Shopping'),
+                child: Text('continueShopping').tr(),
               ),
             ],
           ),
@@ -154,13 +155,13 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Text(
-                                        'Size: ${item.size}',
+                                        'size: ${item.size}',
                                         style: const TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w500,
                                           color: AppColors.primary,
                                         ),
-                                      ),
+                                      ).tr(),
                                     ),
                                   if (item.color != null && item.color!.isNotEmpty)
                                     Container(
@@ -171,13 +172,13 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Text(
-                                        'Color: ${item.color}',
+                                        'color: ${item.color}',
                                         style: const TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.w500,
                                           color: AppColors.primary,
                                         ),
-                                      ),
+                                      ).tr(),
                                     ),
                                 ],
                               ),
@@ -290,13 +291,13 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Subtotal',
+                        'subtotal',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[600],
                           fontWeight: FontWeight.w500,
                         ),
-                      ),
+                      ).tr(),
                       Text(
                         '\$${cartState.subtotal.toStringAsFixed(2)}',
                         style: TextStyle(
@@ -312,13 +313,13 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Shipping',
+                        'shipping',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[600],
                           fontWeight: FontWeight.w500,
                         ),
-                      ),
+                      ).tr(),
                       Text(
                         '\$${cartState.shippingFee.toStringAsFixed(2)}',
                         style: TextStyle(
@@ -334,13 +335,13 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Tax (13%)',
+                        'tax',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[600],
                           fontWeight: FontWeight.w500,
                         ),
-                      ),
+                      ).tr(),
                       Text(
                         '\$${cartState.tax.toStringAsFixed(2)}',
                         style: TextStyle(
@@ -358,13 +359,13 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'Total',
+                        'total',
                         style: TextStyle(
                           fontSize: 18,
                           color: AppColors.textPrimary,
                           fontWeight: FontWeight.bold,
                         ),
-                      ),
+                      ).tr(),
                       Text(
                         '\$${cartState.total.toStringAsFixed(2)}',
                         style: TextStyle(
@@ -396,13 +397,13 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Text(
-                            'Proceed to Checkout',
+                            'proceedToCheckout',
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
                               letterSpacing: 0.5,
                             ),
-                          ),
+                          ).tr(),
                           const SizedBox(width: AppSpacing.sm),
                           Icon(Icons.arrow_forward_rounded, size: 20),
                         ],
@@ -450,7 +451,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       // Show success
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Order placed successfully!'),
+          content: const Text('orderPlacedSuccessfully').tr(),
           backgroundColor: Colors.green,
         ),
       );
@@ -460,7 +461,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       // Show error
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to place order: $e'),
+          content: Text('failedToPlaceOrder: $e'),
           backgroundColor: Colors.red,
         ),
       );
