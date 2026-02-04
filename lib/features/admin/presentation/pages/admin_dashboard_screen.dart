@@ -347,7 +347,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
               Expanded(
                 child: _RevenueCard(
                   title: 'Total Revenue',
-                  amount: stats.totalRevenue ?? 0,
+                  amount: stats.totalRevenue,
                   icon: Icons.attach_money_rounded,
                   gradient: [Colors.green.shade400, Colors.green.shade600],
                   percentage: '+24%',
