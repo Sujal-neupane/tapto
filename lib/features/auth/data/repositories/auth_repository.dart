@@ -125,4 +125,22 @@ class AuthRepositoryImpl implements AuthRepository {
       throw Exception('Logout failed: ${e.toString()}');
     }
   }
+
+  @override
+  Future<void> requestPasswordReset(String email) async {
+    try {
+      await remoteDataSource.requestPasswordReset(email);
+    } catch (e) {
+      throw Exception('Request password reset failed: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<void> resetPassword(String email, String otp, String newPassword) async {
+    try {
+      await remoteDataSource.resetPassword(email, otp, newPassword);
+    } catch (e) {
+      throw Exception('Reset password failed: ${e.toString()}');
+    }
+  }
 }
