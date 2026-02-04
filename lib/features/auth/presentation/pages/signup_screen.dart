@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:tapto/app/routes/app_routes.dart';
 import 'package:tapto/app/theme/app_colors.dart';
 import 'package:tapto/app/theme/app_text_styles.dart';
@@ -29,7 +30,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   String _selectedCountry = 'United States';
   late AnimationController _controller;
 
-  final List<String> _preferences = ['Mens Fashion', 'Womens Fashion'];
+  final List<String> _preferences = ['mensFashion', 'womensFashion'];
   final List<Map<String, String>> _countries = [
     {'name': 'United States', 'code': '+1', 'flag': '🇺🇸'},
     {'name': 'India', 'code': '+91', 'flag': '🇮🇳'},
@@ -62,10 +63,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
 
     ref.listen<AuthState>(authViewModelProvider, (previous, next) {
       if (!mounted) return;
-      if (next.status == AuthStatus.registered) {
+      if (next.status == AuthStatus.authenticated) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Registration successful!'),
+          SnackBar(
+            content: Text('registrationSuccessful'.tr()),
             backgroundColor: Colors.green,
           ),
         );
@@ -73,7 +74,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
       } else if (next.status == AuthStatus.error) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(next.errorMessage ?? 'Registration failed'),
+            content: Text(next.errorMessage ?? 'registrationFailed'.tr()),
             backgroundColor: Colors.red,
           ),
         );
@@ -125,7 +126,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                       ],
                     ).createShader(bounds),
                     child: Text(
-                      'Create Account',
+                      'createAccount'.tr(),
                       style: AppTextStyles.heading.copyWith(
                         fontSize: 30,
                         fontWeight: FontWeight.w800,
@@ -135,21 +136,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Join Tapto for curated picks',
+                    'joinTapto'.tr(),
                     style: TextStyle(color: Colors.grey[600], fontSize: 15),
                   ),
                   const SizedBox(height: 36),
                   AuthTextField(
                     controller: _nameController,
-                    label: 'Full Name',
-                    hint: 'Enter your full name',
+                    label: 'fullName'.tr(),
+                    hint: 'enterFullName'.tr(),
                     prefixIcon: Icons.person_outline_rounded,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please enter your name';
+                        return 'pleaseEnterName'.tr();
                       }
                       if (value.length < 3) {
-                        return 'Name must be at least 3 characters';
+                        return 'nameMinLength'.tr();
                       }
                       return null;
                     },
@@ -276,7 +277,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                     child: DropdownButtonFormField<String>(
                       initialValue: _selectedPreference,
                       decoration: InputDecoration(
-                        labelText: 'Shopping Preference (Optional)',
+                        labelText: 'shoppingPreference'.tr(),
                         labelStyle: TextStyle(
                           color: Colors.grey[600],
                           fontSize: 15,
@@ -316,7 +317,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                       items: _preferences.map((pref) {
                         return DropdownMenuItem<String>(
                           value: pref,
-                          child: Text(pref),
+                          child: Text(pref.tr()),
                         );
                       }).toList(),
                       onChanged: (value) =>
@@ -354,8 +355,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                   const SizedBox(height: 16),
                   AuthTextField(
                     controller: _confirmPasswordController,
-                    label: 'Confirm Password',
-                    hint: 'Re-enter your password',
+                    label: 'confirmPassword'.tr(),
+                    hint: 'reenterPassword'.tr(),
                     prefixIcon: Icons.lock_outline_rounded,
                     obscureText: !_isConfirmPasswordVisible,
                     suffixIcon: IconButton(
@@ -372,10 +373,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                     ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return 'Please confirm';
+                        return 'pleaseConfirm'.tr();
                       }
                       if (value != _passwordController.text) {
-                        return 'Passwords do not match';
+                        return 'passwordsNotMatch'.tr();
                       }
                       return null;
                     },
@@ -466,21 +467,30 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                           : () {
                               if (!_acceptTerms) {
                                 ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Please accept terms'),
+                                  SnackBar(
+                                    content: Text('pleaseAcceptTerms'.tr()),
                                     backgroundColor: Colors.red,
                                   ),
                                 );
                                 return;
                               }
                               if (_formKey.currentState?.validate() == true) {
+                                // Map translation keys to backend values
+                                String? backendPreference;
+                                if (_selectedPreference == 'mensFashion') {
+                                  backendPreference = 'Mens Fashion';
+                                } else if (_selectedPreference == 'womensFashion') {
+                                  backendPreference = 'Womens Fashion';
+                                }
+
                                 ref
                                     .read(authViewModelProvider.notifier)
                                     .register(
                                       name: _nameController.text.trim(),
                                       email: _emailController.text.trim(),
                                       password: _passwordController.text,
-                                      preference: _selectedPreference,
+                                      preference: backendPreference,
+                                      country: _selectedCountry,
                                     );
                               }
                             },
@@ -503,13 +513,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                               ),
                             )
                           : const Text(
-                              'Create Account',
+                              'createAccount',
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w800,
                                 color: Colors.white,
                               ),
-                            ),
+                            ).tr(),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -517,7 +527,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Already have an account? ',
+                        'alreadyHaveAccount'.tr(),
                         style: TextStyle(color: Colors.grey[700]),
                       ),
                       TextButton(
@@ -526,12 +536,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                           AppRoutes.login,
                         ),
                         child: const Text(
-                          'Login',
+                          'login',
                           style: TextStyle(
                             color: AppColors.primary,
                             fontWeight: FontWeight.bold,
                           ),
-                        ),
+                        ).tr(),
                       ),
                     ],
                   ),

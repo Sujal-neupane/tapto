@@ -20,10 +20,12 @@ class LiveTrackingEntity {
   final String? deliveryPersonPhone;
   final double? currentLat;
   final double? currentLng;
-  final double? destinationLat;
-  final double? destinationLng;
+    final String? currentLocationAddress;
+    final double? destinationLat;
+    final double? destinationLng;
   final String? estimatedTime;
   final String? distanceRemaining;
+  final String? cancellationReason;
   final List<TrackingEntity> timeline;
 
   LiveTrackingEntity({
@@ -32,10 +34,12 @@ class LiveTrackingEntity {
     this.deliveryPersonPhone,
     this.currentLat,
     this.currentLng,
+    this.currentLocationAddress,
     this.destinationLat,
     this.destinationLng,
     this.estimatedTime,
     this.distanceRemaining,
+    this.cancellationReason,
     required this.timeline,
   });
 }

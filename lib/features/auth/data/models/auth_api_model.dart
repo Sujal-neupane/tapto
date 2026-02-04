@@ -9,6 +9,7 @@ class AuthApiModel {
   final String phoneNumber;
   final String? profilePicture;
   final bool isAdmin;
+  final String country;
 
   AuthApiModel({
     this.id,
@@ -19,6 +20,7 @@ class AuthApiModel {
     required this.phoneNumber,
     this.profilePicture,
     this.isAdmin = false,
+    required this.country,
   });
 
   // toJson
@@ -32,6 +34,7 @@ class AuthApiModel {
       'phoneNumber': phoneNumber,
       'profilePicture': profilePicture,
       'isAdmin': isAdmin,
+      'country': country,
     };
   }
 
@@ -48,6 +51,7 @@ class AuthApiModel {
       phoneNumber: json['phoneNumber'] as String? ?? '',
       profilePicture: json['profilePicture'] as String?,
       isAdmin: json['isAdmin'] as bool? ?? false,
+      country: json['country'] as String? ?? 'United States',
     );
   }
 
@@ -61,10 +65,10 @@ class AuthApiModel {
       phoneNumber: phoneNumber,
       profilePicture: profilePicture,
       isAdmin: isAdmin,
+      country: country,
     );
   }
 
-  //fromEntity
   factory AuthApiModel.fromEntity(User user, {String password = ''}) {
     return AuthApiModel(
       id: user.id,
@@ -75,7 +79,7 @@ class AuthApiModel {
       phoneNumber: user.phoneNumber ?? '',
       profilePicture: user.profilePicture,
       isAdmin: user.isAdmin,
-
+      country: user.country ?? 'United States',
     );
   }
 

@@ -32,6 +32,7 @@ class ApiEndpoints {
   static const String user = '/api/auth';
   static const String userLogin = '/api/auth/login';
   static const String userRegister = '/api/auth/register';
+  static const String currentUser = '/api/auth/me';
   static String userById(String id) => '/api/auth/$id';
   static const String uploadImage = '/api/auth/upload-profile-picture';
   static const String requestPasswordReset = '/api/auth/request-password-reset';

@@ -47,9 +47,8 @@ final userProductsProvider = FutureProvider<List<ProductModel>>((ref) async {
   }
   return dataSource.fetchProducts(
     fashionType: category,
-    isActive: true,
-  );
-});
+    isActive: true);
+  });
 
 /// Provider to fetch products by specific fashion type
 final productsByFashionTypeProvider = FutureProvider.family<List<ProductModel>, String?>((ref, fashionType) async {

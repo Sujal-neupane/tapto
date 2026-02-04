@@ -19,7 +19,7 @@ class CartState {
 
   double get shippingFee => items.isEmpty ? 0 : 10.0;
 
-  double get tax => subtotal * 0.13;
+  double get tax => 0.0; // Will be calculated in viewmodel
 
   double get total => subtotal + shippingFee + tax;
 
@@ -43,7 +43,7 @@ class CartViewModel extends Notifier<CartState> {
 
   @override
   CartState build() {
-    // Don't read your own provider here!
+    // Return initial state
     return CartState();
   }
 

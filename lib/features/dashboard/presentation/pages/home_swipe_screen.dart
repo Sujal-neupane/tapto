@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:tapto/core/api/api_endpoint.dart';
 import 'package:tapto/features/dashboard/data/models/cart_item_model.dart';
 import 'package:tapto/features/dashboard/presentation/pages/product_details_screen.dart';
 import 'package:tapto/features/dashboard/presentation/provider/wishlist_provider.dart';
 import 'package:tapto/features/dashboard/presentation/viewmodel/cart_viewmodel.dart';
+import 'package:tapto/core/utils/currency_formatter.dart';
 import 'package:tapto/features/products/data/models/product_model.dart';
 import 'package:tapto/features/products/presentation/providers/product_providers.dart';
 
@@ -38,6 +40,8 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
     _animationController.dispose();
     super.dispose();
   }
+
+  String Function(double) get currencyFormatter => ref.watch(currencyFormatterProvider);
 
   void _resetDrag() {
     setState(() => _dragOffset = Offset.zero);
@@ -75,7 +79,7 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
         );
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('${product.name} added to cart ✓'),
+        content: Text('${product.name} ${'addedToCart'.tr()}'),
         behavior: SnackBarBehavior.floating,
         duration: const Duration(milliseconds: 1500),
         backgroundColor: AppColors.success,
@@ -90,7 +94,7 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
       ref.read(wishlistProvider.notifier).removeFromWishlist(product.id);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${product.name} removed from wishlist'),
+          content: Text('${product.name} ${'removedFromWishlist'.tr()}'),
           behavior: SnackBarBehavior.floating,
           duration: const Duration(milliseconds: 1500),
           backgroundColor: Colors.grey,
@@ -100,7 +104,7 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
       ref.read(wishlistProvider.notifier).addToWishlist(product);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('${product.name} saved to wishlist ♡'),
+          content: Text('${product.name} ${'savedToWishlist'.tr()}'),
           behavior: SnackBarBehavior.floating,
           duration: const Duration(milliseconds: 1500),
           backgroundColor: AppColors.secondary,
@@ -211,7 +215,7 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
                 Icon(Icons.error_outline, size: 48, color: Colors.red.shade300),
                 const SizedBox(height: AppSpacing.md),
                 Text(
-                  'Failed to load products',
+                  'failedToLoadProducts'.tr(),
                   style: TextStyle(
                     fontWeight: FontWeight.w600,
                     color: Colors.red.shade700,
@@ -227,7 +231,7 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
                 ElevatedButton.icon(
                   onPressed: () => ref.invalidate(userProductsProvider),
                   icon: const Icon(Icons.refresh),
-                  label: const Text('Retry'),
+                  label: Text('retry'.tr()),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
@@ -274,19 +278,19 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
           ),
           const SizedBox(height: AppSpacing.lg),
           const Text(
-            'No products available',
+            'noProductsAvailable',
             style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
-          ),
+          ).tr(),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'Check back later for new arrivals',
+            'checkBackLaterForNewArrivals'.tr(),
             style: TextStyle(color: AppColors.textSecondary),
           ),
           const SizedBox(height: AppSpacing.xl),
           ElevatedButton.icon(
             onPressed: () => ref.invalidate(userProductsProvider),
             icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Refresh'),
+            label: Text('refresh'.tr()),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
@@ -321,12 +325,12 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
           ),
           const SizedBox(height: AppSpacing.lg),
           const Text(
-            'All products explored!',
+            'allProductsExplored',
             style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
-          ),
+          ).tr(),
           const SizedBox(height: AppSpacing.sm),
           Text(
-            'Apply filters or revisit products',
+            'applyFiltersOrRevisit'.tr(),
             style: TextStyle(color: AppColors.textSecondary),
           ),
           const SizedBox(height: AppSpacing.xl),
@@ -336,7 +340,7 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
               _dragOffset = Offset.zero;
             }),
             icon: const Icon(Icons.refresh_rounded),
-            label: const Text('Explore Again'),
+            label: Text('exploreAgain'.tr()),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
@@ -366,6 +370,7 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
               isTop: i == 0,
               dragOffset: i == 0 ? _dragOffset : Offset.zero,
               getImageUrl: _getImageUrl,
+              currencyFormatter: currencyFormatter,
               onPanUpdate: i == 0
                   ? (details) => setState(() => _dragOffset += details.delta)
                   : null,
@@ -391,6 +396,7 @@ class _SwipeCard extends StatelessWidget {
     required this.isTop,
     required this.dragOffset,
     required this.getImageUrl,
+    required this.currencyFormatter,
     this.onPanUpdate,
     this.onPanEnd,
     this.onDoubleTap,
@@ -402,6 +408,7 @@ class _SwipeCard extends StatelessWidget {
   final bool isTop;
   final Offset dragOffset;
   final String Function(String) getImageUrl;
+  final String Function(double) currencyFormatter;
   final GestureDragUpdateCallback? onPanUpdate;
   final GestureDragEndCallback? onPanEnd;
   final VoidCallback? onDoubleTap;
@@ -484,7 +491,7 @@ class _SwipeCard extends StatelessWidget {
                   Row(
                     children: [
                       Text(
-                        '\$${product.price.toStringAsFixed(2)}',
+                        '${currencyFormatter(product.price)}',
                         style: const TextStyle(
                           fontSize: 26,
                           fontWeight: FontWeight.bold,
@@ -574,7 +581,7 @@ class _SwipeCard extends StatelessWidget {
                       size: 28,
                     ),
                     Text(
-                      'Swipe up for details',
+                      'swipeUpForDetails'.tr(),
                       style: TextStyle(
                         color: Colors.grey.shade600,
                         fontSize: 13,

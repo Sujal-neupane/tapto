@@ -39,10 +39,12 @@ class LiveTrackingModel extends LiveTrackingEntity {
     super.deliveryPersonPhone,
     super.currentLat,
     super.currentLng,
+    super.currentLocationAddress,
     super.destinationLat,
     super.destinationLng,
     super.estimatedTime,
     super.distanceRemaining,
+    super.cancellationReason,
     required super.timeline,
   });
 
@@ -53,10 +55,12 @@ class LiveTrackingModel extends LiveTrackingEntity {
       deliveryPersonPhone: json['deliveryPerson']?['phone'],
       currentLat: json['currentLocation']?['lat']?.toDouble(),
       currentLng: json['currentLocation']?['lng']?.toDouble(),
+      currentLocationAddress: json['currentLocation']?['address'],
       destinationLat: json['destination']?['lat']?.toDouble(),
       destinationLng: json['destination']?['lng']?.toDouble(),
       estimatedTime: json['estimatedTime'],
       distanceRemaining: json['distanceRemaining'],
+      cancellationReason: json['cancellationReason'],
       timeline: (json['timeline'] as List?)
               ?.map((item) => TrackingModel.fromJson(item))
               .toList() ??
@@ -77,6 +81,7 @@ class LiveTrackingModel extends LiveTrackingEntity {
           ? {
               'lat': currentLat,
               'lng': currentLng,
+              'address': currentLocationAddress,
             }
           : null,
       'destination': destinationLat != null && destinationLng != null
@@ -87,6 +92,7 @@ class LiveTrackingModel extends LiveTrackingEntity {
           : null,
       'estimatedTime': estimatedTime,
       'distanceRemaining': distanceRemaining,
+      'cancellationReason': cancellationReason,
       'timeline': timeline.map((t) => (t as TrackingModel).toJson()).toList(),
     };
   }

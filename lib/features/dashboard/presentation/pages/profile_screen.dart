@@ -1,9 +1,12 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:tapto/core/providers/currency_provider.dart';
+import 'package:tapto/core/utils/localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:tapto/features/dashboard/presentation/provider/wishlist_provider.dart';
 import '../../../../app/routes/app_routes.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
@@ -13,7 +16,6 @@ import '../../../../core/utils/image_utils.dart';
 import '../../../auth/presentation/viewmodel/auth_viewmodel.dart';
 import '../../../orders/presentation/viewmodel/order_viewmodel.dart';
 import '../../../orders/presentation/pages/order_tracking_screen.dart';
-import '../provider/wishlist_provider.dart';
 import 'edit_profile_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
@@ -62,7 +64,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 Icons.camera_alt_rounded,
                 color: AppColors.primary,
               ),
-              title: const Text('Take a Photo'),
+              title: Text(context.translate('Take a Photo')),
               onTap: () {
                 Navigator.pop(context);
                 _handleImagePick(ImageSource.camera);
@@ -73,7 +75,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 Icons.photo_library_rounded,
                 color: AppColors.primary,
               ),
-              title: const Text('Choose from Gallery'),
+              title: Text(context.translate('Choose from Gallery')),
               onTap: () {
                 Navigator.pop(context);
                 _handleImagePick(ImageSource.gallery);
@@ -104,7 +106,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       );
       if (pickedFile != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Uploading profile picture...')),
+          SnackBar(content: Text(context.translate('Uploading profile picture...'))),
         );
         await ref
             .read(authViewModelProvider.notifier)
@@ -115,7 +117,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     } else {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Permission denied.')));
+      ).showSnackBar(SnackBar(content: Text(context.translate('Permission denied.'))));
     }
   }
 
@@ -123,21 +125,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Permission Required'),
-        content: const Text(
-          'Please enable permissions in settings to change your photo.',
-        ),
+        title: Text(context.translate('Permission Required')),
+        content: Text(context.translate('Please enable permissions in settings to change your photo.')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(context.translate('Cancel')),
           ),
           TextButton(
             onPressed: () {
               Navigator.pop(context);
               openAppSettings();
             },
-            child: const Text('Settings'),
+            child: Text(context.translate('Settings')),
           ),
         ],
       ),
@@ -159,7 +159,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         return Padding(
           padding: const EdgeInsets.all(16),
           child: orders.isEmpty
-              ? const Center(child: Text('No orders to track.'))
+              ? Center(child: Text('No orders to track.'))
               : ListView.separated(
                   shrinkWrap: true,
                   itemCount: orders.length,
@@ -464,13 +464,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 icon: Icons.payment_outlined,
                 title: 'Payment Methods',
                 subtitle: 'Manage your payment options',
-                onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Payment methods feature coming soon!'),
-                    ),
-                  );
-                },
+                onTap: () => _showPaymentMethodsDialog(context, ref),
               ),
               const SizedBox(height: AppSpacing.sm),
               _ProfileMenuItem(
@@ -586,6 +580,47 @@ class _QuickActionCard extends StatelessWidget {
       ),
     );
   }
+}
+
+// --------------------
+// Payment Methods Dialog
+// --------------------
+void _showPaymentMethodsDialog(BuildContext context, WidgetRef ref) {
+  final paymentMethods = ref.read(paymentMethodsProvider);
+  final currency = ref.read(currencyProvider);
+
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      title: Text('Payment Methods'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('Available payment methods for your region:'),
+          const SizedBox(height: 16),
+          ...paymentMethods.map((method) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              children: [
+                Icon(Icons.payment, color: AppColors.primary, size: 20),
+                const SizedBox(width: 12),
+                Text(method),
+              ],
+            ),
+          )),
+          const SizedBox(height: 16),
+          Text('Currency: ${currency.toString()}'),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: Text('Close'),
+        ),
+      ],
+    ),
+  );
 }
 
 // --------------------

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -5,6 +6,7 @@ import 'package:tapto/core/api/api_endpoint.dart';
 import 'package:tapto/features/dashboard/data/models/cart_item_model.dart';
 import 'package:tapto/features/dashboard/presentation/provider/wishlist_provider.dart';
 import 'package:tapto/features/dashboard/presentation/viewmodel/cart_viewmodel.dart';
+import 'package:tapto/core/utils/currency_formatter.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 
@@ -44,23 +46,23 @@ class WishlistScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.xl),
                 const Text(
-                  'Your wishlist is empty',
+                  'yourWishlistIsEmpty',
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
                   ),
-                ),
+                ).tr(),
                 const SizedBox(height: AppSpacing.md),
                 Text(
-                  'Double-tap products to add them here',
+                  'doubleTapProductsToAdd',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
                     color: AppColors.textSecondary,
                     height: 1.5,
                   ),
-                ),
+                ).tr(),
                 const SizedBox(height: AppSpacing.xl),
                 SizedBox(
                   width: double.infinity,
@@ -78,13 +80,13 @@ class WishlistScreen extends ConsumerWidget {
                       ),
                     ),
                     child: const Text(
-                      'Start Exploring',
+                      'startExploring',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: Colors.white,
                       ),
-                    ),
+                    ).tr(),
                   ),
                 ),
               ],
@@ -146,8 +148,8 @@ class WishlistScreen extends ConsumerWidget {
   void _addToCart(BuildContext context, WidgetRef ref, product) {
     if (product.colors.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('This product has no colors available'),
+        SnackBar(
+          content: const Text('productHasNoColors').tr(),
           backgroundColor: Colors.red,
         ),
       );
@@ -171,20 +173,20 @@ class WishlistScreen extends ConsumerWidget {
     // Optionally remove from wishlist after adding to cart
     ref.read(wishlistProvider.notifier).removeFromWishlist(product.id);
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${product.name} added to cart ✓'),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.success,
-        action: SnackBarAction(
-          label: 'VIEW CART',
-          textColor: Colors.white,
-          onPressed: () {
-            Navigator.pushNamed(context, '/cart');
-          },
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('${product.name} added to cart ✓'),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: AppColors.success,
+          action: SnackBarAction(
+            label: 'VIEW CART',
+            textColor: Colors.white,
+            onPressed: () {
+              Navigator.pushNamed(context, '/cart');
+            },
+          ),
         ),
-      ),
-    );
+      );
   }
 
   void _showClearDialog(BuildContext context, WidgetRef ref) {
@@ -192,26 +194,26 @@ class WishlistScreen extends ConsumerWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.warning_amber_rounded, color: Colors.orange),
-            SizedBox(width: 12),
-            Text('Clear Wishlist'),
+            const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+            const SizedBox(width: 12),
+            const Text('clearWishlist').tr(),
           ],
         ),
-        content: const Text('Are you sure you want to clear your entire wishlist?'),
+        content: const Text('confirmClearWishlist').tr(),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
-            child: const Text('Cancel'),
+            child: const Text('cancel').tr(),
           ),
           ElevatedButton(
             onPressed: () {
               ref.read(wishlistProvider.notifier).clearWishlist();
               Navigator.pop(dialogContext);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Wishlist cleared'),
+                SnackBar(
+                  content: const Text('wishlistCleared').tr(),
                   behavior: SnackBarBehavior.floating,
                 ),
               );
@@ -220,7 +222,7 @@ class WishlistScreen extends ConsumerWidget {
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
             ),
-            child: const Text('Clear All'),
+            child: const Text('clearAll').tr(),
           ),
         ],
       ),
@@ -228,7 +230,7 @@ class WishlistScreen extends ConsumerWidget {
   }
 }
 
-class _WishlistItemCard extends StatelessWidget {
+class _WishlistItemCard extends ConsumerWidget {
   final dynamic product;
   final String imageUrl;
   final VoidCallback onAddToCart;
@@ -242,7 +244,7 @@ class _WishlistItemCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -313,7 +315,7 @@ class _WishlistItemCard extends StatelessWidget {
                       Row(
                         children: [
                           Text(
-                            '\$${product.price.toStringAsFixed(2)}',
+                            '${ref.watch(currencyFormatterProvider)(product.price)}',
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -362,18 +364,18 @@ class _WishlistItemCard extends StatelessWidget {
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 14),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.shopping_cart_outlined, color: AppColors.primary, size: 20),
                   SizedBox(width: 8),
                   Text(
-                    'Add to Cart',
+                    'addToCart',
                     style: TextStyle(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w600,
                     ),
-                  ),
+                  ).tr(),
                 ],
               ),
             ),
