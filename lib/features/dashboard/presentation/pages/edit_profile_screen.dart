@@ -18,9 +18,9 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _phoneController;
-  String? _selectedPreference;
-
-  final List<String> _preferences = ['Men', 'Women', 'Both'];
+  late TextEditingController _emailController;
+  late TextEditingController _passwordController;
+  bool _obscurePassword = true;
 
   @override
   void initState() {
@@ -28,44 +28,69 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
     final user = ref.read(currentUserProvider);
     _nameController = TextEditingController(text: user?.name ?? '');
     _phoneController = TextEditingController(text: user?.phoneNumber ?? '');
-    _selectedPreference = user?.preference;
+    _emailController = TextEditingController(text: user?.email ?? '');
+    _passwordController = TextEditingController();
   }
 
   @override
   void dispose() {
     _nameController.dispose();
     _phoneController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
     super.dispose();
   }
 
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) return;
 
-    await ref
-        .read(authViewModelProvider.notifier)
-        .updateProfile(
-          name: _nameController.text.trim(),
-          phoneNumber: _phoneController.text.trim().isNotEmpty
-              ? _phoneController.text.trim()
-              : null,
-          preference: _selectedPreference,
-        );
+    try {
+      await ref
+          .read(authViewModelProvider.notifier)
+          .updateProfile(
+            name: _nameController.text.trim(),
+            phoneNumber: _phoneController.text.trim().isNotEmpty
+                ? _phoneController.text.trim()
+                : null,
+          );
 
-    if (mounted) {
-      final authState = ref.read(authViewModelProvider);
-      if (authState.status == AuthStatus.authenticated) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Profile updated successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        Navigator.pop(context);
-      } else if (authState.status == AuthStatus.error) {
+      // Wait longer for state to fully update (getCurrentUser is called in updateProfile)
+      await Future.delayed(const Duration(milliseconds: 800));
+
+      if (mounted) {
+        final authState = ref.read(authViewModelProvider);
+        if (authState.status == AuthStatus.authenticated) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profile updated successfully!'),
+              backgroundColor: Colors.green,
+              duration: Duration(seconds: 2),
+            ),
+          );
+          // Navigate back after a brief delay to let user see the toast
+          await Future.delayed(const Duration(milliseconds: 500));
+          if (mounted) {
+            Navigator.pop(context);
+          }
+        } else if (authState.status == AuthStatus.error) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                authState.errorMessage ?? 'Failed to update profile',
+              ),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(authState.errorMessage ?? 'Failed to update profile'),
+            content: Text('Error: ${e.toString()}'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
           ),
         );
       }
@@ -88,38 +113,6 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: AppSpacing.md),
-
-              // Profile picture section (read-only, uses camera on profile screen)
-              Center(
-                child: Column(
-                  children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundColor: AppColors.primary,
-                      backgroundImage: currentUser?.profilePicture != null
-                          ? NetworkImage(currentUser!.profilePicture!)
-                          : null,
-                      child: currentUser?.profilePicture == null
-                          ? Text(
-                              (currentUser?.name ?? 'G')[0].toUpperCase(),
-                              style: const TextStyle(
-                                fontSize: 36,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            )
-                          : null,
-                    ),
-                    const SizedBox(height: AppSpacing.sm),
-                    Text(
-                      'Tap the camera icon on your profile to change photo',
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: AppSpacing.xl),
 
               // Email (read-only)
               Text(
@@ -230,18 +223,20 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
               const SizedBox(height: AppSpacing.lg),
 
-              // Shopping Preference
+              // Password Field
               Text(
-                'Shopping Preference',
+                'Password',
                 style: AppTextStyles.body.copyWith(
                   fontWeight: FontWeight.w600,
                   color: Colors.grey[700],
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
-              DropdownButtonFormField<String>(
-                value: _selectedPreference,
+              TextFormField(
+                controller: _passwordController,
+                obscureText: _obscurePassword,
                 decoration: InputDecoration(
+                  hintText: 'Enter new password (optional)',
                   filled: true,
                   fillColor: Colors.white,
                   border: OutlineInputBorder(
@@ -259,20 +254,21 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       width: 2,
                     ),
                   ),
-                  prefixIcon: const Icon(Icons.style_outlined),
+                  prefixIcon: const Icon(Icons.lock_outline),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscurePassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                      color: Colors.grey[600],
+                    ),
+                    onPressed: () {
+                      setState(() {
+                        _obscurePassword = !_obscurePassword;
+                      });
+                    },
+                  ),
                 ),
-                hint: const Text('Select your preference'),
-                items: _preferences.map((pref) {
-                  return DropdownMenuItem(
-                    value: pref.toLowerCase(),
-                    child: Text(pref),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  setState(() {
-                    _selectedPreference = value;
-                  });
-                },
               ),
 
               const SizedBox(height: AppSpacing.xl * 2),

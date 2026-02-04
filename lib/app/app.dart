@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:tapto/app/routes/app_routes.dart';
 import 'package:tapto/app/theme/app_theme.dart';
-import 'package:tapto/app/theme/theme_provider.dart';
+import 'package:tapto/core/providers/theme_provider.dart';
+import 'package:tapto/core/providers/language_provider.dart';
 
 class MyApp extends ConsumerWidget {
   const MyApp({super.key});
@@ -11,6 +14,9 @@ class MyApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     try {
       final themeMode = ref.watch(themeProvider);
+      final language = ref.watch(languageProvider);
+
+      print('🔄 MyApp rebuild - Theme: $themeMode, Language: ${language.code}');
 
       return MaterialApp(
         title: 'Tapto',
@@ -18,6 +24,14 @@ class MyApp extends ConsumerWidget {
         theme: AppTheme.lightTheme,
         darkTheme: AppTheme.darkTheme,
         themeMode: themeMode,
+        locale: Locale(language.code),
+        supportedLocales: context.supportedLocales,
+        localizationsDelegates: [
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+          ...context.localizationDelegates,
+        ],
         routes: AppRoutes.routes,
         initialRoute: AppRoutes.splash,
         onUnknownRoute: (settings) {
