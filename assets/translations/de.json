@@ -192,5 +192,17 @@
   "registrationSuccessful": "Registrierung erfolgreich!",
   "registrationFailed": "Registrierung fehlgeschlagen",
   "alreadyHaveAccount": "Haben Sie bereits ein Konto?",
-  "login": "Anmelden"
+  "login": "Anmelden",
+  "savedToWishlist": "zur Wunschliste hinzugefügt ♡",
+  "failedToLoadProducts": "Produkte konnten nicht geladen werden",
+  "retry": "Erneut versuchen",
+  "allProductsExplored": "Alle Produkte erkundet!",
+  "applyFiltersOrRevisit": "Filter anwenden oder Produkte erneut besuchen",
+  "exploreAgain": "Erneut erkunden",
+  "swipeUpForDetails": "Nach oben wischen für Details",
+  "addedToCart": "zum Warenkorb hinzugefügt ✓",
+  "removedFromWishlist": "von der Wunschliste entfernt",
+  "noProductsAvailable": "Keine Produkte verfügbar",
+  "checkBackLaterForNewArrivals": "Schauen Sie später nach neuen Produkten vorbei",
+  "refresh": "Aktualisieren"
 }

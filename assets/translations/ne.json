@@ -192,5 +192,17 @@
   "registrationSuccessful": "दर्ता सफल!",
   "registrationFailed": "दर्ता असफल भयो",
   "alreadyHaveAccount": "पहिले नै खाता छ?",
-  "login": "लग इन गर्नुहोस्"
+  "login": "लगइन गर्नुहोस्",
+  "savedToWishlist": "इच्छा सूचीमा बचत गरियो ♡",
+  "failedToLoadProducts": "उत्पादहरू लोड गर्न असफल भयो",
+  "retry": "पुन: प्रयास गर्नुहोस्",
+  "allProductsExplored": "सबै उत्पादनहरू अन्वेषण गरियो!",
+  "applyFiltersOrRevisit": "फिल्टरहरू लागू गर्नुहोस् वा उत्पादनहरू पुन: भ्रमण गर्नुहोस्",
+  "exploreAgain": "फेरि अन्वेषण गर्नुहोस्",
+  "swipeUpForDetails": "विवरणहरूको लागि माथि स्वाइप गर्नुहोस्",
+  "addedToCart": "कार्टमा थपियो ✓",
+  "removedFromWishlist": "इच्छा सूचीबाट हटाइयो",
+  "noProductsAvailable": "कुनै उत्पादनहरू उपलब्ध छैनन्",
+  "checkBackLaterForNewArrivals": "नयाँ आगमनहरूको लागि पछि फर्केर हेर्नुहोस्",
+  "refresh": "ताजा गर्नुहोस्"
 }
