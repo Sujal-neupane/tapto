@@ -152,5 +152,11 @@
   "changePassword": "पासवर्ड परिवर्तन गर्नुहोस्",
   "updatePassword": "पासवर्ड अपडेट गर्नुहोस्",
   "changePasswordComingSoon": "पासवर्ड परिवर्तन गर्न चाँडै आउँदैछ",
-  "editProfileComingSoon": "प्रोफाइल सम्पादन गर्न चाँडै आउँदैछ"
+  "editProfileComingSoon": "प्रोफाइल सम्पादन गर्न चाँडै आउँदैछ",
+  "discover": "अन्वेषण गर्नुहोस्",
+  "wishlist": "इच्छा सूची",
+  "profile": "प्रोफाइल",
+  "search": "खोज्नुहोस्",
+  "filter": "फिल्टर गर्नुहोस्",
+  "cart": "कार्ट"
 }

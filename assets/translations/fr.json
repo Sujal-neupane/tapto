@@ -152,5 +152,11 @@
   "changePassword": "Changer le Mot de Passe",
   "updatePassword": "Mettre à Jour le Mot de Passe",
   "changePasswordComingSoon": "Changer le Mot de Passe Bientôt Disponible",
-  "editProfileComingSoon": "Modifier le Profil Bientôt Disponible"
+  "editProfileComingSoon": "Modifier le Profil Bientôt Disponible",
+  "discover": "Découvrir",
+  "wishlist": "Liste de Souhaits",
+  "profile": "Profil",
+  "search": "Rechercher",
+  "filter": "Filtrer",
+  "cart": "Panier"
 }

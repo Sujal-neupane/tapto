@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:tapto/features/dashboard/presentation/viewmodel/cart_viewmodel.dart';
 import '../../presentation/pages/home_swipe_screen.dart';
 import '../../presentation/pages/wish_list_screen.dart';
@@ -29,11 +30,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   String _getTitle() {
     switch (_currentIndex) {
       case 1:
-        return 'Wishlist';
+        return 'wishlist'.tr();
       case 2:
-        return 'Profile';
+        return 'profile'.tr();
       default:
-        return 'Discover';
+        return 'discover'.tr();
     }
   }
 
@@ -89,7 +90,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           if (_currentIndex == 0) ...[
             IconButton(
               icon: const Icon(Icons.search_rounded, color: Colors.black87),
-              tooltip: 'Search',
+              tooltip: 'search'.tr(),
               onPressed: () {
                 Navigator.push(
                   context,
@@ -99,7 +100,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             ),
             IconButton(
               icon: const Icon(Icons.tune_rounded, color: Colors.black87),
-              tooltip: 'Filter',
+              tooltip: 'filter'.tr(),
               onPressed: () {
                 Navigator.push(
                   context,
@@ -115,7 +116,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                   Icons.shopping_cart_outlined,
                   color: Colors.black87,
                 ),
-                tooltip: 'Cart',
+                tooltip: 'cart'.tr(),
                 onPressed: () {
                   Navigator.push(
                     context,
@@ -173,7 +174,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             children: [
               _NavItem(
                 icon: Icons.explore_rounded,
-                label: 'Discover',
+                label: 'discover'.tr(),
                 isSelected: _currentIndex == 0,
                 onTap: () {
                   if (_currentIndex != 0) {
@@ -183,7 +184,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
               _NavItem(
                 icon: Icons.favorite_rounded,
-                label: 'Wishlist',
+                label: 'wishlist'.tr(),
                 isSelected: _currentIndex == 1,
                 badge: 0,
                 onTap: () {
@@ -194,7 +195,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               ),
               _NavItem(
                 icon: Icons.person_rounded,
-                label: 'Profile',
+                label: 'profile'.tr(),
                 isSelected: _currentIndex == 2,
                 onTap: () {
                   if (_currentIndex != 2) {

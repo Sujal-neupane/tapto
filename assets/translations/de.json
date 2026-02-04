@@ -152,5 +152,11 @@
   "changePassword": "Passwort ändern",
   "updatePassword": "Passwort aktualisieren",
   "changePasswordComingSoon": "Passwort ändern demnächst verfügbar",
-  "editProfileComingSoon": "Profil bearbeiten demnächst verfügbar"
+  "editProfileComingSoon": "Profil bearbeiten demnächst verfügbar",
+  "discover": "Entdecken",
+  "wishlist": "Wunschliste",
+  "profile": "Profil",
+  "search": "Suchen",
+  "filter": "Filtern",
+  "cart": "Warenkorb"
 }

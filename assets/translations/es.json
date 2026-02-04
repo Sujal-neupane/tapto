@@ -152,5 +152,11 @@
   "changePassword": "Cambiar Contraseña",
   "updatePassword": "Actualizar Contraseña",
   "changePasswordComingSoon": "Cambiar Contraseña Próximamente",
-  "editProfileComingSoon": "Editar Perfil Próximamente"
+  "editProfileComingSoon": "Editar Perfil Próximamente",
+  "discover": "Descubrir",
+  "wishlist": "Lista de Deseos",
+  "profile": "Perfil",
+  "search": "Buscar",
+  "filter": "Filtrar",
+  "cart": "Carrito"
 }

@@ -152,6 +152,12 @@
   "changePassword": "Change Password",
   "updatePassword": "Update Password",
   "changePasswordComingSoon": "Change Password Coming Soon",
-  "editProfileComingSoon": "Edit Profile Coming Soon"
+  "editProfileComingSoon": "Edit Profile Coming Soon",
+  "discover": "Discover",
+  "wishlist": "Wishlist",
+  "profile": "Profile",
+  "search": "Search",
+  "filter": "Filter",
+  "cart": "Cart"
 }
 
