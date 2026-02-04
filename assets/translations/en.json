@@ -173,6 +173,25 @@
   "dontHaveAccount": "Don't have an account?",
   "signUp": "Sign Up",
   "welcomeBackMessage": "Welcome back!",
-  "loginFailed": "Login failed"
+  "loginFailed": "Login failed",
+  "createAccount": "Create Account",
+  "joinTapto": "Join Tapto for curated picks",
+  "fullName": "Full Name",
+  "enterFullName": "Enter your full name",
+  "pleaseEnterName": "Please enter your name",
+  "nameMinLength": "Name must be at least 3 characters",
+  "shoppingPreference": "Shopping Preference (Optional)",
+  "mensFashion": "Mens Fashion",
+  "womensFashion": "Womens Fashion",
+  "confirmPassword": "Confirm Password",
+  "reenterPassword": "Re-enter your password",
+  "pleaseConfirm": "Please confirm",
+  "passwordsNotMatch": "Passwords do not match",
+  "acceptTerms": "I accept the Terms and Conditions",
+  "pleaseAcceptTerms": "Please accept terms",
+  "registrationSuccessful": "Registration successful!",
+  "registrationFailed": "Registration failed",
+  "alreadyHaveAccount": "Already have an account?",
+  "login": "Login"
 }
 
