@@ -117,7 +117,7 @@ class AdminOrderDataSourceImpl implements AdminOrderDataSource {
 
   @override
   Future<List<OrderModel>> getAllOrders() async {
-    final response = await apiClient.get('/admin/orders');
+    final response = await apiClient.get('/api/admin/orders');
 
     final data = response.data;
     if (data is Map && data['data'] != null) {
@@ -131,7 +131,7 @@ class AdminOrderDataSourceImpl implements AdminOrderDataSource {
   @override
   Future<OrderModel> updateOrderStatus(String orderId, String status) async {
     final response = await apiClient.patch(
-      '/admin/orders/$orderId/status',
+      '/api/admin/orders/$orderId/status',
       data: {'status': status},
     );
 
@@ -145,7 +145,7 @@ class AdminOrderDataSourceImpl implements AdminOrderDataSource {
   @override
   Future<void> cancelOrder(String orderId, String reason) async {
     await apiClient.patch(
-      '/admin/orders/$orderId/status',
+      '/api/admin/orders/$orderId/status',
       data: {'status': 'cancelled', 'cancellationReason': reason},
     );
   }
