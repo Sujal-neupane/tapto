@@ -20,6 +20,16 @@ class EditProductModal extends ConsumerStatefulWidget {
 }
 
 class _EditProductModalState extends ConsumerState<EditProductModal> {
+    static const _menCategories = [
+      'T-Shirts',
+      'Shirts',
+      'Jeans',
+      'Trousers',
+      'Shoes',
+      'Formal Wear',
+      'Jackets',
+      'Accessories',
+    ];
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
@@ -37,16 +47,6 @@ class _EditProductModalState extends ConsumerState<EditProductModal> {
   List<XFile> _newImages = [];
   bool _isLoading = false;
 
-  static const _menCategories = [
-    'T-Shirts',
-    'Shirts',
-    'Jeans',
-    'Trousers',
-    'Shoes',
-    'Formal Wear',
-    'Jackets',
-    'Accessories',
-  ];
 
   static const _womenCategories = [
     'Dresses',
@@ -544,36 +544,6 @@ class _EditProductModalState extends ConsumerState<EditProductModal> {
     );
   }
 
-  Widget _buildToggleButton(String label, String value) {
-    final isSelected = _fashionType == value;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() {
-          _fashionType = value;
-          _category = '';
-        }),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary : Colors.grey[100],
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isSelected ? AppColors.primary : Colors.grey[300]!,
-            ),
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                color: isSelected ? Colors.white : Colors.grey[600],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 
   Widget _buildVariantsSection() {
     return Column(
@@ -640,6 +610,37 @@ class _EditProductModalState extends ConsumerState<EditProductModal> {
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: const BorderSide(color: AppColors.primary, width: 2),
+      ),
+    );
+  }
+
+  Widget _buildToggleButton(String label, String value) {
+    final isSelected = _fashionType == value;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() {
+          _fashionType = value;
+          _category = '';
+        }),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? AppColors.primary : Colors.grey[100],
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: isSelected ? AppColors.primary : Colors.grey[300]!,
+            ),
+          ),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: isSelected ? Colors.white : Colors.grey[600],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

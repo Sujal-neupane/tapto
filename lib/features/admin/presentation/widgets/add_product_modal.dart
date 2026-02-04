@@ -54,6 +54,7 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
     'Bags',
     'Accessories',
   ];
+  
 
   @override
   void dispose() {
@@ -275,7 +276,7 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
                 _buildFashionTypeCard(
                   'Men\'s Fashion',
                   'Clothing and accessories for men',
-                  Icons.man,
+                  Icons.male,
                   'Men',
                   Colors.blue,
                 ),
@@ -968,7 +969,7 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
       final formData = FormData();
 
       // Add text fields
-      // Use fashionType as category since backend filters products by category (Men/Women)
+      // Use fashionType as category since backend filters products by category
       formData.fields.addAll([
         MapEntry('name', _nameController.text),
         MapEntry('description', _descriptionController.text),
@@ -976,7 +977,7 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
         MapEntry(
           'category',
           _fashionType ?? '',
-        ), // Use Men/Women as category for filtering
+        ), // Use category for filtering
         MapEntry(
           'subcategory',
           _category ?? '',
@@ -1029,7 +1030,7 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
 
       // Use the ApiClient to make the post request.
       // The base URL and auth headers are handled by the client's interceptors.
-      final response = await apiClient.post(
+      await apiClient.post(
         ApiEndpoints.adminProducts,
         data: formData,
       );
