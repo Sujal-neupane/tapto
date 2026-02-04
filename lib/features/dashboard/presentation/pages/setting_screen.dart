@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../app/routes/app_routes.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
@@ -8,6 +10,7 @@ import '../../../../app/widgets/custom_app_bar.dart';
 import '../../../../app/widgets/logout_dialog.dart';
 import '../../../auth/presentation/viewmodel/auth_viewmodel.dart';
 import '../../../auth/presentation/state/auth_state.dart';
+import '../../../../core/providers/language_provider.dart';
 
 class SettingScreen extends ConsumerStatefulWidget {
   const SettingScreen({super.key});
@@ -20,17 +23,83 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
   bool _notificationsEnabled = true;
   bool _darkModeEnabled = false;
   bool _emailUpdates = true;
-  String _selectedLanguage = 'English';
+  String _selectedLanguage = 'english'.tr();
 
-  void _handleLogout(BuildContext context) async {
-    showDialog(
-      context: context,
-      builder: (context) => LogoutDialog(
-        onConfirm: () async {
-          await ref.read(authViewModelProvider.notifier).logout();
-        },
-      ),
-    );
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedLanguage();
+  }
+
+  Future<void> _loadSavedLanguage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedLanguage = prefs.getString('languageCode') ?? 'en';
+    setState(() {
+      _selectedLanguage = _getLanguageDisplayName(savedLanguage);
+    });
+  }
+
+  String _getLanguageDisplayName(String code) {
+    switch (code) {
+      case 'en': return 'english'.tr();
+      case 'es': return 'spanish'.tr();
+      case 'fr': return 'french'.tr();
+      case 'de': return 'german'.tr();
+      case 'ne': return 'nepali'.tr();
+      default: return 'english'.tr();
+    }
+  }
+
+  String _getLanguageCode(String displayName) {
+    if (displayName == 'english'.tr()) return 'en';
+    if (displayName == 'spanish'.tr()) return 'es';
+    if (displayName == 'french'.tr()) return 'fr';
+    if (displayName == 'german'.tr()) return 'de';
+    if (displayName == 'nepali'.tr()) return 'ne';
+    return 'en';
+  }
+
+  Future<void> _changeLanguage(String languageCode) async {
+    final locale = Locale(languageCode);
+    await context.setLocale(locale);
+
+    // Update language provider
+    final appLanguage = _getAppLanguageFromCode(languageCode);
+    ref.read(languageProvider.notifier).setLanguage(appLanguage);
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('languageCode', languageCode);
+
+    setState(() {
+      _selectedLanguage = _getLanguageDisplayName(languageCode);
+    });
+
+    // Show success message
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('languageChanged'.tr()),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
+  AppLanguage _getAppLanguageFromCode(String code) {
+    switch (code) {
+      case 'en':
+        return AppLanguage.english;
+      case 'es':
+        return AppLanguage.spanish;
+      case 'fr':
+        return AppLanguage.french;
+      case 'de':
+        return AppLanguage.german;
+      case 'ne':
+        return AppLanguage.nepali;
+      default:
+        return AppLanguage.english;
+    }
   }
 
   @override
@@ -49,8 +118,8 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
     return Scaffold(
       backgroundColor: AppColors.surface,
       appBar: CustomAppBar(
-        title: 'Settings',
-        subtitle: "Manage your app preferences",
+        title: 'settings'.tr(),
+        subtitle: "managePreferences".tr(),
         showBackButton: true,
       ),
       body: SingleChildScrollView(
@@ -59,16 +128,16 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Account Section
-            _buildSectionHeader('Account'),
+            _buildSectionHeader('account'.tr()),
             const SizedBox(height: AppSpacing.sm),
             _buildSettingsTile(
               icon: Icons.person_outline,
-              title: 'Edit Profile',
-              subtitle: 'Update your personal information',
+              title: 'editProfile'.tr(),
+              subtitle: 'updatePersonalInfo'.tr(),
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Edit profile feature coming soon!'),
+                  SnackBar(
+                    content: Text('editProfileComingSoon'.tr()),
                   ),
                 );
               },
@@ -76,12 +145,12 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
             const SizedBox(height: AppSpacing.xs),
             _buildSettingsTile(
               icon: Icons.security_outlined,
-              title: 'Privacy & Security',
-              subtitle: 'Manage your privacy settings',
+              title: 'privacySecurity'.tr(),
+              subtitle: 'managePrivacy'.tr(),
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Privacy settings coming soon!'),
+                  SnackBar(
+                    content: Text('privacyComingSoon'.tr()),
                   ),
                 );
               },
@@ -89,12 +158,12 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
             const SizedBox(height: AppSpacing.xs),
             _buildSettingsTile(
               icon: Icons.lock_outline,
-              title: 'Change Password',
-              subtitle: 'Update your password',
+              title: 'changePassword'.tr(),
+              subtitle: 'updatePassword'.tr(),
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Change password feature coming soon!'),
+                  SnackBar(
+                    content: Text('changePasswordComingSoon'.tr()),
                   ),
                 );
               },
@@ -103,12 +172,12 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
             const SizedBox(height: AppSpacing.xl),
 
             // Notifications Section
-            _buildSectionHeader('Notifications'),
+            _buildSectionHeader('notifications'.tr()),
             const SizedBox(height: AppSpacing.sm),
             _buildSwitchTile(
               icon: Icons.notifications_outlined,
-              title: 'Push Notifications',
-              subtitle: 'Receive app notifications',
+              title: 'pushNotifications'.tr(),
+              subtitle: 'receiveNotifications'.tr(),
               value: _notificationsEnabled,
               onChanged: (value) {
                 setState(() {
@@ -119,8 +188,8 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
             const SizedBox(height: AppSpacing.xs),
             _buildSwitchTile(
               icon: Icons.email_outlined,
-              title: 'Email Updates',
-              subtitle: 'Receive updates via email',
+              title: 'emailUpdates'.tr(),
+              subtitle: 'receiveEmailUpdates'.tr(),
               value: _emailUpdates,
               onChanged: (value) {
                 setState(() {
@@ -132,12 +201,12 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
             const SizedBox(height: AppSpacing.xl),
 
             // Appearance Section
-            _buildSectionHeader('Appearance'),
+            _buildSectionHeader('appearance'.tr()),
             const SizedBox(height: AppSpacing.sm),
             _buildSwitchTile(
               icon: Icons.dark_mode_outlined,
-              title: 'Dark Mode',
-              subtitle: 'Enable dark theme',
+              title: 'darkMode'.tr(),
+              subtitle: 'enableDarkTheme'.tr(),
               value: _darkModeEnabled,
               onChanged: (value) {
                 setState(() {
@@ -148,7 +217,7 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
             const SizedBox(height: AppSpacing.xs),
             _buildSettingsTile(
               icon: Icons.language_outlined,
-              title: 'Language',
+              title: 'language'.tr(),
               subtitle: _selectedLanguage,
               onTap: () {
                 _showLanguageDialog();
@@ -158,16 +227,16 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
             const SizedBox(height: AppSpacing.xl),
 
             // Support Section
-            _buildSectionHeader('Support'),
+            _buildSectionHeader('support'.tr()),
             const SizedBox(height: AppSpacing.sm),
             _buildSettingsTile(
               icon: Icons.help_outline,
-              title: 'Help Center',
-              subtitle: 'Get help and support',
+              title: 'helpCenter'.tr(),
+              subtitle: 'getHelp'.tr(),
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Help center coming soon!'),
+                  SnackBar(
+                    content: Text('helpCenterComingSoon'.tr()),
                   ),
                 );
               },
@@ -175,8 +244,8 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
             const SizedBox(height: AppSpacing.xs),
             _buildSettingsTile(
               icon: Icons.info_outline,
-              title: 'About',
-              subtitle: 'App version and information',
+              title: 'about'.tr(),
+              subtitle: 'appVersion'.tr(),
               onTap: () {
                 _showAboutDialog();
               },
@@ -184,12 +253,12 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
             const SizedBox(height: AppSpacing.xs),
             _buildSettingsTile(
               icon: Icons.rate_review_outlined,
-              title: 'Rate App',
-              subtitle: 'Share your feedback',
+              title: 'rateApp'.tr(),
+              subtitle: 'shareFeeling'.tr(),
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Thank you for your interest!'),
+                  SnackBar(
+                    content: Text('thankYou'.tr()),
                   ),
                 );
               },
@@ -198,16 +267,16 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
             const SizedBox(height: AppSpacing.xl),
 
             // Legal Section
-            _buildSectionHeader('Legal'),
+            _buildSectionHeader('legal'.tr()),
             const SizedBox(height: AppSpacing.sm),
             _buildSettingsTile(
               icon: Icons.privacy_tip_outlined,
-              title: 'Privacy Policy',
-              subtitle: 'View our privacy policy',
+              title: 'privacyPolicy'.tr(),
+              subtitle: 'viewPrivacy'.tr(),
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Privacy policy coming soon!'),
+                  SnackBar(
+                    content: Text('privacyComingSoon'.tr()),
                   ),
                 );
               },
@@ -215,12 +284,12 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
             const SizedBox(height: AppSpacing.xs),
             _buildSettingsTile(
               icon: Icons.description_outlined,
-              title: 'Terms of Service',
-              subtitle: 'View terms and conditions',
+              title: 'termsOfService'.tr(),
+              subtitle: 'viewTerms'.tr(),
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Terms of service coming soon!'),
+                  SnackBar(
+                    content: Text('termsComingSoon'.tr()),
                   ),
                 );
               },
@@ -235,9 +304,9 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
               child: OutlinedButton.icon(
                 onPressed: () => _handleLogout(context),
                 icon: const Icon(Icons.logout, color: Colors.red),
-                label: const Text(
-                  'Logout',
-                  style: TextStyle(
+                label: Text(
+                  'logout'.tr(),
+                  style: const TextStyle(
                     color: Colors.red,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -376,37 +445,35 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Select Language'),
+        title: Text('selectLanguage'.tr()),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            _buildLanguageOption('English'),
-            _buildLanguageOption('Spanish'),
-            _buildLanguageOption('French'),
-            _buildLanguageOption('German'),
-            _buildLanguageOption('Nepali'),
+            _buildLanguageOption('english'.tr(), 'en'),
+            _buildLanguageOption('spanish'.tr(), 'es'),
+            _buildLanguageOption('french'.tr(), 'fr'),
+            _buildLanguageOption('german'.tr(), 'de'),
+            _buildLanguageOption('nepali'.tr(), 'ne'),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text('cancel'.tr()),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildLanguageOption(String language) {
+  Widget _buildLanguageOption(String language, String code) {
     return RadioListTile<String>(
       title: Text(language),
       value: language,
       groupValue: _selectedLanguage,
       onChanged: (value) {
-        setState(() {
-          _selectedLanguage = value!;
-        });
         Navigator.pop(context);
+        _changeLanguage(code);
       },
       activeColor: AppColors.primary,
     );
@@ -433,6 +500,17 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
       children: [
         const Text('A complete solution for your shopping needs.'),
       ],
+    );
+  }
+
+  void _handleLogout(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => LogoutDialog(
+        onConfirm: () {
+          ref.read(authViewModelProvider.notifier).logout();
+        },
+      ),
     );
   }
 }

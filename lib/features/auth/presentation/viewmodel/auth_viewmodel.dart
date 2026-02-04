@@ -94,7 +94,6 @@ class AuthViewModel extends Notifier<AuthState> {
         } catch (e) {
           // If getCurrentUser fails, we already have the user from login
           // so we can continue with the authenticated state
-          print('Warning: Could not fetch complete user data: $e');
         }
       },
     );
