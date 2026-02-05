@@ -5,6 +5,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../services/hive/hive_services.dart';
 import '../services/storage/user_session_service.dart';
 import '../services/sensor_service.dart';
+import '../services/location_service.dart';
 
 // Auth Feature
 
@@ -26,6 +27,11 @@ final sharedPreferencesInstanceProvider = Provider<SharedPreferences>((ref) {
 /// Sensor service provider for shake gesture detection
 final sensorServiceProvider = Provider<SensorService>((ref) {
   return SensorService();
+});
+
+/// Location service provider for GPS and address services
+final locationServiceProvider = Provider<LocationService>((ref) {
+  return LocationService();
 });
 
 // ==================== Data Source Providers ====================

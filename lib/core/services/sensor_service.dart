@@ -101,6 +101,7 @@ class SensorService {
 
   /// Handle accelerometer events for shake detection and proximity
   void _onAccelerometerEvent(AccelerometerEvent event) {
+    debugPrint('📱 Accel: x=${event.x.toStringAsFixed(2)}, y=${event.y.toStringAsFixed(2)}, z=${event.z.toStringAsFixed(2)}');
     final now = DateTime.now();
 
     // Detect device orientation
@@ -109,15 +110,23 @@ class SensorService {
     // Calculate acceleration magnitude (excluding gravity)
     final magnitude = sqrt(event.x * event.x + event.y * event.y + event.z * event.z) - 9.8;
 
-    // Proximity detection: when phone is near face, acceleration is very low
-    // and device is likely in a stable position (like during a call)
-    final isNearFace = magnitude < PROXIMITY_THRESHOLD &&
-                      event.z.abs() > 8.0; // Z-axis shows gravity when face-up
+    // Improved proximity detection: detect when phone is face up on table (idle detection)
+    // Face up: z < 0.0 (negative z), very stable, minimal movement
+    final isVeryStable = magnitude < 10.0; // Very relaxed threshold
+    final isFaceUp = event.z < 0.0; // Negative z means face up
+    final hasLowMovement = event.x.abs() < 10.0 && event.y.abs() < 10.0; // Very relaxed threshold
+
+    final isNearFace = isVeryStable && isFaceUp && hasLowMovement;
+
+    // Debug: print values
+    if (isNearFace != _isNearFace) {
+      debugPrint('📱 Proximity change: stable=$isVeryStable, faceUp=$isFaceUp, lowMove=$hasLowMovement, z=${event.z}, mag=$magnitude');
+    }
 
     if (isNearFace != _isNearFace) {
       _isNearFace = isNearFace;
       _proximityController.add(_isNearFace);
-      debugPrint('📱 Proximity: ${_isNearFace ? "NEAR FACE" : "FAR FROM FACE"}');
+      debugPrint('📱 Proximity: ${_isNearFace ? "NEAR FACE (Call detected)" : "FAR FROM FACE"}');
     }
 
     // Shake detection with cooldown
