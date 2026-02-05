@@ -51,6 +51,8 @@
 	<string>This app requires microphone access for audio recording.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>This app requires photo library access to select photos and videos.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>This app requires permission to save photos to your photo library.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>This app requires location access to deliver the product.</string>
 </dict>
