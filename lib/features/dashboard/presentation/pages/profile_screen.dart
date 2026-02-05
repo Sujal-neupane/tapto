@@ -88,37 +88,127 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   Future<void> _handleImagePick(ImageSource source) async {
-    PermissionStatus status;
-    if (source == ImageSource.camera) {
-      status = await Permission.camera.request();
-    } else {
-      // iOS: try both, Android: just photos
-      status = await Permission.photos.request();
-      if (!status.isGranted && Platform.isIOS) {
-        status = await Permission.photosAddOnly.request();
-      }
-    }
+    try {
+      // On iOS simulator, skip permission check and go directly to image picker
+      // iOS simulators have issues with permission dialogs
+      if (Platform.isIOS) {
+        debugPrint('iOS detected, attempting direct image pick');
+        final XFile? pickedFile = await _picker.pickImage(
+          source: source,
+          imageQuality: 80,
+        );
 
-    if (status.isGranted) {
+        if (pickedFile != null) {
+          debugPrint('Image picked successfully on iOS: ${pickedFile.path}');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.translate('Uploading profile picture...'))),
+          );
+          await ref
+              .read(authViewModelProvider.notifier)
+              .uploadProfilePicture(File(pickedFile.path));
+        } else {
+          debugPrint('Image picker returned null on iOS');
+        }
+        return;
+      }
+
+      // For Android and other platforms, use normal permission flow
+      PermissionStatus permissionStatus;
+      if (source == ImageSource.camera) {
+        debugPrint('Requesting camera permission...');
+        permissionStatus = await Permission.camera.request();
+        debugPrint('Camera permission status: $permissionStatus');
+      } else {
+        debugPrint('Requesting storage permission...');
+        permissionStatus = await Permission.storage.request();
+        debugPrint('Storage permission status: $permissionStatus');
+      }
+
+      // If permission is denied, show dialog
+      if (!permissionStatus.isGranted && permissionStatus != PermissionStatus.limited) {
+        if (permissionStatus == PermissionStatus.permanentlyDenied) {
+          debugPrint('Permission permanently denied, opening settings directly');
+          _showSettingsDialog();
+        } else {
+          debugPrint('Permission not granted, showing dialog');
+          _showPermissionDialog(source);
+        }
+        return;
+      }
+
+      // If limited access on iOS, show message but continue
+      if (permissionStatus == PermissionStatus.limited) {
+        debugPrint('Limited permission granted');
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(context.translate('Limited photo access granted. You can still select photos.'))),
+        );
+      }
+
+      debugPrint('Permission granted, attempting to pick image...');
+      // Now try to pick image
       final XFile? pickedFile = await _picker.pickImage(
         source: source,
         imageQuality: 80,
       );
+
       if (pickedFile != null) {
+        debugPrint('Image picked successfully: ${pickedFile.path}');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(context.translate('Uploading profile picture...'))),
         );
-        await ref
-            .read(authViewModelProvider.notifier)
-            .uploadProfilePicture(File(pickedFile.path));
+        try {
+          await ref
+              .read(authViewModelProvider.notifier)
+              .uploadProfilePicture(File(pickedFile.path));
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.translate('Profile picture updated successfully!'))),
+          );
+        } catch (uploadError) {
+          debugPrint('Upload failed: $uploadError');
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to upload profile picture: ${uploadError.toString()}')),
+          );
+        }
+      } else {
+        debugPrint('Image picker returned null');
       }
-    } else if (status.isPermanentlyDenied) {
-      _showSettingsDialog();
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(context.translate('Permission denied.'))));
+    } catch (e) {
+      debugPrint('Error in _handleImagePick: $e');
+      // If image picking fails, check if it's due to permissions
+      if (e.toString().contains('permission') ||
+          e.toString().contains('Permission') ||
+          e.toString().contains('denied') ||
+          e.toString().contains('not authorized')) {
+        _showPermissionDialog(source);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to pick image: ${e.toString()}')),
+        );
+      }
     }
+  }
+
+  void _showPermissionDialog(ImageSource source) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(context.translate('Permission Required')),
+        content: Text(context.translate('This app needs ${source == ImageSource.camera ? 'camera' : 'photo library'} access to ${source == ImageSource.camera ? 'take photos' : 'select photos'}. Please enable it in Settings.')),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text(context.translate('Cancel')),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              openAppSettings();
+            },
+            child: Text(context.translate('Open Settings')),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showSettingsDialog() {
@@ -219,10 +309,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final userEmail = currentUser?.email ?? 'guest@tapto.com';
     final userInitial = userName.isNotEmpty ? userName[0].toUpperCase() : 'G';
 
-    final profileImageUrl = currentUser?.profilePicture != null
-        ? "${ApiEndpoints.baseUrl}${currentUser!.profilePicture}"
-        : null;
+    final profileImageUrl = currentUser?.profilePicture;
     print('Profile picture path: ${currentUser?.profilePicture}');
+    print('Profile image URL: $profileImageUrl');
 
     return Scaffold(
       backgroundColor: AppColors.surface,
@@ -255,7 +344,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         CircleAvatar(
                           radius: 50,
                           backgroundColor: AppColors.primary,
-                          backgroundImage: profileImageUrl != null
+                          backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty
                               ? NetworkImage(
                                   ImageUtils.getImageUrl(profileImageUrl),
                                 )
