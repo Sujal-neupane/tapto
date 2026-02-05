@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:tapto/core/api/api_endpoint.dart';
+import 'package:tapto/core/utils/image_utils.dart';
 import 'package:tapto/features/dashboard/data/models/cart_item_model.dart';
 import 'package:tapto/features/dashboard/presentation/pages/product_details_screen.dart';
 import 'package:tapto/features/dashboard/presentation/provider/wishlist_provider.dart';
@@ -49,14 +50,7 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
 
   /// Helper to convert relative image path to full URL
   String _getImageUrl(String imagePath) {
-    if (imagePath.startsWith('http')) {
-      return imagePath;
-    }
-    // Remove leading slash if present
-    final cleanPath = imagePath.startsWith('/')
-        ? imagePath.substring(1)
-        : imagePath;
-    return '${ApiEndpoints.baseUrl}/$cleanPath';
+    return ImageUtils.getImageUrl(imagePath);
   }
 
   void _addToCart(ProductModel product) {
