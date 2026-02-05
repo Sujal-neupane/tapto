@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:tapto/app/routes/app_routes.dart';
+import 'package:tapto/features/auth/presentation/pages/forgot_password_screen.dart';
 import 'package:tapto/features/auth/presentation/state/auth_state.dart';
 import 'package:tapto/features/auth/presentation/viewmodel/auth_viewmodel.dart';
 import 'package:tapto/features/auth/presentation/widgets/auth_text_field.dart';
@@ -172,23 +173,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       return null;
                     },
                   ),
-                  const SizedBox(height: 16),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () => Navigator.pushNamed(
-                        context,
-                        AppRoutes.forgotPassword,
-                      ),
-                      child: const Text(
-                        'forgotPassword',
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ).tr(),
-                    ),
-                  ),
                   const SizedBox(height: 32),
                   Container(
                     height: 58,
@@ -250,7 +234,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                             ).tr(),
                     ),
                   ),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 16),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ForgotPasswordScreen(),
+                        ),
+                      ),
+                      child: Text(
+                        'forgotPassword'.tr(),
+                        style: TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

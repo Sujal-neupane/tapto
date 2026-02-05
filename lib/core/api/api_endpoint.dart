@@ -6,7 +6,7 @@ class ApiEndpoints {
   ApiEndpoints._();
 
   static const bool isPhysicalDevice = false;
-  static const String compIpAddress= "192.168.1.215"; // Replace with your computer's local IP address
+  static const String compIpAddress= "10.1.2.16"; // Replace with your computer's local IP address
 
   static String get baseUrl{
     if(isPhysicalDevice){
@@ -19,7 +19,9 @@ class ApiEndpoints {
     } else if (Platform.isAndroid) {
       return 'http://10.0.2.2:4000';
     } else if (Platform.isIOS) {
-      return 'http://localhost:4000';
+      // iOS simulator can't reach localhost (refers to simulator itself)
+      // Use computer's IP address for iOS simulator
+      return 'http://$compIpAddress:4000';
     } else {
       return 'http://localhost:4000';
     }

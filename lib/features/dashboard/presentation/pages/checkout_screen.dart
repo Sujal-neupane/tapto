@@ -5,12 +5,13 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:tapto/app/theme/app_colors.dart';
 import 'package:tapto/core/providers/currency_provider.dart';
+import 'package:tapto/core/utils/currency_formatter.dart';
 import 'package:tapto/features/dashboard/presentation/viewmodel/cart_viewmodel.dart';
 import 'package:tapto/features/dashboard/data/models/cart_item_model.dart';
 import 'package:tapto/features/orders/presentation/pages/my_orders_screen.dart';
 import 'package:tapto/features/orders/presentation/viewmodel/order_viewmodel.dart';
 
-import 'package:tapto/core/utils/currency_formatter.dart';
+import 'package:tapto/core/services/storage/user_session_service.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
@@ -23,6 +24,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
   String _selectedPayment = 'COD';
   bool _isPlacingOrder = false;
   Map<String, String>? _shippingAddress;
+  String? _userName;
+  String? _userPhone;
   
   late AnimationController _slideController;
   late AnimationController _fadeController;
@@ -59,6 +62,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
     
     _slideController.forward();
     _fadeController.forward();
+    
+    // Load user data for address form
+    _loadUserData();
   }
 
   @override
@@ -66,6 +72,23 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
     _slideController.dispose();
     _fadeController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final userSessionService = ref.read(userSessionServiceProvider);
+      final user = await userSessionService.getCurrentUser();
+      
+      if (user != null) {
+        setState(() {
+          _userName = user.name;
+          _userPhone = user.phoneNumber;
+        });
+      }
+    } catch (e) {
+      // Handle error silently
+      debugPrint('Error loading user data: $e');
+    }
   }
 
   String Function(double) get currencyFormatter => ref.watch(currencyFormatterProvider);
@@ -78,7 +101,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
       backgroundColor: Colors.transparent,
       isDismissible: true,
       enableDrag: true,
-      builder: (context) => const _AddressModal(),
+      builder: (context) => _AddressModal(
+        initialName: _userName,
+        initialPhone: _userPhone,
+      ),
     );
     if (result != null) {
       setState(() {
@@ -849,45 +875,57 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
   }
 }
 
-// --- Address Modal Bottom Sheet ---
+// Removed duplicate _AddressModal class - using the updated version below
+
+// --- Address Modal Widget ---
 class _AddressModal extends StatefulWidget {
-  const _AddressModal();
+  final String? initialName;
+  final String? initialPhone;
+
+  const _AddressModal({this.initialName, this.initialPhone});
 
   @override
   State<_AddressModal> createState() => _AddressModalState();
 }
 
-class _AddressModalState extends State<_AddressModal> with SingleTickerProviderStateMixin {
+class _AddressModalState extends State<_AddressModal> with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
   final _phoneController = TextEditingController();
-  final _streetController = TextEditingController(text: '123 Main Street');
-  final _cityController = TextEditingController(text: 'Kathmandu');
-  final _stateController = TextEditingController(text: 'Bagmati');
-  final _zipController = TextEditingController(text: '44600');
-  final _countryController = TextEditingController(text: 'Nepal');
+  final _streetController = TextEditingController();
+  final _cityController = TextEditingController();
+  final _stateController = TextEditingController();
+  final _zipController = TextEditingController();
+  final _countryController = TextEditingController();
   bool _isLoadingLocation = false;
 
-  late AnimationController _animController;
+  late AnimationController _scaleController;
   late Animation<double> _scaleAnimation;
 
   @override
   void initState() {
     super.initState();
-    _animController = AnimationController(
+    _scaleController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-    _scaleAnimation = CurvedAnimation(
-      parent: _animController,
+    _scaleAnimation = Tween<double>(
+      begin: 0.8,
+      end: 1.0,
+    ).animate(CurvedAnimation(
+      parent: _scaleController,
       curve: Curves.easeOutBack,
-    );
-    _animController.forward();
+    ));
+    _scaleController.forward();
+
+    // Pre-fill name and phone from user data
+    _fullNameController.text = widget.initialName ?? '';
+    _phoneController.text = widget.initialPhone ?? '';
   }
 
   @override
   void dispose() {
-    _animController.dispose();
+    _scaleController.dispose();
     _fullNameController.dispose();
     _phoneController.dispose();
     _streetController.dispose();
@@ -960,7 +998,8 @@ class _AddressModalState extends State<_AddressModal> with SingleTickerProviderS
       if (placemarks.isNotEmpty) {
         final place = placemarks.first;
         setState(() {
-          _streetController.text = '${place.street ?? ''} ${place.subLocality ?? ''}'.trim();
+          // Clear house number field for user input
+          _streetController.text = ''; // House number will be entered by user
           _cityController.text = place.locality ?? place.subAdministrativeArea ?? '';
           _stateController.text = place.administrativeArea ?? '';
           _zipController.text = place.postalCode ?? '';
@@ -1135,9 +1174,9 @@ class _AddressModalState extends State<_AddressModal> with SingleTickerProviderS
                         const SizedBox(height: 16),
                         _AddressField(
                           icon: Icons.home_outlined,
-                          label: 'Street Address',
+                          label: 'House Number',
                           controller: _streetController,
-                          hint: 'House no, Building name',
+                          hint: 'Enter house number',
                         ),
                         const SizedBox(height: 16),
                         Row(

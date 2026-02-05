@@ -374,6 +374,8 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
   }
 
   Widget _buildProductHeader() {
+    final currencyFormatter = ref.watch(currencyFormatterProvider);
+    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -404,7 +406,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                '${currencyFormatter(widget.price)}',
+                currencyFormatter(widget.price),
                 style: const TextStyle(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w400,

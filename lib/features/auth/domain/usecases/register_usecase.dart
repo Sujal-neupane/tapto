@@ -34,6 +34,8 @@ class RegisterUsecase implements UsecaseWithParms<User, RegisterParams> {
         email: params.email,
         password: params.password,
         preference: params.preference,
+        country: params.country,
+        phoneNumber: params.phoneNumber,
       );
       return Right(user);
     } catch (e) {
