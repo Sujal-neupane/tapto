@@ -1,14 +1,19 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/core/api/api_endpoint.dart';
 import 'package:tapto/core/services/hive/hive_services.dart';
+import 'package:tapto/core/services/storage/user_session_service.dart';
+import 'package:tapto/core/services/storage/token_storage_service.dart';
 import 'package:tapto/core/services/storage/storage_provider.dart';
 import 'package:tapto/features/auth/domain/usecases/get_current_user_usecase.dart';
 import 'package:tapto/features/auth/domain/usecases/login_usecase.dart';
 import 'package:tapto/features/auth/domain/usecases/logout_usecase.dart';
 import 'package:tapto/features/auth/domain/usecases/register_usecase.dart';
+import 'package:tapto/features/auth/domain/usecases/request_password_reset_usecase.dart';
+import 'package:tapto/features/auth/domain/usecases/reset_password_usecase.dart';
 import 'package:tapto/features/auth/domain/usecases/auth_params.dart';
 import 'package:tapto/features/auth/presentation/state/auth_state.dart';
 import 'package:tapto/features/auth/data/models/user_model.dart'; // <-- Import UserModel
@@ -22,6 +27,8 @@ class AuthViewModel extends Notifier<AuthState> {
   late final LoginUsecase _loginUsecase;
   late final GetCurrentUserUsecase _getCurrentUserUsecase;
   late final LogoutUsecase _logoutUsecase;
+  late final RequestPasswordResetUsecase _requestPasswordResetUsecase;
+  late final ResetPasswordUsecase _resetPasswordUsecase;
 
   @override
   AuthState build() {
@@ -29,6 +36,8 @@ class AuthViewModel extends Notifier<AuthState> {
     _loginUsecase = ref.read(loginUsecaseProvider);
     _getCurrentUserUsecase = ref.read(getCurrentUserUsecaseProvider);
     _logoutUsecase = ref.read(logoutUsecaseProvider);
+    _requestPasswordResetUsecase = ref.read(requestPasswordResetUsecaseProvider);
+    _resetPasswordUsecase = ref.read(resetPasswordUsecaseProvider);
     return const AuthState();
   }
 
@@ -66,6 +75,11 @@ class AuthViewModel extends Notifier<AuthState> {
         );
         // Save selected country for currency determination
         await hiveService.put('user_country', country);
+
+        // Set current user in session service
+        final userSessionService = UserSessionService();
+        await userSessionService.setCurrentUser(user.id);
+
         state = state.copyWith(status: AuthStatus.authenticated, user: user);
       },
     );
@@ -90,6 +104,10 @@ class AuthViewModel extends Notifier<AuthState> {
           UserModel.fromEntity(user, password),
         );
         
+        // Set current user in session service
+        final userSessionService = UserSessionService();
+        await userSessionService.setCurrentUser(user.id);
+
         // Set authenticated state immediately with login user data
         state = state.copyWith(status: AuthStatus.authenticated, user: user);
         
@@ -132,6 +150,10 @@ class AuthViewModel extends Notifier<AuthState> {
         if (user.country != null && user.country!.isNotEmpty) {
           await hiveService.put('user_country', user.country);
         }
+
+        // Ensure current user is set in session service
+        final userSessionService = UserSessionService();
+        await userSessionService.setCurrentUser(user.id);
       }
       state = state.copyWith(
         status: user != null
@@ -165,6 +187,46 @@ class AuthViewModel extends Notifier<AuthState> {
     );
   }
 
+  Future<void> requestPasswordReset(String email) async {
+    state = state.copyWith(status: AuthStatus.loading);
+
+    final result = await _requestPasswordResetUsecase(email);
+
+    result.fold(
+      (failure) => state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: failure.message,
+      ),
+      (_) => state = state.copyWith(
+        status: AuthStatus.initial,
+        errorMessage: null,
+      ),
+    );
+  }
+
+  Future<void> resetPassword(String email, String otp, String newPassword) async {
+    state = state.copyWith(status: AuthStatus.loading);
+
+    final result = await _resetPasswordUsecase(
+      ResetPasswordParams(
+        email: email,
+        otp: otp,
+        newPassword: newPassword,
+      ),
+    );
+
+    result.fold(
+      (failure) => state = state.copyWith(
+        status: AuthStatus.error,
+        errorMessage: failure.message,
+      ),
+      (_) => state = state.copyWith(
+        status: AuthStatus.authenticated, // Consider this as successful reset
+        errorMessage: null,
+      ),
+    );
+  }
+
   void clearError() {
     state = state.copyWith(errorMessage: null);
   }
@@ -187,10 +249,23 @@ class AuthViewModel extends Notifier<AuthState> {
         throw Exception('No auth token found');
       }
 
-      final formData = FormData.fromMap({
-        'profilePicture': await MultipartFile.fromFile(image.path),
-      });
+      debugPrint('Uploading profile picture to: $url');
+      debugPrint('Image path: ${image.path}');
+      debugPrint('Image exists: ${await image.exists()}');
+      debugPrint('Image size: ${await image.length()} bytes');
 
+      debugPrint('Creating FormData...');
+      final formData = FormData();
+      formData.files.add(MapEntry(
+        'profilePicture',
+        await MultipartFile.fromFile(
+          image.path,
+          filename: image.path.split('/').last,
+        ),
+      ));
+      debugPrint('FormData created with ${formData.files.length} files');
+
+      debugPrint('Sending upload request...');
       final response = await dio.post(
         url,
         data: formData,
@@ -202,26 +277,33 @@ class AuthViewModel extends Notifier<AuthState> {
         ),
       );
 
+      debugPrint('Upload response status: ${response.statusCode}');
+      debugPrint('Upload response data: ${response.data}');
+
       final data = response.data;
-   if (data['success'] == true && data['data'] != null) {
-  final profilePicturePath = data['data']['profilePicture'];
-  if (state.user != null) {
-    final updatedUser = state.user!.copyWith(profilePicture: profilePicturePath);
-    final hiveService = ref.read(hiveServiceProvider);
-    await hiveService.saveUser(
-      UserModel.fromEntity(updatedUser, ''),
-    );
-    // Refresh user from backend to ensure latest info
-    await getCurrentUser();
-    state = state.copyWith(
-      status: AuthStatus.authenticated,
-      user: updatedUser,
-    );
-  }
-} else {
+      if (data['success'] == true && data['data'] != null) {
+        final profilePicturePath = data['data']['profilePicture'];
+        debugPrint('Profile picture uploaded successfully: $profilePicturePath');
+
+        if (state.user != null) {
+          final updatedUser = state.user!.copyWith(profilePicture: profilePicturePath);
+          final hiveService = ref.read(hiveServiceProvider);
+          await hiveService.saveUser(
+            UserModel.fromEntity(updatedUser, ''),
+          );
+          // Refresh user from backend to ensure latest info
+          await getCurrentUser();
+          state = state.copyWith(
+            status: AuthStatus.authenticated,
+            user: updatedUser,
+          );
+        }
+      } else {
+        debugPrint('Upload failed: ${data['message']}');
         throw Exception(data['message'] ?? 'Upload failed');
       }
     } catch (e) {
+      debugPrint('Upload error: $e');
       state = state.copyWith(
         status: AuthStatus.error,
         errorMessage: e.toString(),
