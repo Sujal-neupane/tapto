@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:tapto/features/admin/presentation/pages/admin_dashboard_screen.dart';
 import 'package:tapto/features/auth/presentation/pages/forgot_password_screen.dart';
-import 'package:tapto/features/auth/presentation/pages/otp_screen.dart';
 import 'package:tapto/features/dashboard/presentation/pages/cart_screen.dart';
 import 'package:tapto/features/dashboard/presentation/pages/checkout_screen.dart';
 import 'package:tapto/features/dashboard/presentation/pages/dashboard_screen.dart';
@@ -24,7 +23,7 @@ class AppRoutes {
   static const String dashboard = '/dashboard';
   static const String onboarding = '/onboarding';
   static const String forgotPassword = '/forgot-password';
-  static const String otp = '/otp';
+  static const String resetPassword = '/reset-password';
   static const String filter = '/filter';
   static const String search = '/search';
   static const String cart = '/cart';
@@ -44,7 +43,6 @@ class AppRoutes {
     dashboard: (context) => const DashboardScreen(),
     onboarding: (context) => const OnboardingScreen(),
     forgotPassword: (context) => const ForgotPasswordScreen(),
-    otp: (context) => const OtpScreen(),
     filter: (context) => const FilterScreen(),
     search: (context) => const SearchScreen(),
     cart: (context) => const CartScreen(),

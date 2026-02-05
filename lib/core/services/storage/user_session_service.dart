@@ -181,6 +181,12 @@ class UserSessionService {
     await _sessionBox!.delete(_currentUserKey);
   }
 
+  /// Set current user by ID
+  Future<void> setCurrentUser(String userId) async {
+    await _ensureInitialized();
+    await _sessionBox!.put(_currentUserKey, userId);
+  }
+
   /// Update user profile
   Future<User> updateUser({
     required String userId,
