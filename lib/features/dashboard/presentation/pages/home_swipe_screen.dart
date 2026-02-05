@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'dart:async';
 import 'package:tapto/core/api/api_endpoint.dart';
+import 'package:tapto/core/providers/app_providers.dart';
 import 'package:tapto/core/utils/image_utils.dart';
+import 'package:tapto/core/services/sensor_service.dart';
 import 'package:tapto/features/dashboard/data/models/cart_item_model.dart';
 import 'package:tapto/features/dashboard/presentation/pages/product_details_screen.dart';
 import 'package:tapto/features/dashboard/presentation/provider/wishlist_provider.dart';
@@ -26,6 +29,8 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
   int _currentIndex = 0;
   Offset _dragOffset = Offset.zero;
   late AnimationController _animationController;
+  StreamSubscription<ShakeDirection>? _shakeSubscription;
+  bool _shakeEnabled = true; // Toggle for shake gestures
 
   @override
   void initState() {
@@ -34,10 +39,14 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
+
+    // Start listening to shake gestures
+    _startShakeListening();
   }
 
   @override
   void dispose() {
+    _shakeSubscription?.cancel();
     _animationController.dispose();
     super.dispose();
   }
@@ -46,6 +55,86 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
 
   void _resetDrag() {
     setState(() => _dragOffset = Offset.zero);
+  }
+
+  /// Start listening to shake gestures
+  void _startShakeListening() {
+    if (!_shakeEnabled) return;
+
+    final sensorService = ref.read(sensorServiceProvider);
+    sensorService.startListening();
+
+    _shakeSubscription = sensorService.shakeStream.listen(_handleShake);
+  }
+
+  void _toggleShakeGestures() {
+    setState(() => _shakeEnabled = !_shakeEnabled);
+
+    if (_shakeEnabled) {
+      _startShakeListening();
+      _showShakeFeedback('Shake gestures enabled!', Colors.green);
+    } else {
+      _shakeSubscription?.cancel();
+      final sensorService = ref.read(sensorServiceProvider);
+      sensorService.stopListening();
+      _showShakeFeedback('Shake gestures disabled!', Colors.orange);
+    }
+  }
+
+  /// Handle shake gestures
+  void _handleShake(ShakeDirection direction) {
+    final productsAsync = ref.watch(userProductsProvider);
+
+    productsAsync.whenData((products) {
+      if (products.isEmpty || _currentIndex >= products.length) return;
+
+      switch (direction) {
+        case ShakeDirection.right:
+          // Add to cart
+          _addToCart(products[_currentIndex]);
+          _showShakeFeedback('Added to cart!', Colors.green);
+          // Move to next product
+          _swipeToNext();
+          break;
+
+        case ShakeDirection.left:
+          // Skip product
+          _showShakeFeedback('Skipped!', Colors.orange);
+          // Move to next product
+          _swipeToNext();
+          break;
+
+        case ShakeDirection.none:
+          // Do nothing
+          break;
+      }
+    });
+  }
+
+  /// Show feedback for shake actions
+  void _showShakeFeedback(String message, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: color,
+        duration: const Duration(milliseconds: 800),
+      ),
+    );
+  }
+
+  /// Swipe to next product
+  void _swipeToNext() {
+    final productsAsync = ref.watch(userProductsProvider);
+
+    productsAsync.whenData((products) {
+      if (_currentIndex < products.length - 1) {
+        setState(() => _currentIndex++);
+      } else {
+        // Reset to first product or show completion message
+        setState(() => _currentIndex = 0);
+        _showShakeFeedback('Reached end of products!', Colors.blue);
+      }
+    });
   }
 
   /// Helper to convert relative image path to full URL
@@ -351,34 +440,45 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
 
   Widget _buildDeck(List<ProductModel> products) {
     final visible = products.skip(_currentIndex).take(3).toList();
-    return Stack(
-      alignment: Alignment.topCenter,
-      clipBehavior: Clip.none,
-      children: [
-        for (int i = visible.length - 1; i >= 0; i--)
-          Positioned(
-            top: i * 14.0 + 24,
-            child: _SwipeCard(
-              product: visible[i],
-              depth: i,
-              isTop: i == 0,
-              dragOffset: i == 0 ? _dragOffset : Offset.zero,
-              getImageUrl: _getImageUrl,
-              currencyFormatter: currencyFormatter,
-              onPanUpdate: i == 0
-                  ? (details) => setState(() => _dragOffset += details.delta)
-                  : null,
-              onPanEnd: i == 0
-                  ? (details) => _handleSwipe(
-                      offset: _dragOffset,
-                      product: visible.first,
-                    )
-                  : null,
-              onDoubleTap: () => _addToWishlist(visible[i]),
-              onSwipeUp: () => _showDetails(visible[i]),
+    return Scaffold(
+      backgroundColor: Colors.transparent,
+      floatingActionButton: FloatingActionButton(
+        onPressed: _toggleShakeGestures,
+        backgroundColor: _shakeEnabled ? AppColors.primary : Colors.grey,
+        child: Icon(
+          _shakeEnabled ? Icons.vibration : Icons.vibration_outlined,
+          color: Colors.white,
+        ),
+      ),
+      body: Stack(
+        alignment: Alignment.topCenter,
+        clipBehavior: Clip.none,
+        children: [
+          for (int i = visible.length - 1; i >= 0; i--)
+            Positioned(
+              top: i * 14.0 + 24,
+              child: _SwipeCard(
+                product: visible[i],
+                depth: i,
+                isTop: i == 0,
+                dragOffset: i == 0 ? _dragOffset : Offset.zero,
+                getImageUrl: _getImageUrl,
+                currencyFormatter: currencyFormatter,
+                onPanUpdate: i == 0
+                    ? (details) => setState(() => _dragOffset += details.delta)
+                    : null,
+                onPanEnd: i == 0
+                    ? (details) => _handleSwipe(
+                        offset: _dragOffset,
+                        product: visible.first,
+                      )
+                    : null,
+                onDoubleTap: () => _addToWishlist(visible[i]),
+                onSwipeUp: () => _showDetails(visible[i]),
+              ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 }

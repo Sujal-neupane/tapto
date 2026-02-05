@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 // Core Services
 import '../services/hive/hive_services.dart';
 import '../services/storage/user_session_service.dart';
+import '../services/sensor_service.dart';
 
 // Auth Feature
 
@@ -21,6 +22,11 @@ final sharedPreferencesInstanceProvider = Provider<SharedPreferences>((ref) {
 // Network Info is already provided in network_info.dart
 // Hive Service is already provided in hive_services.dart
 // User Session Service is already provided in user_session_service.dart
+
+/// Sensor service provider for shake gesture detection
+final sensorServiceProvider = Provider<SensorService>((ref) {
+  return SensorService();
+});
 
 // ==================== Data Source Providers ====================
 
