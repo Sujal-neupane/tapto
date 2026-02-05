@@ -73,6 +73,8 @@ class AuthRepositoryImpl implements AuthRepository {
     required String email,
     required String password,
     String? preference,
+    String? country,
+    String? phoneNumber,
   }) async {
     try {
       // Register with remote server - API call will fail naturally if no network
@@ -81,6 +83,8 @@ class AuthRepositoryImpl implements AuthRepository {
         password: password,
         name: name,
         preference: preference,
+        country: country,
+        phoneNumber: phoneNumber,
       );
 
       // Convert to UserModel and save locally for caching

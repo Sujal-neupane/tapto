@@ -20,14 +20,18 @@ class RegisterParams extends Equatable {
   final String email;
   final String password;
   final String? preference;
+  final String country;
+  final String? phoneNumber;
 
   const RegisterParams({
     required this.name,
     required this.email,
     required this.password,
     this.preference,
+    required this.country,
+    this.phoneNumber,
   });
 
   @override
-  List<Object?> get props => [name, email, password, preference];
+  List<Object?> get props => [name, email, password, preference, country, phoneNumber];
 }

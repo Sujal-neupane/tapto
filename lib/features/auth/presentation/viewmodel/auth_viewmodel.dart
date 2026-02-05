@@ -38,6 +38,7 @@ class AuthViewModel extends Notifier<AuthState> {
     required String password,
     String? preference,
     required String country,
+    String? phoneNumber,
   }) async {
     state = state.copyWith(status: AuthStatus.loading);
 
@@ -47,6 +48,8 @@ class AuthViewModel extends Notifier<AuthState> {
         email: email,
         password: password,
         preference: preference,
+        country: country,
+        phoneNumber: phoneNumber,
       ),
     );
 

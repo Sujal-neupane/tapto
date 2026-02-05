@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:tapto/app/routes/app_routes.dart';
 import 'package:tapto/app/theme/app_colors.dart';
 import 'package:tapto/app/theme/app_text_styles.dart';
+import 'package:tapto/core/services/hive/hive_services.dart';
 import 'package:tapto/features/auth/presentation/state/auth_state.dart';
 import 'package:tapto/features/auth/presentation/viewmodel/auth_viewmodel.dart';
 import 'package:tapto/features/auth/presentation/widgets/auth_text_field.dart';
@@ -483,6 +484,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                   backendPreference = 'Womens Fashion';
                                 }
 
+                                // Get country code for the selected country
+                                String countryCode = '+1'; // Default
+                                for (var country in _countries) {
+                                  if (country['name'] == _selectedCountry) {
+                                    countryCode = country['code']!;
+                                    break;
+                                  }
+                                }
+
+                                // Combine country code with phone number
+                                String fullPhoneNumber = '';
+                                if (_phoneController.text.isNotEmpty) {
+                                  fullPhoneNumber = '$countryCode${_phoneController.text.trim()}';
+                                }
+
+                                // Save selected country to local storage for currency provider
+                                final hiveService = ref.read(hiveServiceProvider);
+                                hiveService.put('user_country', _selectedCountry);
+
                                 ref
                                     .read(authViewModelProvider.notifier)
                                     .register(
@@ -491,6 +511,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                       password: _passwordController.text,
                                       preference: backendPreference,
                                       country: _selectedCountry,
+                                      phoneNumber: fullPhoneNumber,
                                     );
                               }
                             },

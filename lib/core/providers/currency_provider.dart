@@ -29,7 +29,7 @@ final currencyProvider = Provider<CurrencyInfo>((ref) {
   // If not available, fallback to stored value
   if (country == null || country.isEmpty) {
     final hiveService = ref.watch(hiveServiceProvider);
-    country = hiveService.get<String>('user_country', defaultValue: 'United States');
+    country = hiveService.get<String>('user_country', defaultValue: 'Nepal'); // Default to Nepal for existing users
   }
 
   switch (country?.toLowerCase()) {
@@ -55,7 +55,7 @@ final taxRateProvider = Provider<double>((ref) {
   // If not available, fallback to stored value
   if (country == null || country.isEmpty) {
     final hiveService = ref.watch(hiveServiceProvider);
-    country = hiveService.get<String>('user_country', defaultValue: 'United States');
+    country = hiveService.get<String>('user_country', defaultValue: 'Nepal'); // Default to Nepal for existing users
   }
 
   switch (country?.toLowerCase()) {
@@ -81,7 +81,7 @@ final paymentMethodsProvider = Provider<List<String>>((ref) {
   // If not available, fallback to stored value
   if (country == null || country.isEmpty) {
     final hiveService = ref.watch(hiveServiceProvider);
-    country = hiveService.get<String>('user_country', defaultValue: 'United States');
+    country = hiveService.get<String>('user_country', defaultValue: 'Nepal'); // Default to Nepal for existing users
   }
 
   switch (country?.toLowerCase()) {

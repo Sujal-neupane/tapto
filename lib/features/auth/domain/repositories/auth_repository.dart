@@ -8,6 +8,8 @@ abstract class AuthRepository {
     required String email,
     required String password,
     String? preference,
+    String? country,
+    String? phoneNumber,
   });
   Future<User?> getCurrentUser();
   Future<bool> isLoggedIn();
