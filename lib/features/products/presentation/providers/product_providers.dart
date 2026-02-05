@@ -21,9 +21,14 @@ final adminProductsProvider = FutureProvider<List<ProductModel>>((ref) async {
 /// Helper function to convert user preference to product category
 String? _preferenceToCategory(String? preference) {
   if (preference == null) return null;
-  // Map "Mens Fashion" -> "Men", "Womens Fashion" -> "Women"
-  if (preference.toLowerCase().contains('men')) return 'Men';
-  if (preference.toLowerCase().contains('women')) return 'Women';
+  final lowerPref = preference.toLowerCase();
+  // Check for exact matches or word boundaries
+  if (lowerPref.contains('men') && !lowerPref.contains('women')) {
+    return 'Men';
+  }
+  if (lowerPref.contains('women')) {
+    return 'Women';
+  }
   return preference;
 }
 
@@ -41,10 +46,11 @@ final userProductsProvider = FutureProvider<List<ProductModel>>((ref) async {
   final preference = authState.user?.preference;
   final category = _preferenceToCategory(preference);
 
-  // If no preference is set, return empty list or show a message
+  // If no preference is set, fetch all active products
   if (category == null) {
-    return [];
+    return dataSource.fetchProducts(isActive: true);
   }
+  
   return dataSource.fetchProducts(
     fashionType: category,
     isActive: true);
