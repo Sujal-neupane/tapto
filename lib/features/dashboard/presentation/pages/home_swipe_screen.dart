@@ -30,7 +30,9 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
   Offset _dragOffset = Offset.zero;
   late AnimationController _animationController;
   StreamSubscription<ShakeDirection>? _shakeSubscription;
+  StreamSubscription<bool>? _proximitySubscription;
   bool _shakeEnabled = true; // Toggle for shake gestures
+  bool _isPausedByProximity = false; // Track if browsing is paused due to proximity
 
   @override
   void initState() {
@@ -42,11 +44,15 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
 
     // Start listening to shake gestures
     _startShakeListening();
+
+    // Start listening to proximity sensor
+    _startProximityListening();
   }
 
   @override
   void dispose() {
     _shakeSubscription?.cancel();
+    _proximitySubscription?.cancel();
     _animationController.dispose();
     super.dispose();
   }
@@ -81,8 +87,26 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
     }
   }
 
+  void _startProximityListening() {
+    final sensorService = ref.read(sensorServiceProvider);
+    sensorService.startListening(); // Ensure sensors are started
+
+    _proximitySubscription = sensorService.proximityStream.listen((isNearFace) {
+      setState(() => _isPausedByProximity = isNearFace);
+
+      if (isNearFace) {
+        _showShakeFeedback('Browsing paused - phone near face', Colors.blue);
+      } else {
+        _showShakeFeedback('Browsing resumed', Colors.green);
+      }
+    });
+  }
+
   /// Handle shake gestures
   void _handleShake(ShakeDirection direction) {
+    // Don't handle shake gestures if browsing is paused by proximity
+    if (_isPausedByProximity) return;
+
     final productsAsync = ref.watch(userProductsProvider);
 
     productsAsync.whenData((products) {
@@ -464,17 +488,84 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
                 dragOffset: i == 0 ? _dragOffset : Offset.zero,
                 getImageUrl: _getImageUrl,
                 currencyFormatter: currencyFormatter,
-                onPanUpdate: i == 0
+                onPanUpdate: i == 0 && !_isPausedByProximity
                     ? (details) => setState(() => _dragOffset += details.delta)
                     : null,
-                onPanEnd: i == 0
+                onPanEnd: i == 0 && !_isPausedByProximity
                     ? (details) => _handleSwipe(
                         offset: _dragOffset,
                         product: visible.first,
                       )
                     : null,
-                onDoubleTap: () => _addToWishlist(visible[i]),
-                onSwipeUp: () => _showDetails(visible[i]),
+                onDoubleTap: !_isPausedByProximity ? () => _addToWishlist(visible[i]) : null,
+                onSwipeUp: !_isPausedByProximity ? () => _showDetails(visible[i]) : null,
+              ),
+            ),
+
+          // Proximity pause overlay
+          if (_isPausedByProximity)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.7),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black26,
+                              blurRadius: 10,
+                              spreadRadius: 2,
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.phone_android,
+                              size: 48,
+                              color: AppColors.primary,
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+                            Text(
+                              'Browsing Paused',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.sm),
+                            Text(
+                              'Phone detected near face',
+                              style: TextStyle(
+                                fontSize: 16,
+                                color: AppColors.textSecondary,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                            const SizedBox(height: AppSpacing.lg),
+                            Text(
+                              'Move phone away to resume browsing',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: AppColors.textSecondary,
+                                fontStyle: FontStyle.italic,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
         ],
