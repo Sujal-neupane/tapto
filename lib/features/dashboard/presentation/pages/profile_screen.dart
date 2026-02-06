@@ -17,6 +17,7 @@ import '../../../auth/presentation/viewmodel/auth_viewmodel.dart';
 import '../../../orders/presentation/viewmodel/order_viewmodel.dart';
 import '../../../orders/presentation/pages/order_tracking_screen.dart';
 import 'edit_profile_screen.dart';
+import '../../../addresses/presentation/pages/addresses_screen.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -541,9 +542,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 title: 'Addresses',
                 subtitle: 'Manage delivery addresses',
                 onTap: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Addresses feature coming soon!'),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const AddressesScreen(),
                     ),
                   );
                 },

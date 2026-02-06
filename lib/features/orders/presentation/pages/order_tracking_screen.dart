@@ -688,7 +688,6 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
               ],
             ),
           ),
-          const Divider(height: 1),
           InkWell(
             onTap: () {
               HapticFeedback.lightImpact();
@@ -834,7 +833,6 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
               ],
             ),
           ),
-          const Divider(height: 1),
           if (timeline.isEmpty)
             const Padding(
               padding: EdgeInsets.all(32),
