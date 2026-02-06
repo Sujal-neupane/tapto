@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -97,6 +98,11 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final textScaler = MediaQuery.of(context).textScaler;
+    final isTablet = screenSize.width > 600;
+    final padding = (screenSize.width * 0.05).toDouble(); // 5% of width
+
     // Listen for logout completion
     ref.listen<AuthState>(authViewModelProvider, (previous, next) {
       if (next.status == AuthStatus.loggedOut && context.mounted) {
@@ -109,14 +115,14 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
     });
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: Colors.white,
       appBar: CustomAppBar(
         title: 'settings'.tr(),
         subtitle: "managePreferences".tr(),
         showBackButton: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: EdgeInsets.all(padding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
