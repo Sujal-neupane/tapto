@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/app/theme/app_colors.dart';
 import 'package:tapto/features/admin/presentation/providers/admin_order_provider.dart';
 import 'package:tapto/features/orders/data/models/order_model.dart';
+import 'package:tapto/features/admin/presentation/providers/driver_provider.dart';
 import 'package:intl/intl.dart';
 
 class ManageOrdersScreen extends ConsumerStatefulWidget {
@@ -201,6 +202,7 @@ class _ManageOrdersScreenState extends ConsumerState<ManageOrdersScreen> {
 
   void _showUpdateStatusDialog(OrderModel order) {
     String selectedStatus = order.status.name;
+    String? selectedDriverId;
 
     showDialog(
       context: context,
@@ -216,12 +218,14 @@ class _ManageOrdersScreenState extends ConsumerState<ManageOrdersScreen> {
               ),
               const SizedBox(height: 16),
               ...[
-                'pending',
-                'confirmed',
-                'processing',
-                'shipped',
-                'outForDelivery',
-                'delivered',
+                'PENDING',
+                'CONFIRMED',
+                'PROCESSING',
+                'SHIPPED',
+                'OUTFORDELIVERY',
+                'DELIVERED',
+                'CANCELLED',
+                'REFUNDED',
               ].map((status) {
                 return RadioListTile<String>(
                   title: Text(_formatStatusLabel(status)),
@@ -232,6 +236,31 @@ class _ManageOrdersScreenState extends ConsumerState<ManageOrdersScreen> {
                   },
                 );
               }),
+              if (_isOutForDelivery(selectedStatus)) ...[
+                const SizedBox(height: 16),
+                Consumer(
+                  builder: (context, ref, _) {
+                    final driversAsync = ref.watch(driversProvider);
+                    return driversAsync.when(
+                      loading: () => const CircularProgressIndicator(),
+                      error: (e, _) => Text('Failed to load drivers'),
+                      data: (drivers) => DropdownButtonFormField<String>(
+                        value: selectedDriverId,
+                        hint: const Text('Select Delivery Driver'),
+                        items: drivers.map<DropdownMenuItem<String>>((driver) {
+                          return DropdownMenuItem(
+                            value: driver.id,
+                            child: Text('${driver.name} (${driver.vehicleNumber})'),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          setDialogState(() => selectedDriverId = value);
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ],
             ],
           ),
           actions: [
@@ -241,11 +270,27 @@ class _ManageOrdersScreenState extends ConsumerState<ManageOrdersScreen> {
             ),
             ElevatedButton(
               onPressed: () async {
+                if (selectedStatus.toLowerCase() == 'outfordelivery' && (selectedDriverId == null || selectedDriverId!.isEmpty)) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Please select a delivery driver.')),
+                  );
+                  return;
+                }
                 Navigator.pop(context);
-                final success = await ref
-                    .read(adminOrderOperationProvider.notifier)
-                    .updateOrderStatus(order.id, selectedStatus);
-
+                bool success = false;
+                if (selectedStatus.toLowerCase() == 'outfordelivery') {
+                  // Assign driver first
+                  try {
+                    final driverDataSource = ref.read(driverRemoteDataSourceProvider);
+                    await driverDataSource.assignDriverToOrder(order.id, selectedDriverId!);
+                    // Then update status
+                    success = await ref.read(adminOrderOperationProvider.notifier).updateOrderStatus(order.id, selectedStatus);
+                  } catch (e) {
+                    success = false;
+                  }
+                } else {
+                  success = await ref.read(adminOrderOperationProvider.notifier).updateOrderStatus(order.id, selectedStatus);
+                }
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
@@ -271,13 +316,17 @@ class _ManageOrdersScreenState extends ConsumerState<ManageOrdersScreen> {
     );
   }
 
+  bool _isOutForDelivery(String status) {
+    final normalized = status.replaceAll(RegExp(r'[^a-zA-Z]'), '').toLowerCase();
+    return normalized == 'outfordelivery';
+  }
+
   String _formatStatusLabel(String status) {
-    switch (status) {
-      case 'outForDelivery':
-        return 'Out for Delivery';
-      default:
-        return status[0].toUpperCase() + status.substring(1);
-    }
+    final normalized = status.replaceAll(RegExp(r'[^a-zA-Z]'), '').toLowerCase();
+    if (normalized == 'outfordelivery') return 'Out for Delivery';
+    if (normalized == 'cancelled') return 'Cancelled';
+    if (normalized == 'refunded') return 'Refunded';
+    return status[0].toUpperCase() + status.substring(1).toLowerCase();
   }
 
   void _showOrderDetails(OrderModel order) {
@@ -295,28 +344,16 @@ class _ManageOrdersScreenState extends ConsumerState<ManageOrdersScreen> {
           children: [
             Container(
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(24),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 10,
-                  ),
-                ],
-              ),
               child: Row(
                 children: [
-                  const Text(
-                    'Order Details',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const Spacer(),
                   IconButton(
-                    icon: const Icon(Icons.close),
                     onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                  ),
+                  const SizedBox(width: 16),
+                  Text(
+                    'Order Details',
+                    style: Theme.of(context).textTheme.headlineSmall,
                   ),
                 ],
               ),
@@ -330,10 +367,7 @@ class _ManageOrdersScreenState extends ConsumerState<ManageOrdersScreen> {
                     _DetailSection(
                       title: 'Order Information',
                       children: [
-                        _DetailRow(
-                          'Order ID',
-                          '#${order.id.substring(order.id.length - 8)}',
-                        ),
+                        _DetailRow('Order ID', order.id),
                         _DetailRow('Status', order.status.name.toUpperCase()),
                         _DetailRow(
                           'Date',
