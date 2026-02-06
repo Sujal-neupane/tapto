@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,10 +36,14 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     final taxRate = ref.watch(taxRateProvider);
     final tax = cartState.subtotal * taxRate;
     final total = cartState.subtotal + cartState.shippingFee + tax;
+    final screenSize = MediaQuery.of(context).size;
+    final textScaler = MediaQuery.of(context).textScaler;
+    final isTablet = screenSize.width > 600;
+    final padding = (screenSize.width * 0.04).toDouble(); // 4% of width
 
     if (cartState.items.isEmpty) {
       return Scaffold(
-        backgroundColor: AppColors.surface,
+        backgroundColor: Colors.white,
             appBar: CustomAppBar(
           title: 'Shopping Cart',
           subtitle: 'Empty',
@@ -73,7 +78,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       );
     }
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: Colors.white,
       appBar: CustomAppBar(
         title: 'Shopping Cart',
         subtitle: '${cartState.itemCount} items',
