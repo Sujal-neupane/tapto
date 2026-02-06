@@ -1,7 +1,7 @@
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:easy_localization/easy_localization.dart';
-import 'dart:async';
 import 'package:tapto/core/api/api_endpoint.dart';
 import 'package:tapto/core/providers/app_providers.dart';
 import 'package:tapto/core/utils/image_utils.dart';
@@ -404,15 +404,14 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
   @override
   Widget build(BuildContext context) {
     final productsAsync = ref.watch(userProductsProvider);
+    final screenSize = MediaQuery.of(context).size;
+    final textScaler = MediaQuery.of(context).textScaler;
+    final isTablet = screenSize.width > 600;
+    final iconSize = min(48.0, screenSize.width * 0.1); // Max 48, or 10% of width
+    final titleFontSize = min(18.0, 16 * textScaler.scale(1.0) * (isTablet ? 1.1 : 1.0));
 
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Colors.white, Colors.grey.shade50],
-        ),
-      ),
+      color: Colors.white,
       child: SafeArea(
         child: productsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -420,11 +419,12 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.error_outline, size: 48, color: Colors.red.shade300),
+                Icon(Icons.error_outline, size: iconSize, color: Colors.red.shade300),
                 const SizedBox(height: AppSpacing.md),
                 Text(
                   'failedToLoadProducts'.tr(),
                   style: TextStyle(
+                    fontSize: titleFontSize,
                     fontWeight: FontWeight.w600,
                     color: Colors.red.shade700,
                   ),
