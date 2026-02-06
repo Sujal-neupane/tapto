@@ -1,4 +1,5 @@
 import 'dart:developer' as developer;
+import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -86,8 +87,14 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final textScaler = MediaQuery.of(context).textScaler;
+    final isTablet = screenSize.width > 600;
+    final padding = (screenSize.width * 0.05).toDouble(); // 5% of width
+    final titleFontSize = min(20.0, 18 * textScaler.scale(1.0) * (isTablet ? 1.1 : 1.0));
+
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
           // Main scrollable content
@@ -103,7 +110,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
                 toolbarHeight: 70,
                 flexibleSpace: SafeArea(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    padding: EdgeInsets.symmetric(horizontal: padding, vertical: padding * 0.6),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -113,8 +120,8 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
                         ),
                         Text(
                           'productDetails'.tr(),
-                          style: const TextStyle(
-                            fontSize: 18,
+                          style: TextStyle(
+                            fontSize: titleFontSize,
                             fontWeight: FontWeight.w600,
                             color: Color(0xFF212529),
                           ),
