@@ -1,13 +1,9 @@
+import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_map/flutter_map.dart';
-import 'package:latlong2/latlong.dart';
 import 'package:tapto/app/theme/app_colors.dart';
-import 'package:tapto/features/orders/domain/enitites/tracking_entity.dart';
-import 'package:tapto/features/orders/presentation/providers/order_provider.dart';
-import 'package:intl/intl.dart';
-import 'dart:async';
 
 class OrderTrackingScreen extends ConsumerStatefulWidget {
   final String orderId;
@@ -129,8 +125,14 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final textScaler = MediaQuery.of(context).textScaler;
+    final isTablet = screenSize.width > 600;
+    final iconSize = min(60.0, screenSize.width * 0.12); // Max 60, or 12% of width
+
     if (isLoading) {
       return Scaffold(
+        backgroundColor: Colors.white,
         appBar: AppBar(
           title: const Text('Order Tracking'),
           backgroundColor: AppColors.primary,
@@ -148,9 +150,9 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
                     color: AppColors.primary.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.delivery_dining,
-                    size: 60,
+                    size: iconSize,
                     color: AppColors.primary,
                   ),
                 ),
@@ -195,7 +197,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
     final isDelivered = orderStatus.contains('deliver');
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Order Tracking'),
         backgroundColor: isCancelled ? Colors.red : AppColors.primary,
