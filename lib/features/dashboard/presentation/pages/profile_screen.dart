@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:tapto/core/providers/currency_provider.dart';
@@ -305,6 +306,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final currentUser = ref.watch(currentUserProvider);
+    final screenSize = MediaQuery.of(context).size;
+    final textScaler = MediaQuery.of(context).textScaler;
+    final isTablet = screenSize.width > 600;
+    final padding = (screenSize.width * 0.05).toDouble(); // 5% of width
 
     final userName = currentUser?.name ?? 'Guest User';
     final userEmail = currentUser?.email ?? 'guest@tapto.com';
@@ -315,10 +320,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     print('Profile image URL: $profileImageUrl');
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Padding(
-          padding: const EdgeInsets.all(AppSpacing.lg),
+          padding: EdgeInsets.all(padding),
           child: Column(
             children: [
               const SizedBox(height: AppSpacing.md),
