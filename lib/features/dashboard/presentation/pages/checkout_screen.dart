@@ -22,6 +22,7 @@ class CheckoutScreen extends ConsumerStatefulWidget {
 
 class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProviderStateMixin {
   String _selectedPayment = 'COD';
+  String? _userCountry;
   bool _isPlacingOrder = false;
   Map<String, String>? _shippingAddress;
   String? _userName;
@@ -78,11 +79,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
     try {
       final userSessionService = ref.read(userSessionServiceProvider);
       final user = await userSessionService.getCurrentUser();
-      
       if (user != null) {
         setState(() {
           _userName = user.name;
           _userPhone = user.phoneNumber;
+          _userCountry = user.country;
         });
       }
     } catch (e) {
@@ -630,6 +631,22 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
   }
 
   Widget _buildPaymentSection() {
+    // Define payment methods by country
+    final List<Map<String, dynamic>> paymentOptions = [
+      {'value': 'COD', 'label': 'Cash on Delivery', 'icon': Icons.money},
+    ];
+    if (_userCountry == 'Nepal') {
+      paymentOptions.addAll([
+        {'value': 'eSewa', 'label': 'eSewa', 'icon': Icons.account_balance_wallet},
+        {'value': 'Khalti', 'label': 'Khalti', 'icon': Icons.credit_card},
+      ]);
+    } else if (_userCountry == 'India') {
+      paymentOptions.addAll([
+        {'value': 'UPI', 'label': 'UPI', 'icon': Icons.account_balance},
+        {'value': 'Paytm', 'label': 'Paytm', 'icon': Icons.payment},
+        {'value': 'PhonePe', 'label': 'PhonePe', 'icon': Icons.phone_android},
+      ]);
+    }
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -664,7 +681,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
               ],
             ),
           ),
-          _buildPaymentOption('COD', 'Cash on Delivery', Icons.money),
+          ...paymentOptions.map((opt) => _buildPaymentOption(opt['value'], opt['label'], opt['icon'])),
         ],
       ),
     );
@@ -673,9 +690,52 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
   Widget _buildPaymentOption(String value, String label, IconData icon) {
     final isSelected = _selectedPayment == value;
     return InkWell(
-      onTap: () {
+      onTap: () async {
         HapticFeedback.selectionClick();
         setState(() => _selectedPayment = value);
+        // If not COD, show mock payment dialog
+        if (value != 'COD') {
+          final paid = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('Simulate $label Payment'),
+              content: Text('This is a mock payment for $label. Press Pay to simulate a successful payment.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  style: ButtonStyle(foregroundColor: WidgetStateProperty.all(AppColors.surface)),
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Pay'),
+                ),
+              ],
+            ),
+          );
+          if (paid == true) {
+            // Show a success snackbar
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    const Icon(Icons.check_circle, color: Colors.white),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text('$label payment successful!')),
+                  ],
+                ),
+                backgroundColor: AppColors.success,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                margin: const EdgeInsets.all(16),
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          } else {
+            // If cancelled, revert to COD
+            setState(() => _selectedPayment = 'COD');
+          }
+        }
       },
       child: Container(
         margin: const EdgeInsets.all(16),
