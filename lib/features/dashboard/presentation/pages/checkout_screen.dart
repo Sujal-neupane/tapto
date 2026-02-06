@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -293,9 +294,15 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
     final cart = ref.watch(cartViewModelProvider);
     final cartItems = cart.items;
     final total = cart.total;
+    final screenSize = MediaQuery.of(context).size;
+    final textScaler = MediaQuery.of(context).textScaler;
+    final isTablet = screenSize.width > 600;
+    final padding = (screenSize.width * 0.04).toDouble(); // 4% of width
+    final iconSize = min(80.0, screenSize.width * 0.15); // Max 80, or 15% of width
+    final titleFontSize = min(20.0, 18 * textScaler.scale(1.0) * (isTablet ? 1.1 : 1.0));
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('Checkout', style: TextStyle(fontWeight: FontWeight.w600)),
         backgroundColor: AppColors.primary,
@@ -308,9 +315,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.shopping_cart_outlined, size: 80, color: Colors.grey[300]),
+                  Icon(Icons.shopping_cart_outlined, size: iconSize, color: Colors.grey[300]),
                   const SizedBox(height: 16),
-                  Text('Your cart is empty', style: TextStyle(fontSize: 18, color: Colors.grey[600])),
+                  Text('Your cart is empty', style: TextStyle(fontSize: titleFontSize, color: Colors.grey[600])),
                 ],
               ),
             )
