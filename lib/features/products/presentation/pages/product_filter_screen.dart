@@ -34,8 +34,8 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
     super.initState();
     _filters = ref.read(searchFiltersProvider);
     _priceRange = RangeValues(
-      _filters.minPrice ?? 0,
-      _filters.maxPrice ?? 1000,
+      (_filters.minPrice ?? 0).clamp(0, 1000).toDouble(),
+      (_filters.maxPrice ?? 1000).clamp(0, 1000).toDouble(),
     );
     _selectedSizes = _filters.tags?.where((tag) => _sizes.contains(tag)).toList() ?? [];
     _selectedColors = _filters.tags?.where((tag) => _colors.contains(tag)).toList() ?? [];
@@ -423,7 +423,7 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
             divisions: 100,
             activeColor: AppColors.primary,
             inactiveColor: Colors.grey.shade200,
-            overlayColor: MaterialStateProperty.all(AppColors.primary.withOpacity(0.2)),
+            overlayColor: WidgetStateProperty.all(AppColors.primary.withOpacity(0.2)),
             labels: RangeLabels(
               '\$${_priceRange.start.toInt()}',
               '\$${_priceRange.end.toInt()}',

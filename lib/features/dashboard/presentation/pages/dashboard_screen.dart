@@ -3,11 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:tapto/features/dashboard/presentation/viewmodel/cart_viewmodel.dart';
+import 'package:tapto/features/products/presentation/pages/product_filter_screen.dart';
 import '../../presentation/pages/home_swipe_screen.dart';
 import '../../presentation/pages/wish_list_screen.dart';
 import '../../presentation/pages/profile_screen.dart';
 import '../../presentation/pages/search_screen.dart';
-import '../../presentation/pages/filter_screen.dart';
 import '../../presentation/pages/cart_screen.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
@@ -110,7 +110,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const FilterScreen()),
+                  MaterialPageRoute(builder: (context) => const ProductFilterScreen()),
                 );
               },
             ),
