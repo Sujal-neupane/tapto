@@ -6,7 +6,7 @@ class ApiEndpoints {
   ApiEndpoints._();
 
   static const bool isPhysicalDevice = false;
-  static const String compIpAddress= "10.1.2.16"; // Replace with your computer's local IP address
+  static const String compIpAddress= "192.168.1.92"; // Replace with your computer's local IP address
 
   static String get baseUrl{
     if(isPhysicalDevice){

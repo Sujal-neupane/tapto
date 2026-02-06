@@ -1,6 +1,7 @@
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/features/auth/data/models/user_model.dart';
+import 'package:tapto/features/auth/domain/entities/user.dart';
 
 class HiveService {
   static final HiveService _instance = HiveService._internal();
@@ -59,6 +60,13 @@ Future<void> init({bool useFlutter = true, String? testPath}) async {
   Future<void> saveUser(UserModel user) async {
     await _ensureInitialized();
     await _userBox!.put(user.id, user);
+  }
+
+  /// Save user from entity (Clean Architecture compliant)
+  Future<void> saveUserFromEntity(User user, String password) async {
+    await _ensureInitialized();
+    final userModel = UserModel.fromEntity(user, password);
+    await _userBox!.put(user.id, userModel);
   }
 
   /// Get user by ID

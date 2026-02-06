@@ -5,8 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/core/api/api_endpoint.dart';
 import 'package:tapto/core/services/hive/hive_services.dart';
-import 'package:tapto/core/services/storage/user_session_service.dart';
-import 'package:tapto/core/services/storage/token_storage_service.dart';
 import 'package:tapto/core/services/storage/storage_provider.dart';
 import 'package:tapto/features/auth/domain/usecases/get_current_user_usecase.dart';
 import 'package:tapto/features/auth/domain/usecases/login_usecase.dart';
@@ -16,7 +14,7 @@ import 'package:tapto/features/auth/domain/usecases/request_password_reset_useca
 import 'package:tapto/features/auth/domain/usecases/reset_password_usecase.dart';
 import 'package:tapto/features/auth/domain/usecases/auth_params.dart';
 import 'package:tapto/features/auth/presentation/state/auth_state.dart';
-import 'package:tapto/features/auth/data/models/user_model.dart'; // <-- Import UserModel
+import 'package:tapto/features/auth/domain/services/user_storage_service.dart'; // <-- ADDED: Domain service for storage
 
 final authViewModelProvider = NotifierProvider<AuthViewModel, AuthState>(
   AuthViewModel.new,
@@ -29,6 +27,7 @@ class AuthViewModel extends Notifier<AuthState> {
   late final LogoutUsecase _logoutUsecase;
   late final RequestPasswordResetUsecase _requestPasswordResetUsecase;
   late final ResetPasswordUsecase _resetPasswordUsecase;
+  late final UserStorageService _userStorageService; // <-- ADDED: Domain service for storage
 
   @override
   AuthState build() {
@@ -38,6 +37,7 @@ class AuthViewModel extends Notifier<AuthState> {
     _logoutUsecase = ref.read(logoutUsecaseProvider);
     _requestPasswordResetUsecase = ref.read(requestPasswordResetUsecaseProvider);
     _resetPasswordUsecase = ref.read(resetPasswordUsecaseProvider);
+    _userStorageService = ref.read(userStorageServiceProvider); // <-- ADDED: Initialize storage service
     return const AuthState();
   }
 
@@ -68,17 +68,10 @@ class AuthViewModel extends Notifier<AuthState> {
         errorMessage: failure.message,
       ),
       (user) async {
-        final hiveService = ref.read(hiveServiceProvider);
-        // Save as UserModel, using the password provided at registration
-        await hiveService.saveUser(
-          UserModel.fromEntity(user, password),
-        );
-        // Save selected country for currency determination
-        await hiveService.put('user_country', country);
-
-        // Set current user in session service
-        final userSessionService = UserSessionService();
-        await userSessionService.setCurrentUser(user.id);
+        // Use domain service for storage operations (Clean Architecture compliant)
+        await _userStorageService.saveUser(user, password);
+        await _userStorageService.saveUserCountry(country);
+        await _userStorageService.setCurrentUser(user);
 
         state = state.copyWith(status: AuthStatus.authenticated, user: user);
       },
@@ -98,15 +91,9 @@ class AuthViewModel extends Notifier<AuthState> {
         errorMessage: failure.message,
       ),
       (user) async {
-        final hiveService = ref.read(hiveServiceProvider);
-        // Save as UserModel, using the password provided at login
-        await hiveService.saveUser(
-          UserModel.fromEntity(user, password),
-        );
-        
-        // Set current user in session service
-        final userSessionService = UserSessionService();
-        await userSessionService.setCurrentUser(user.id);
+        // Use domain service for storage operations (Clean Architecture compliant)
+        await _userStorageService.saveUser(user, password);
+        await _userStorageService.setCurrentUser(user);
 
         // Set authenticated state immediately with login user data
         state = state.copyWith(status: AuthStatus.authenticated, user: user);
@@ -144,16 +131,12 @@ class AuthViewModel extends Notifier<AuthState> {
     ),
     (user) async {
       if (user != null) {
-        final hiveService = ref.read(hiveServiceProvider);
-        await hiveService.saveUser(UserModel.fromEntity(user, ''));
-        // Save country for currency determination
+        // Use domain service for storage operations (Clean Architecture compliant)
+        await _userStorageService.saveUser(user, '');
         if (user.country != null && user.country!.isNotEmpty) {
-          await hiveService.put('user_country', user.country);
+          await _userStorageService.saveUserCountry(user.country!);
         }
-
-        // Ensure current user is set in session service
-        final userSessionService = UserSessionService();
-        await userSessionService.setCurrentUser(user.id);
+        await _userStorageService.setCurrentUser(user);
       }
       state = state.copyWith(
         status: user != null
@@ -287,10 +270,8 @@ class AuthViewModel extends Notifier<AuthState> {
 
         if (state.user != null) {
           final updatedUser = state.user!.copyWith(profilePicture: profilePicturePath);
-          final hiveService = ref.read(hiveServiceProvider);
-          await hiveService.saveUser(
-            UserModel.fromEntity(updatedUser, ''),
-          );
+          // Use domain service for storage operations (Clean Architecture compliant)
+          await _userStorageService.saveUser(updatedUser, '');
           // Refresh user from backend to ensure latest info
           await getCurrentUser();
           state = state.copyWith(

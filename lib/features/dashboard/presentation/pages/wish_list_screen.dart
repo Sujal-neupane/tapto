@@ -52,7 +52,7 @@ class WishlistScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                const Text(
+                Text(
                   'yourWishlistIsEmpty',
                   style: TextStyle(
                     fontSize: titleFontSize,
