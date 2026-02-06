@@ -12,6 +12,7 @@ import 'package:tapto/features/orders/domain/enitites/order_entity.dart';
 import 'package:tapto/features/products/presentation/providers/product_providers.dart';
 import 'package:tapto/features/products/data/models/product_model.dart';
 import 'package:tapto/core/api/api_endpoint.dart';
+import 'package:tapto/features/admin/presentation/pages/assign_delivery_screen.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -90,7 +91,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
                                 _buildDashboardTab(adminState),
                                 _buildOrdersTab(adminState),
                                 _buildProductsTab(),
-                                _buildUsersTab(adminState),
+                                const AssignDeliveryScreen(),
                               ],
                             ),
                           ),
@@ -210,7 +211,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
           Tab(icon: Icon(Icons.dashboard_rounded, size: 22), text: 'OVERVIEW'),
           Tab(icon: Icon(Icons.receipt_long_rounded, size: 22), text: 'ORDERS'),
           Tab(icon: Icon(Icons.inventory_2_rounded, size: 22), text: 'PRODUCTS'),
-          Tab(icon: Icon(Icons.people_rounded, size: 22), text: 'USERS'),
+          Tab(icon: Icon(Icons.local_shipping_rounded, size: 22), text: 'ASSIGN DELIVERY'),
         ],
       ),
     );
@@ -695,126 +696,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
     }
   }
 
-  Widget _buildUsersTab(AdminState state) {
-    // User management is coming soon
-    return RefreshIndicator(
-      onRefresh: () async {
-        HapticFeedback.mediumImpact();
-        await ref.read(adminViewModelProvider.notifier).fetchDashboardData();
-      },
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Colors.indigo.shade400, Colors.indigo.shade600],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.indigo.withOpacity(0.08),
-                    blurRadius: 12,
-                    offset: const Offset(0, 5),
-                  ),
-                ],
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _UserStatBubble(
-                    label: 'Total',
-                    value: '${state.stats?.totalUsers ?? 0}',
-                    icon: Icons.people_rounded,
-                  ),
-                  Container(
-                    width: 1,
-                    height: 40,
-                    color: Colors.white.withOpacity(0.3),
-                  ),
-                  _UserStatBubble(
-                    label: 'Admins',
-                    value: '-', // totalAdmins not available in DashboardStats
-                    icon: Icons.admin_panel_settings_rounded,
-                  ),
-                  Container(
-                    width: 1,
-                    height: 40,
-                    color: Colors.white.withOpacity(0.3),
-                  ),
-                  _UserStatBubble(
-                    label: 'Customers',
-                    value: '${state.stats?.totalUsers ?? 0}',
-                    icon: Icons.person_rounded,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(Icons.manage_accounts_rounded, color: AppColors.primary, size: 20),
-                ),
-                const SizedBox(width: 12),
-                const Text(
-                  'User Management',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            _buildComingSoonCard(),
-          ],
-        ),
-      ),
-    );
-  }
+  
 
-  Widget _buildComingSoonCard() {
-    return Container(
-      padding: const EdgeInsets.all(40),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.purple.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.construction_rounded, size: 60, color: Colors.purple.shade400),
-          ),
-          const SizedBox(height: 20),
-          const Text(
-            'Coming Soon',
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'User management features are under development',
-            style: TextStyle(color: Colors.grey[600]),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
+
 
   Widget _buildLoadingState() {
     return Center(

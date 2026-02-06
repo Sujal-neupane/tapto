@@ -65,6 +65,10 @@ class ApiEndpoints {
   static String orderLocationById(String id) => '/api/orders/$id/location';
   static String orderCancelById(String id) => '/api/orders/$id/cancel';
 
+  // Address Endpoints
+  static const String addresses = '/api/addresses';
+  static String addressById(String id) => '/api/addresses/$id';
+  static String addressSetDefault(String id) => '/api/addresses/$id/default';
 
   // Cart Endpoints 
   static const String cart = '/api/cart';

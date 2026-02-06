@@ -12,6 +12,8 @@ import 'package:tapto/features/orders/presentation/pages/my_orders_screen.dart';
 import 'package:tapto/features/orders/presentation/viewmodel/order_viewmodel.dart';
 
 import 'package:tapto/core/services/storage/user_session_service.dart';
+import 'package:tapto/features/addresses/presentation/viewmodel/address_viewmodel.dart';
+import 'package:tapto/features/addresses/domain/entities/address_entity.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
@@ -22,10 +24,12 @@ class CheckoutScreen extends ConsumerStatefulWidget {
 
 class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProviderStateMixin {
   String _selectedPayment = 'COD';
+  String? _userCountry;
   bool _isPlacingOrder = false;
   Map<String, String>? _shippingAddress;
   String? _userName;
   String? _userPhone;
+  AddressEntity? _selectedSavedAddress;
   
   late AnimationController _slideController;
   late AnimationController _fadeController;
@@ -63,7 +67,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
     _slideController.forward();
     _fadeController.forward();
     
-    // Load user data for address form
+    // Load user data and addresses
     _loadUserData();
   }
 
@@ -78,11 +82,23 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
     try {
       final userSessionService = ref.read(userSessionServiceProvider);
       final user = await userSessionService.getCurrentUser();
-      
       if (user != null) {
         setState(() {
           _userName = user.name;
           _userPhone = user.phoneNumber;
+          _userCountry = user.country;
+        });
+      }
+
+      // Load user addresses
+      await ref.read(addressViewModelProvider.notifier).loadUserAddresses();
+      
+      // Auto-select default address if available
+      final addressState = ref.read(addressViewModelProvider);
+      final defaultAddress = addressState.addresses.where((addr) => addr.isDefault).firstOrNull;
+      if (defaultAddress != null && mounted) {
+        setState(() {
+          _selectedSavedAddress = defaultAddress;
         });
       }
     } catch (e) {
@@ -101,21 +117,30 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
       backgroundColor: Colors.transparent,
       isDismissible: true,
       enableDrag: true,
-      builder: (context) => _AddressModal(
-        initialName: _userName,
-        initialPhone: _userPhone,
+      builder: (context) => _AddressSelectionModal(
+        selectedAddress: _selectedSavedAddress,
+        onAddressSelected: (address) {
+          setState(() {
+            _selectedSavedAddress = address;
+            _shippingAddress = null; // Clear manual address when saved address is selected
+          });
+        },
+        onManualAddressEntered: (addressData) {
+          setState(() {
+            _shippingAddress = addressData;
+            _selectedSavedAddress = null; // Clear saved address when manual address is entered
+          });
+        },
       ),
     );
     if (result != null) {
-      setState(() {
-        _shippingAddress = result;
-      });
       HapticFeedback.lightImpact();
     }
   }
 
   Future<void> _placeOrder(List<CartItemModel> cartItems, double total) async {
-    if (_shippingAddress == null || _shippingAddress!['phone'] == null || _shippingAddress!['phone']!.isEmpty) {
+    // Check if an address is selected
+    if (_selectedSavedAddress == null && (_shippingAddress == null || _shippingAddress!['phone'] == null || _shippingAddress!['phone']!.isEmpty)) {
       HapticFeedback.heavyImpact();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -123,7 +148,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
             children: [
               Icon(Icons.error_outline, color: Colors.white),
               SizedBox(width: 12),
-              Expanded(child: Text('Please enter a valid phone number in your shipping address.')),
+              Expanded(child: Text('Please select or enter a valid shipping address.')),
             ],
           ),
           backgroundColor: Colors.red,
@@ -144,6 +169,56 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
         'type': _selectedPayment == 'COD' ? 'Cash on Delivery' : _selectedPayment,
       };
 
+      // Prepare address data
+      Map<String, String> addressData;
+      if (_selectedSavedAddress != null) {
+        // Use saved address
+        addressData = {
+          'id': _selectedSavedAddress!.id,
+          'fullName': _selectedSavedAddress!.fullName,
+          'phone': _selectedSavedAddress!.phone,
+          'street': _selectedSavedAddress!.street,
+          'city': _selectedSavedAddress!.city,
+          'state': _selectedSavedAddress!.state ?? '',
+          'zipCode': _selectedSavedAddress!.zipCode,
+          'country': _selectedSavedAddress!.country,
+        };
+      } else {
+        // Use manual address
+        addressData = {
+          'id': 'manual-address',
+          'fullName': _shippingAddress!['fullName'] ?? '',
+          'phone': _shippingAddress!['phone'] ?? '',
+          'street': _shippingAddress!['street'] ?? '',
+          'city': _shippingAddress!['city'] ?? '',
+          'state': _shippingAddress!['state'] ?? '',
+          'zipCode': _shippingAddress!['zipCode'] ?? '',
+          'country': _shippingAddress!['country'] ?? '',
+        };
+      }
+
+      // Validate required fields
+      if (addressData['state'] == null || addressData['state']!.isEmpty) {
+        HapticFeedback.heavyImpact();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Row(
+              children: [
+                Icon(Icons.error_outline, color: Colors.white),
+                SizedBox(width: 12),
+                Expanded(child: Text('State is required for shipping address.')),
+              ],
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+        setState(() => _isPlacingOrder = false);
+        return;
+      }
+
       await ref.read(orderViewModelProvider.notifier).createOrderFromCart(
         cartItems.map((e) => CartItemModel(
           productId: e.productId,
@@ -154,7 +229,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
           size: e.size,
           color: e.color,
         )).toList(),
-        address: _shippingAddress!,
+        address: addressData,
         payment: paymentMethod,
       );
 
@@ -522,7 +597,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
                   style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
                 ),
                 const Spacer(),
-                if (_shippingAddress != null)
+                if (_selectedSavedAddress != null || _shippingAddress != null)
                   IconButton(
                     icon: const Icon(Icons.edit_outlined, size: 20),
                     onPressed: () => _showAddressModal(context),
@@ -535,7 +610,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
           ),
           Padding(
             padding: const EdgeInsets.all(16),
-            child: _shippingAddress == null
+            child: (_selectedSavedAddress == null && _shippingAddress == null)
                 ? InkWell(
                     onTap: () => _showAddressModal(context),
                     borderRadius: BorderRadius.circular(12),
@@ -578,7 +653,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                _shippingAddress!['fullName']!,
+                                _selectedSavedAddress?.fullName ?? _shippingAddress!['fullName']!,
                                 style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
                               ),
                             ),
@@ -588,9 +663,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
                                 color: Colors.green,
                                 borderRadius: BorderRadius.circular(6),
                               ),
-                              child: const Text(
-                                'Selected',
-                                style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
+                              child: Text(
+                                _selectedSavedAddress != null ? 'Saved Address' : 'Manual Entry',
+                                style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
                               ),
                             ),
                           ],
@@ -601,7 +676,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
                             const Icon(Icons.phone_outlined, size: 14, color: Colors.grey),
                             const SizedBox(width: 8),
                             Text(
-                              _shippingAddress!['phone']!,
+                              _selectedSavedAddress?.phone ?? _shippingAddress!['phone']!,
                               style: TextStyle(fontSize: 13, color: Colors.grey[700]),
                             ),
                           ],
@@ -614,12 +689,33 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                '${_shippingAddress!['street']}, ${_shippingAddress!['city']}, ${_shippingAddress!['state']}, ${_shippingAddress!['zipCode']}, ${_shippingAddress!['country']}',
+                                _selectedSavedAddress != null
+                                    ? _selectedSavedAddress!.toString()
+                                    : '${_shippingAddress!['street']}, ${_shippingAddress!['city']}, ${_shippingAddress!['state']}, ${_shippingAddress!['zipCode']}, ${_shippingAddress!['country']}',
                                 style: TextStyle(fontSize: 13, color: Colors.grey[700], height: 1.4),
                               ),
                             ),
                           ],
                         ),
+                        if (_selectedSavedAddress != null && _selectedSavedAddress!.isDefault)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 8),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppColors.primary.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                'Default Address',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.primary,
+                                ),
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),
@@ -630,6 +726,22 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
   }
 
   Widget _buildPaymentSection() {
+    // Define payment methods by country
+    final List<Map<String, dynamic>> paymentOptions = [
+      {'value': 'COD', 'label': 'Cash on Delivery', 'icon': Icons.money},
+    ];
+    if (_userCountry == 'Nepal') {
+      paymentOptions.addAll([
+        {'value': 'eSewa', 'label': 'eSewa', 'icon': Icons.account_balance_wallet},
+        {'value': 'Khalti', 'label': 'Khalti', 'icon': Icons.credit_card},
+      ]);
+    } else if (_userCountry == 'India') {
+      paymentOptions.addAll([
+        {'value': 'UPI', 'label': 'UPI', 'icon': Icons.account_balance},
+        {'value': 'Paytm', 'label': 'Paytm', 'icon': Icons.payment},
+        {'value': 'PhonePe', 'label': 'PhonePe', 'icon': Icons.phone_android},
+      ]);
+    }
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -664,7 +776,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
               ],
             ),
           ),
-          _buildPaymentOption('COD', 'Cash on Delivery', Icons.money),
+          ...paymentOptions.map((opt) => _buildPaymentOption(opt['value'], opt['label'], opt['icon'])),
         ],
       ),
     );
@@ -673,9 +785,52 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
   Widget _buildPaymentOption(String value, String label, IconData icon) {
     final isSelected = _selectedPayment == value;
     return InkWell(
-      onTap: () {
+      onTap: () async {
         HapticFeedback.selectionClick();
         setState(() => _selectedPayment = value);
+        // If not COD, show mock payment dialog
+        if (value != 'COD') {
+          final paid = await showDialog<bool>(
+            context: context,
+            builder: (context) => AlertDialog(
+              title: Text('Simulate $label Payment'),
+              content: Text('This is a mock payment for $label. Press Pay to simulate a successful payment.'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  style: ButtonStyle(foregroundColor: WidgetStateProperty.all(AppColors.surface)),
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: const Text('Pay'),
+                ),
+              ],
+            ),
+          );
+          if (paid == true) {
+            // Show a success snackbar
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    const Icon(Icons.check_circle, color: Colors.white),
+                    const SizedBox(width: 12),
+                    Expanded(child: Text('$label payment successful!')),
+                  ],
+                ),
+                backgroundColor: AppColors.success,
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                margin: const EdgeInsets.all(16),
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          } else {
+            // If cancelled, revert to COD
+            setState(() => _selectedPayment = 'COD');
+          }
+        }
       },
       child: Container(
         margin: const EdgeInsets.all(16),
@@ -1270,6 +1425,459 @@ class _AddressField extends StatelessWidget {
   final String? hint;
 
   const _AddressField({
+    required this.icon,
+    required this.label,
+    required this.controller,
+    this.keyboardType,
+    this.hint,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      validator: (v) => v == null || v.trim().isEmpty ? 'This field is required' : null,
+      decoration: InputDecoration(
+        prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
+        labelText: label,
+        hintText: hint,
+        hintStyle: TextStyle(color: Colors.grey[400]),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[300]!),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(color: Colors.grey[300]!),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red),
+        ),
+        filled: true,
+        fillColor: Colors.grey[50],
+        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+      ),
+    );
+  }
+}
+
+class _AddressSelectionModal extends ConsumerStatefulWidget {
+  final AddressEntity? selectedAddress;
+  final Function(AddressEntity?) onAddressSelected;
+  final Function(Map<String, String>) onManualAddressEntered;
+
+  const _AddressSelectionModal({
+    required this.selectedAddress,
+    required this.onAddressSelected,
+    required this.onManualAddressEntered,
+  });
+
+  @override
+  ConsumerState<_AddressSelectionModal> createState() => _AddressSelectionModalState();
+}
+
+class _AddressSelectionModalState extends ConsumerState<_AddressSelectionModal> with TickerProviderStateMixin {
+  late TabController _tabController;
+  final _formKey = GlobalKey<FormState>();
+  final _fullNameController = TextEditingController();
+  final _phoneController = TextEditingController();
+  final _streetController = TextEditingController();
+  final _cityController = TextEditingController();
+  final _stateController = TextEditingController();
+  final _zipCodeController = TextEditingController();
+  final _countryController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _tabController = TabController(length: 2, vsync: this);
+    _countryController.text = 'Nepal'; // Default country
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    _fullNameController.dispose();
+    _phoneController.dispose();
+    _streetController.dispose();
+    _cityController.dispose();
+    _stateController.dispose();
+    _zipCodeController.dispose();
+    _countryController.dispose();
+    super.dispose();
+  }
+
+  void _submitManualAddress() {
+    if (_formKey.currentState!.validate()) {
+      final addressData = {
+        'fullName': _fullNameController.text.trim(),
+        'phone': _phoneController.text.trim(),
+        'street': _streetController.text.trim(),
+        'city': _cityController.text.trim(),
+        'state': _stateController.text.trim(),
+        'zipCode': _zipCodeController.text.trim(),
+        'country': _countryController.text.trim(),
+      };
+      widget.onManualAddressEntered(addressData);
+      Navigator.of(context).pop();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final addressState = ref.watch(addressViewModelProvider);
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.85,
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      child: Column(
+        children: [
+          // Header
+          Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 10,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                // Handle
+                Container(
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Select Shipping Address',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Tab Bar
+                Container(
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: TabBar(
+                    controller: _tabController,
+                    indicator: BoxDecoration(
+                      color: AppColors.primary,
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    labelColor: Colors.white,
+                    unselectedLabelColor: Colors.grey[600],
+                    labelStyle: const TextStyle(fontWeight: FontWeight.w600),
+                    tabs: [
+                      Tab(text: 'Saved Addresses'),
+                      Tab(text: 'Enter Manually'),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Tab Content
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                // Saved Addresses Tab
+                _buildSavedAddressesTab(addressState),
+                // Manual Entry Tab
+                _buildManualEntryTab(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSavedAddressesTab(AddressState addressState) {
+    return addressState.isLoading
+        ? const Center(child: CircularProgressIndicator())
+        : addressState.errorMessage != null
+            ? Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Failed to load addresses',
+                      style: TextStyle(color: Colors.red[600]),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      addressState.errorMessage!,
+                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () => ref.read(addressViewModelProvider.notifier).loadUserAddresses(),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              )
+            : addressState.addresses.isEmpty
+                ? Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.location_off_outlined, size: 48, color: Colors.grey[400]),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'No saved addresses',
+                          style: TextStyle(fontSize: 16, color: Colors.grey),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Add addresses in your profile to use them here',
+                          style: TextStyle(color: Colors.grey,fontSize: 12),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          onPressed: () => _tabController.animateTo(1),
+                          icon: const Icon(Icons.add),
+                          label: const Text('Add Address'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            foregroundColor: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: addressState.addresses.length,
+                    itemBuilder: (context, index) {
+                      final address = addressState.addresses[index];
+                      final isSelected = widget.selectedAddress?.id == address.id;
+
+                      return Card(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          side: BorderSide(
+                            color: isSelected ? AppColors.primary : Colors.transparent,
+                            width: 2,
+                          ),
+                        ),
+                        child: InkWell(
+                          onTap: () {
+                            widget.onAddressSelected(address);
+                            Navigator.of(context).pop();
+                          },
+                          borderRadius: BorderRadius.circular(12),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  children: [
+                                    Icon(
+                                      isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
+                                      color: isSelected ? AppColors.primary : Colors.grey[400],
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        address.fullName,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
+                                        ),
+                                      ),
+                                    ),
+                                    if (address.isDefault)
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: AppColors.primary.withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(12),
+                                        ),
+                                        child: Text(
+                                          'Default',
+                                          style: TextStyle(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w500,
+                                            color: AppColors.primary,
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Icon(Icons.phone_outlined, size: 14, color: Colors.grey[600]),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      address.phone,
+                                      style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(Icons.location_on_outlined, size: 14, color: Colors.grey[600]),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        address.toString(),
+                                        style: TextStyle(fontSize: 13, color: Colors.grey[700], height: 1.4),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      );
+                    },
+                  );
+  }
+
+  Widget _buildManualEntryTab() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _ModalAddressFormField(
+              icon: Icons.person_outline,
+              label: 'Full Name',
+              controller: _fullNameController,
+              hint: 'Enter your full name',
+            ),
+            const SizedBox(height: 16),
+            _ModalAddressFormField(
+              icon: Icons.phone_outlined,
+              label: 'Phone Number',
+              controller: _phoneController,
+              keyboardType: TextInputType.phone,
+              hint: 'Enter your phone number',
+            ),
+            const SizedBox(height: 16),
+            _ModalAddressFormField(
+              icon: Icons.location_on_outlined,
+              label: 'Street Address',
+              controller: _streetController,
+              hint: 'Street, building, apartment',
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _ModalAddressFormField(
+                    icon: Icons.location_city_outlined,
+                    label: 'City',
+                    controller: _cityController,
+                    hint: 'City name',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _ModalAddressFormField(
+                    icon: Icons.map_outlined,
+                    label: 'State',
+                    controller: _stateController,
+                    hint: 'State/Province',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _ModalAddressFormField(
+                    icon: Icons.pin_drop_outlined,
+                    label: 'ZIP Code',
+                    controller: _zipCodeController,
+                    keyboardType: TextInputType.number,
+                    hint: 'ZIP/Postal code',
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _ModalAddressFormField(
+                    icon: Icons.flag_outlined,
+                    label: 'Country',
+                    controller: _countryController,
+                    hint: 'Country',
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: _submitManualAddress,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'Use This Address',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ModalAddressFormField extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final TextEditingController controller;
+  final TextInputType? keyboardType;
+  final String? hint;
+
+  const _ModalAddressFormField({
     required this.icon,
     required this.label,
     required this.controller,
