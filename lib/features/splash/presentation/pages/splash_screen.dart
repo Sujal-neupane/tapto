@@ -66,8 +66,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
     _slideAnimation =
         Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
-      CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
-    );
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+        );
   }
 
   void _startAnimations() async {
@@ -103,7 +103,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         int waited = 0;
         while (waited < 2000) {
           final authState = ref.read(authViewModelProvider);
-          if (authState.status == AuthStatus.authenticated && authState.user != null) {
+          if (authState.status == AuthStatus.authenticated &&
+              authState.user != null) {
             break;
           }
           await Future.delayed(const Duration(milliseconds: 100));
@@ -112,11 +113,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
         if (!mounted) return;
 
-        
-
         final authState = ref.read(authViewModelProvider);
         final user = authState.user;
-        await ref.read(authViewModelProvider.notifier).getCurrentUser();
 
         if (authState.status == AuthStatus.authenticated && user != null) {
           if (user.isAdmin) {
@@ -130,9 +128,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
             debugPrint('Regular user detected: ${user.email}');
             Navigator.pushReplacementNamed(
               context,
-              isOnboardingComplete
-                  ? AppRoutes.dashboard
-                  : AppRoutes.onboarding,
+              isOnboardingComplete ? AppRoutes.dashboard : AppRoutes.onboarding,
             );
           }
         } else {

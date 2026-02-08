@@ -4,7 +4,6 @@ import 'package:tapto/features/auth/presentation/pages/forgot_password_screen.da
 import 'package:tapto/features/dashboard/presentation/pages/cart_screen.dart';
 import 'package:tapto/features/dashboard/presentation/pages/checkout_screen.dart';
 import 'package:tapto/features/dashboard/presentation/pages/dashboard_screen.dart';
-import 'package:tapto/features/dashboard/presentation/pages/product_details_screen.dart';
 import 'package:tapto/features/dashboard/presentation/pages/setting_screen.dart';
 import 'package:tapto/features/onboarding/presentation/pages/onboarding_screen.dart';
 import 'package:tapto/features/dashboard/presentation/pages/search_screen.dart';

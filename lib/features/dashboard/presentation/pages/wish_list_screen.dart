@@ -322,7 +322,7 @@ class _WishlistItemCard extends ConsumerWidget {
                       Row(
                         children: [
                           Text(
-                            '${ref.watch(currencyFormatterProvider)(product.price)}',
+                            ref.watch(currencyFormatterProvider)(product.price),
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,

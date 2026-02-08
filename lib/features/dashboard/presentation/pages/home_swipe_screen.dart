@@ -928,7 +928,7 @@ class _SwipeCard extends StatelessWidget {
                     child: Row(
                       children: [
                         Text(
-                          '${currencyFormatter(product.price)}',
+                          currencyFormatter(product.price),
                           style: const TextStyle(
                             fontSize: 26,
                             fontWeight: FontWeight.bold,

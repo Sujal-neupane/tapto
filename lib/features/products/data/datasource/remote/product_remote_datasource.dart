@@ -36,10 +36,9 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
     final response = await dio.get(
       ApiEndpoints.products,
       queryParameters: {
-        if (category != null) 'category': category,
-        if (fashionType != null)
-          'category': fashionType, // Backend uses 'category' for filtering
-        if (isActive != null) 'isActive': isActive,
+        'category': ?category,
+        'category': ?fashionType, // Backend uses 'category' for filtering
+        'isActive': ?isActive,
       },
     );
 
@@ -64,9 +63,9 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
       ApiEndpoints.products,
       queryParameters: {
         if (query != null && query.isNotEmpty) 'search': query,
-        if (category != null) 'category': category,
-        if (minPrice != null) 'minPrice': minPrice,
-        if (maxPrice != null) 'maxPrice': maxPrice,
+        'category': ?category,
+        'minPrice': ?minPrice,
+        'maxPrice': ?maxPrice,
         if (tags != null && tags.isNotEmpty) 'tags': tags.join(','),
         'isActive': true,
       },

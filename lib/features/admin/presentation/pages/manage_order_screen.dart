@@ -245,7 +245,7 @@ class _ManageOrdersScreenState extends ConsumerState<ManageOrdersScreen> {
                       loading: () => const CircularProgressIndicator(),
                       error: (e, _) => Text('Failed to load drivers'),
                       data: (drivers) => DropdownButtonFormField<String>(
-                        value: selectedDriverId,
+                        initialValue: selectedDriverId,
                         hint: const Text('Select Delivery Driver'),
                         items: drivers.map<DropdownMenuItem<String>>((driver) {
                           return DropdownMenuItem(

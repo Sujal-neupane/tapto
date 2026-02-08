@@ -1,6 +1,4 @@
 import 'dart:io';
-import 'dart:math';
-
 import 'package:flutter/material.dart';
 import 'package:tapto/core/providers/currency_provider.dart';
 import 'package:tapto/core/utils/localization.dart';
@@ -12,7 +10,6 @@ import '../../../../app/routes/app_routes.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_text_styles.dart';
-import '../../../../core/api/api_endpoint.dart';
 import '../../../../core/utils/image_utils.dart';
 import '../../../auth/presentation/viewmodel/auth_viewmodel.dart';
 import '../../../orders/presentation/viewmodel/order_viewmodel.dart';
@@ -103,7 +100,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         if (pickedFile != null) {
           debugPrint('Image picked successfully on iOS: ${pickedFile.path}');
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.translate('Uploading profile picture...'))),
+            SnackBar(
+              content: Text(context.translate('Uploading profile picture...')),
+            ),
           );
           await ref
               .read(authViewModelProvider.notifier)
@@ -127,9 +126,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       }
 
       // If permission is denied, show dialog
-      if (!permissionStatus.isGranted && permissionStatus != PermissionStatus.limited) {
+      if (!permissionStatus.isGranted &&
+          permissionStatus != PermissionStatus.limited) {
         if (permissionStatus == PermissionStatus.permanentlyDenied) {
-          debugPrint('Permission permanently denied, opening settings directly');
+          debugPrint(
+            'Permission permanently denied, opening settings directly',
+          );
           _showSettingsDialog();
         } else {
           debugPrint('Permission not granted, showing dialog');
@@ -142,7 +144,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       if (permissionStatus == PermissionStatus.limited) {
         debugPrint('Limited permission granted');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.translate('Limited photo access granted. You can still select photos.'))),
+          SnackBar(
+            content: Text(
+              context.translate(
+                'Limited photo access granted. You can still select photos.',
+              ),
+            ),
+          ),
         );
       }
 
@@ -156,19 +164,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       if (pickedFile != null) {
         debugPrint('Image picked successfully: ${pickedFile.path}');
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(context.translate('Uploading profile picture...'))),
+          SnackBar(
+            content: Text(context.translate('Uploading profile picture...')),
+          ),
         );
         try {
           await ref
               .read(authViewModelProvider.notifier)
               .uploadProfilePicture(File(pickedFile.path));
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(context.translate('Profile picture updated successfully!'))),
+            SnackBar(
+              content: Text(
+                context.translate('Profile picture updated successfully!'),
+              ),
+            ),
           );
         } catch (uploadError) {
           debugPrint('Upload failed: $uploadError');
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Failed to upload profile picture: ${uploadError.toString()}')),
+            SnackBar(
+              content: Text(
+                'Failed to upload profile picture: ${uploadError.toString()}',
+              ),
+            ),
           );
         }
       } else {
@@ -195,7 +213,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(context.translate('Permission Required')),
-        content: Text(context.translate('This app needs ${source == ImageSource.camera ? 'camera' : 'photo library'} access to ${source == ImageSource.camera ? 'take photos' : 'select photos'}. Please enable it in Settings.')),
+        content: Text(
+          context.translate(
+            'This app needs ${source == ImageSource.camera ? 'camera' : 'photo library'} access to ${source == ImageSource.camera ? 'take photos' : 'select photos'}. Please enable it in Settings.',
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -218,7 +240,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text(context.translate('Permission Required')),
-        content: Text(context.translate('Please enable permissions in settings to change your photo.')),
+        content: Text(
+          context.translate(
+            'Please enable permissions in settings to change your photo.',
+          ),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -307,8 +333,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Widget build(BuildContext context) {
     final currentUser = ref.watch(currentUserProvider);
     final screenSize = MediaQuery.of(context).size;
-    final textScaler = MediaQuery.of(context).textScaler;
-    final isTablet = screenSize.width > 600;
     final padding = (screenSize.width * 0.05).toDouble(); // 5% of width
 
     final userName = currentUser?.name ?? 'Guest User';
@@ -350,7 +374,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         CircleAvatar(
                           radius: 50,
                           backgroundColor: AppColors.primary,
-                          backgroundImage: profileImageUrl != null && profileImageUrl.isNotEmpty
+                          backgroundImage:
+                              profileImageUrl != null &&
+                                  profileImageUrl.isNotEmpty
                               ? NetworkImage(
                                   ImageUtils.getImageUrl(profileImageUrl),
                                 )
@@ -549,9 +575,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 onTap: () {
                   Navigator.push(
                     context,
-                    MaterialPageRoute(
-                      builder: (_) => const AddressesScreen(),
-                    ),
+                    MaterialPageRoute(builder: (_) => const AddressesScreen()),
                   );
                 },
               ),
@@ -695,16 +719,18 @@ void _showPaymentMethodsDialog(BuildContext context, WidgetRef ref) {
         children: [
           Text('Available payment methods for your region:'),
           const SizedBox(height: 16),
-          ...paymentMethods.map((method) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Row(
-              children: [
-                Icon(Icons.payment, color: AppColors.primary, size: 20),
-                const SizedBox(width: 12),
-                Text(method),
-              ],
+          ...paymentMethods.map(
+            (method) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  Icon(method.icon, color: AppColors.primary, size: 20),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text(method.label)),
+                ],
+              ),
             ),
-          )),
+          ),
           const SizedBox(height: 16),
           Text('Currency: ${currency.toString()}'),
         ],

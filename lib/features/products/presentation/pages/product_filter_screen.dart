@@ -219,7 +219,7 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              '${activeCount} ${'activeFilters'.tr()}',
+              '$activeCount ${'activeFilters'.tr()}',
               style: AppTextStyles.body.copyWith(
                 fontWeight: FontWeight.w600,
                 color: AppColors.primary,

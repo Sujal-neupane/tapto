@@ -1,6 +1,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../viewmodel/admin_viewmodel.dart';
 
 class DashboardOverviewScreen extends ConsumerStatefulWidget {
   const DashboardOverviewScreen({super.key});
@@ -10,19 +11,18 @@ class DashboardOverviewScreen extends ConsumerStatefulWidget {
 }
 
 class _DashboardOverviewScreenState extends ConsumerState<DashboardOverviewScreen> {
-  // Mock data - replace with real API data
-  final stats = {
-    'totalOrders': 1234,
-    'totalUsers': 567,
-    'totalProducts': 89,
-    'totalRevenue': 45678.90,
-    'todayRevenue': 2345.67,
-    'pendingOrders': 23,
-    'lowStockProducts': 5,
-  };
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      ref.read(adminViewModelProvider.notifier).fetchDashboardData();
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final adminState = ref.watch(adminViewModelProvider);
+    final stats = adminState.stats;
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
@@ -40,7 +40,25 @@ class _DashboardOverviewScreenState extends ConsumerState<DashboardOverviewScree
           const SizedBox(width: 16),
         ],
       ),
-      body: SingleChildScrollView(
+      body: adminState.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : adminState.error != null && stats == null
+              ? Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
+                      const SizedBox(height: 16),
+                      Text('Failed to load dashboard data', style: TextStyle(color: Colors.grey[600])),
+                      const SizedBox(height: 8),
+                      ElevatedButton(
+                        onPressed: () => ref.read(adminViewModelProvider.notifier).fetchDashboardData(),
+                        child: const Text('Retry'),
+                      ),
+                    ],
+                  ),
+                )
+              : SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -56,28 +74,28 @@ class _DashboardOverviewScreenState extends ConsumerState<DashboardOverviewScree
               children: [
                 _StatCard(
                   title: 'Total Revenue',
-                  value: '\$${stats['totalRevenue']!.toStringAsFixed(2)}',
+                  value: '\$${(stats?.totalRevenue ?? 0).toStringAsFixed(2)}',
                   icon: Icons.attach_money,
                   color: Colors.green,
                   trend: '+12.5%',
                 ),
                 _StatCard(
                   title: 'Total Orders',
-                  value: '${stats['totalOrders']}',
+                  value: '${stats?.totalOrders ?? 0}',
                   icon: Icons.shopping_cart,
                   color: Colors.blue,
                   trend: '+8.2%',
                 ),
                 _StatCard(
                   title: 'Total Users',
-                  value: '${stats['totalUsers']}',
+                  value: '${stats?.totalUsers ?? 0}',
                   icon: Icons.people,
                   color: Colors.purple,
                   trend: '+15.3%',
                 ),
                 _StatCard(
                   title: 'Total Products',
-                  value: '${stats['totalProducts']}',
+                  value: '${stats?.totalProducts ?? 0}',
                   icon: Icons.inventory,
                   color: Colors.orange,
                   trend: '+5.1%',
@@ -93,7 +111,7 @@ class _DashboardOverviewScreenState extends ConsumerState<DashboardOverviewScree
                 Expanded(
                   child: _AlertCard(
                     title: 'Pending Orders',
-                    value: '${stats['pendingOrders']}',
+                    value: '${stats?.pendingOrders ?? 0}',
                     subtitle: 'Need attention',
                     color: Colors.orange,
                     icon: Icons.pending_actions,
@@ -103,7 +121,7 @@ class _DashboardOverviewScreenState extends ConsumerState<DashboardOverviewScree
                 Expanded(
                   child: _AlertCard(
                     title: 'Low Stock',
-                    value: '${stats['lowStockProducts']}',
+                    value: '${stats?.cancelledOrders ?? 0}',
                     subtitle: 'Products running low',
                     color: Colors.red,
                     icon: Icons.warning_amber,
@@ -186,21 +204,32 @@ class _DashboardOverviewScreenState extends ConsumerState<DashboardOverviewScree
   }
 
   List<TableRow> _buildMockOrders() {
-    final orders = [
-      {'id': '#12345', 'customer': 'John Doe', 'amount': '\$299.99', 'status': 'Pending'},
-      {'id': '#12346', 'customer': 'Jane Smith', 'amount': '\$159.99', 'status': 'Shipped'},
-      {'id': '#12347', 'customer': 'Bob Johnson', 'amount': '\$499.99', 'status': 'Delivered'},
-    ];
+    final adminState = ref.watch(adminViewModelProvider);
+    final recentOrders = adminState.orders.take(5).toList();
+    
+    if (recentOrders.isEmpty) {
+      return [
+        TableRow(
+          children: [
+            _tableCell('No orders yet'),
+            _tableCell(''),
+            _tableCell(''),
+            const Padding(padding: EdgeInsets.all(12), child: SizedBox()),
+            const Padding(padding: EdgeInsets.all(12), child: SizedBox()),
+          ],
+        ),
+      ];
+    }
 
-    return orders.map((order) {
+    return recentOrders.map((order) {
       return TableRow(
         children: [
-          _tableCell(order['id']!),
-          _tableCell(order['customer']!),
-          _tableCell(order['amount']!),
+          _tableCell('#${order.id.substring(order.id.length > 5 ? order.id.length - 5 : 0)}'),
+          _tableCell(order.shippingAddress.fullName),
+          _tableCell('\$${order.total.toStringAsFixed(2)}'),
           Padding(
             padding: const EdgeInsets.all(12),
-            child: _StatusBadge(status: order['status']!),
+            child: _StatusBadge(status: order.status.name),
           ),
           Padding(
             padding: const EdgeInsets.all(12),

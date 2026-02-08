@@ -1,6 +1,5 @@
 import 'dart:developer' as developer;
 import 'dart:math';
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -32,10 +31,12 @@ class ProductDetailsScreen extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<ProductDetailsScreen> createState() => _ProductDetailsScreenState();
+  ConsumerState<ProductDetailsScreen> createState() =>
+      _ProductDetailsScreenState();
 }
 
-class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> with SingleTickerProviderStateMixin {
+class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen>
+    with SingleTickerProviderStateMixin {
   String? selectedSize;
   String? selectedColor;
   int _currentImageIndex = 0;
@@ -65,13 +66,13 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
       curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
     );
 
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: const Interval(0.2, 0.8, curve: Curves.easeOutCubic),
-    ));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: const Interval(0.2, 0.8, curve: Curves.easeOutCubic),
+          ),
+        );
 
     _animationController.forward();
   }
@@ -83,7 +84,8 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
     super.dispose();
   }
 
-  String Function(double) get currencyFormatter => ref.watch(currencyFormatterProvider);
+  String Function(double) get currencyFormatter =>
+      ref.watch(currencyFormatterProvider);
 
   @override
   Widget build(BuildContext context) {
@@ -91,7 +93,10 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
     final textScaler = MediaQuery.of(context).textScaler;
     final isTablet = screenSize.width > 600;
     final padding = (screenSize.width * 0.05).toDouble(); // 5% of width
-    final titleFontSize = min(20.0, 18 * textScaler.scale(1.0) * (isTablet ? 1.1 : 1.0));
+    final titleFontSize = min(
+      20.0,
+      18 * textScaler.scale(1.0) * (isTablet ? 1.1 : 1.0),
+    );
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -110,7 +115,10 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
                 toolbarHeight: 70,
                 flexibleSpace: SafeArea(
                   child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: padding, vertical: padding * 0.6),
+                    padding: EdgeInsets.symmetric(
+                      horizontal: padding,
+                      vertical: padding * 0.6,
+                    ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -138,9 +146,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
               ),
 
               // Image Gallery
-              SliverToBoxAdapter(
-                child: _buildImageGallery(),
-              ),
+              SliverToBoxAdapter(child: _buildImageGallery()),
 
               // Product Details
               SliverToBoxAdapter(
@@ -210,7 +216,8 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
                     child: Image.network(
                       _allImages[index],
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _buildImagePlaceholder('imageNotAvailable'.tr()),
+                      errorBuilder: (_, __, ___) =>
+                          _buildImagePlaceholder('imageNotAvailable'.tr()),
                     ),
                   ),
                 );
@@ -254,10 +261,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [
-            const Color(0xFFF8F8F8),
-            const Color(0xFFEEEEEE),
-          ],
+          colors: [const Color(0xFFF8F8F8), const Color(0xFFEEEEEE)],
         ),
       ),
       child: Column(
@@ -341,10 +345,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
-                AppColors.primary,
-                AppColors.primary.withOpacity(0.8),
-              ],
+              colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
             ),
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
@@ -368,17 +369,9 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
                 ),
               ),
               Text(
-                '₹',
+                currencyFormatter(widget.price),
                 style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: Colors.white,
-                ),
-              ),
-              Text(
-                widget.price.toStringAsFixed(2),
-                style: const TextStyle(
-                  fontSize: 24,
+                  fontSize: 22,
                   fontWeight: FontWeight.w700,
                   color: Colors.white,
                 ),
@@ -475,8 +468,10 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
           builder: (context, constraints) {
             // Calculate item width based on available width
             final spacing = 12.0;
-            final itemWidth = (constraints.maxWidth - (spacing * (widget.sizes.length - 1))) / widget.sizes.length;
-            
+            final itemWidth =
+                (constraints.maxWidth - (spacing * (widget.sizes.length - 1))) /
+                widget.sizes.length;
+
             return Wrap(
               spacing: spacing,
               runSpacing: 12,
@@ -500,7 +495,9 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
                           : null,
                       color: isSelected ? null : Colors.white,
                       border: Border.all(
-                        color: isSelected ? AppColors.primary : const Color(0xFFE9ECEF),
+                        color: isSelected
+                            ? AppColors.primary
+                            : const Color(0xFFE9ECEF),
                         width: 2,
                       ),
                       borderRadius: BorderRadius.circular(12),
@@ -509,7 +506,9 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
                       size,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: isSelected ? Colors.white : const Color(0xFF495057),
+                        color: isSelected
+                            ? Colors.white
+                            : const Color(0xFF495057),
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
                       ),
@@ -562,8 +561,11 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
           builder: (context, constraints) {
             // Calculate item width based on available width
             final spacing = 12.0;
-            final itemWidth = (constraints.maxWidth - (spacing * (widget.colors.length - 1))) / widget.colors.length;
-            
+            final itemWidth =
+                (constraints.maxWidth -
+                    (spacing * (widget.colors.length - 1))) /
+                widget.colors.length;
+
             return Wrap(
               spacing: spacing,
               runSpacing: 12,
@@ -590,7 +592,9 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
                           : null,
                       color: isSelected ? null : Colors.white,
                       border: Border.all(
-                        color: isSelected ? AppColors.primary : const Color(0xFFE9ECEF),
+                        color: isSelected
+                            ? AppColors.primary
+                            : const Color(0xFFE9ECEF),
                         width: 2,
                       ),
                       borderRadius: BorderRadius.circular(12),
@@ -599,7 +603,9 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
                       color,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: isSelected ? Colors.white : const Color(0xFF495057),
+                        color: isSelected
+                            ? Colors.white
+                            : const Color(0xFF495057),
                         fontWeight: FontWeight.w600,
                         fontSize: 15,
                       ),
@@ -630,10 +636,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
             topRight: Radius.circular(0),
           ),
           border: Border(
-            top: BorderSide(
-              color: const Color(0xFFE9ECEF),
-              width: 1,
-            ),
+            top: BorderSide(color: const Color(0xFFE9ECEF), width: 1),
           ),
           boxShadow: [
             BoxShadow(
@@ -680,7 +683,9 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
                             name: 'ProductDetailsScreen',
                           );
 
-                          ref.read(cartViewModelProvider.notifier).addItem(
+                          ref
+                              .read(cartViewModelProvider.notifier)
+                              .addItem(
                                 CartItemModel(
                                   productId: widget.productId,
                                   productName: widget.productName,
@@ -714,7 +719,8 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
                                     const SizedBox(width: 14),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           const Text(
@@ -752,7 +758,9 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
                         }
                       : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: canAddToCart ? AppColors.primary : const Color(0xFFE9ECEF),
+                    backgroundColor: canAddToCart
+                        ? AppColors.primary
+                        : const Color(0xFFE9ECEF),
                     foregroundColor: Colors.white,
                     elevation: 0,
                     shadowColor: Colors.transparent,
@@ -765,7 +773,9 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
                     children: [
                       Icon(
                         Icons.shopping_cart_outlined,
-                        color: canAddToCart ? Colors.white : const Color(0xFF6C757D),
+                        color: canAddToCart
+                            ? Colors.white
+                            : const Color(0xFF6C757D),
                         size: 20,
                       ),
                       const SizedBox(width: 8),
@@ -774,7 +784,9 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen> wit
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
-                          color: canAddToCart ? Colors.white : const Color(0xFF6C757D),
+                          color: canAddToCart
+                              ? Colors.white
+                              : const Color(0xFF6C757D),
                         ),
                       ),
                     ],

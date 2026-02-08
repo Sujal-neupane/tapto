@@ -23,7 +23,8 @@ class CheckoutScreen extends ConsumerStatefulWidget {
   ConsumerState<CheckoutScreen> createState() => _CheckoutScreenState();
 }
 
-class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProviderStateMixin {
+class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
+    with TickerProviderStateMixin {
   String _selectedPayment = 'COD';
   String? _userCountry;
   bool _isPlacingOrder = false;
@@ -31,7 +32,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
   String? _userName;
   String? _userPhone;
   AddressEntity? _selectedSavedAddress;
-  
+
   late AnimationController _slideController;
   late AnimationController _fadeController;
   late Animation<Offset> _slideAnimation;
@@ -48,26 +49,20 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
       vsync: this,
       duration: const Duration(milliseconds: 800),
     );
-    
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _slideController,
-      curve: Curves.easeOutCubic,
-    ));
-    
+
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+        );
+
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeIn,
-    ));
-    
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
+
     _slideController.forward();
     _fadeController.forward();
-    
+
     // Load user data and addresses
     _loadUserData();
   }
@@ -91,12 +86,22 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
         });
       }
 
+      // Set default payment to first available method for user's country
+      final methods = ref.read(paymentMethodsProvider);
+      if (methods.isNotEmpty) {
+        setState(() {
+          _selectedPayment = methods.first.id;
+        });
+      }
+
       // Load user addresses
       await ref.read(addressViewModelProvider.notifier).loadUserAddresses();
-      
+
       // Auto-select default address if available
       final addressState = ref.read(addressViewModelProvider);
-      final defaultAddress = addressState.addresses.where((addr) => addr.isDefault).firstOrNull;
+      final defaultAddress = addressState.addresses
+          .where((addr) => addr.isDefault)
+          .firstOrNull;
       if (defaultAddress != null && mounted) {
         setState(() {
           _selectedSavedAddress = defaultAddress;
@@ -108,7 +113,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
     }
   }
 
-  String Function(double) get currencyFormatter => ref.watch(currencyFormatterProvider);
+  String Function(double) get currencyFormatter =>
+      ref.watch(currencyFormatterProvider);
 
   Future<void> _showAddressModal(BuildContext context) async {
     HapticFeedback.mediumImpact();
@@ -123,13 +129,15 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
         onAddressSelected: (address) {
           setState(() {
             _selectedSavedAddress = address;
-            _shippingAddress = null; // Clear manual address when saved address is selected
+            _shippingAddress =
+                null; // Clear manual address when saved address is selected
           });
         },
         onManualAddressEntered: (addressData) {
           setState(() {
             _shippingAddress = addressData;
-            _selectedSavedAddress = null; // Clear saved address when manual address is entered
+            _selectedSavedAddress =
+                null; // Clear saved address when manual address is entered
           });
         },
       ),
@@ -141,7 +149,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
 
   Future<void> _placeOrder(List<CartItemModel> cartItems, double total) async {
     // Check if an address is selected
-    if (_selectedSavedAddress == null && (_shippingAddress == null || _shippingAddress!['phone'] == null || _shippingAddress!['phone']!.isEmpty)) {
+    if (_selectedSavedAddress == null &&
+        (_shippingAddress == null ||
+            _shippingAddress!['phone'] == null ||
+            _shippingAddress!['phone']!.isEmpty)) {
       HapticFeedback.heavyImpact();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -149,12 +160,16 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
             children: [
               Icon(Icons.error_outline, color: Colors.white),
               SizedBox(width: 12),
-              Expanded(child: Text('Please select or enter a valid shipping address.')),
+              Expanded(
+                child: Text('Please select or enter a valid shipping address.'),
+              ),
             ],
           ),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -167,7 +182,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
     try {
       final paymentMethod = {
         'id': _selectedPayment.toLowerCase(),
-        'type': _selectedPayment == 'COD' ? 'Cash on Delivery' : _selectedPayment,
+        'type': _selectedPayment == 'COD'
+            ? 'Cash on Delivery'
+            : _selectedPayment,
       };
 
       // Prepare address data
@@ -207,12 +224,16 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
               children: [
                 Icon(Icons.error_outline, color: Colors.white),
                 SizedBox(width: 12),
-                Expanded(child: Text('State is required for shipping address.')),
+                Expanded(
+                  child: Text('State is required for shipping address.'),
+                ),
               ],
             ),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             margin: const EdgeInsets.all(16),
           ),
         );
@@ -220,25 +241,31 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
         return;
       }
 
-      await ref.read(orderViewModelProvider.notifier).createOrderFromCart(
-        cartItems.map((e) => CartItemModel(
-          productId: e.productId,
-          productName: e.productName,
-          productImage: e.productImage,
-          price: e.price,
-          quantity: e.quantity,
-          size: e.size,
-          color: e.color,
-        )).toList(),
-        address: addressData,
-        payment: paymentMethod,
-      );
+      await ref
+          .read(orderViewModelProvider.notifier)
+          .createOrderFromCart(
+            cartItems
+                .map(
+                  (e) => CartItemModel(
+                    productId: e.productId,
+                    productName: e.productName,
+                    productImage: e.productImage,
+                    price: e.price,
+                    quantity: e.quantity,
+                    size: e.size,
+                    color: e.color,
+                  ),
+                )
+                .toList(),
+            address: addressData,
+            payment: paymentMethod,
+          );
 
       ref.read(cartViewModelProvider.notifier).clearCart();
 
       if (!mounted) return;
       HapticFeedback.heavyImpact();
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Row(
@@ -250,7 +277,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
           ),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           margin: const EdgeInsets.all(16),
           duration: const Duration(seconds: 2),
         ),
@@ -259,7 +288,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
       await Future.delayed(const Duration(milliseconds: 300));
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
-          pageBuilder: (context, animation, secondaryAnimation) => const MyOrdersScreen(),
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const MyOrdersScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(opacity: animation, child: child);
           },
@@ -280,7 +310,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
           ),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -298,13 +330,22 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
     final textScaler = MediaQuery.of(context).textScaler;
     final isTablet = screenSize.width > 600;
     final padding = (screenSize.width * 0.04).toDouble(); // 4% of width
-    final iconSize = min(80.0, screenSize.width * 0.15); // Max 80, or 15% of width
-    final titleFontSize = min(20.0, 18 * textScaler.scale(1.0) * (isTablet ? 1.1 : 1.0));
+    final iconSize = min(
+      80.0,
+      screenSize.width * 0.15,
+    ); // Max 80, or 15% of width
+    final titleFontSize = min(
+      20.0,
+      18 * textScaler.scale(1.0) * (isTablet ? 1.1 : 1.0),
+    );
 
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Checkout', style: TextStyle(fontWeight: FontWeight.w600)),
+        title: const Text(
+          'Checkout',
+          style: TextStyle(fontWeight: FontWeight.w600),
+        ),
         backgroundColor: AppColors.primary,
         foregroundColor: Colors.white,
         elevation: 0,
@@ -315,9 +356,19 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.shopping_cart_outlined, size: iconSize, color: Colors.grey[300]),
+                  Icon(
+                    Icons.shopping_cart_outlined,
+                    size: iconSize,
+                    color: Colors.grey[300],
+                  ),
                   const SizedBox(height: 16),
-                  Text('Your cart is empty', style: TextStyle(fontSize: titleFontSize, color: Colors.grey[600])),
+                  Text(
+                    'Your cart is empty',
+                    style: TextStyle(
+                      fontSize: titleFontSize,
+                      color: Colors.grey[600],
+                    ),
+                  ),
                 ],
               ),
             )
@@ -333,24 +384,24 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
                         // Progress Indicator
                         _buildProgressIndicator(),
                         const SizedBox(height: 24),
-                        
+
                         // Order Summary
                         _buildOrderSummary(cartItems, total),
                         const SizedBox(height: 16),
-                        
+
                         // Shipping Address
                         _buildShippingSection(),
                         const SizedBox(height: 16),
-                        
+
                         // Payment Method
                         _buildPaymentSection(),
                         const SizedBox(height: 16),
-                        
+
                         // Order Details Summary
                         _buildOrderDetails(cartItems),
                       ],
                     ),
-                    
+
                     // Floating Bottom Bar
                     Positioned(
                       left: 0,
@@ -399,7 +450,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: isCompleted ? AppColors.success : (isActive ? AppColors.primary : Colors.grey[200]),
+              color: isCompleted
+                  ? AppColors.success
+                  : (isActive ? AppColors.primary : Colors.grey[200]),
               shape: BoxShape.circle,
             ),
             child: Center(
@@ -465,12 +518,19 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
                     color: AppColors.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.shopping_bag_outlined, color: AppColors.primary, size: 20),
+                  child: const Icon(
+                    Icons.shopping_bag_outlined,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Text(
                   'Order Items (${cartItems.length})',
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 16,
+                  ),
                 ),
               ],
             ),
@@ -517,7 +577,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
               children: [
                 Text(
                   item.productName,
-                  style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 14,
+                  ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -537,7 +600,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
             children: [
               Text(
                 ref.watch(currencyFormatterProvider)(item.price),
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
               ),
               const SizedBox(height: 4),
               Container(
@@ -548,7 +614,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
                 ),
                 child: Text(
                   'Qty: ${item.quantity}',
-                  style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.primary),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.primary,
+                  ),
                 ),
               ),
             ],
@@ -563,10 +633,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
       children: [
         Icon(icon, size: 14, color: Colors.grey[600]),
         const SizedBox(width: 4),
-        Text(
-          text,
-          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-        ),
+        Text(text, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
       ],
     );
   }
@@ -596,7 +663,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
                     color: AppColors.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.local_shipping_outlined, color: AppColors.primary, size: 20),
+                  child: const Icon(
+                    Icons.local_shipping_outlined,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 const Text(
@@ -624,13 +695,20 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
                     child: Container(
                       padding: const EdgeInsets.symmetric(vertical: 24),
                       decoration: BoxDecoration(
-                        border: Border.all(color: AppColors.primary.withOpacity(0.3), width: 1.5),
+                        border: Border.all(
+                          color: AppColors.primary.withOpacity(0.3),
+                          width: 1.5,
+                        ),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.add_location_alt_outlined, color: AppColors.primary, size: 22),
+                          Icon(
+                            Icons.add_location_alt_outlined,
+                            color: AppColors.primary,
+                            size: 22,
+                          ),
                           const SizedBox(width: 8),
                           const Text(
                             'Add Shipping Address',
@@ -656,23 +734,40 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.person_outline, size: 16, color: Colors.green),
+                            const Icon(
+                              Icons.person_outline,
+                              size: 16,
+                              color: Colors.green,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                _selectedSavedAddress?.fullName ?? _shippingAddress!['fullName']!,
-                                style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15),
+                                _selectedSavedAddress?.fullName ??
+                                    _shippingAddress!['fullName']!,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 15,
+                                ),
                               ),
                             ),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.green,
                                 borderRadius: BorderRadius.circular(6),
                               ),
                               child: Text(
-                                _selectedSavedAddress != null ? 'Saved Address' : 'Manual Entry',
-                                style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.w600),
+                                _selectedSavedAddress != null
+                                    ? 'Saved Address'
+                                    : 'Manual Entry',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ],
@@ -680,11 +775,19 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
                         const SizedBox(height: 8),
                         Row(
                           children: [
-                            const Icon(Icons.phone_outlined, size: 14, color: Colors.grey),
+                            const Icon(
+                              Icons.phone_outlined,
+                              size: 14,
+                              color: Colors.grey,
+                            ),
                             const SizedBox(width: 8),
                             Text(
-                              _selectedSavedAddress?.phone ?? _shippingAddress!['phone']!,
-                              style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                              _selectedSavedAddress?.phone ??
+                                  _shippingAddress!['phone']!,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey[700],
+                              ),
                             ),
                           ],
                         ),
@@ -692,23 +795,35 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
                         Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Icon(Icons.location_on_outlined, size: 14, color: Colors.grey),
+                            const Icon(
+                              Icons.location_on_outlined,
+                              size: 14,
+                              color: Colors.grey,
+                            ),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 _selectedSavedAddress != null
                                     ? _selectedSavedAddress!.toString()
                                     : '${_shippingAddress!['street']}, ${_shippingAddress!['city']}, ${_shippingAddress!['state']}, ${_shippingAddress!['zipCode']}, ${_shippingAddress!['country']}',
-                                style: TextStyle(fontSize: 13, color: Colors.grey[700], height: 1.4),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey[700],
+                                  height: 1.4,
+                                ),
                               ),
                             ),
                           ],
                         ),
-                        if (_selectedSavedAddress != null && _selectedSavedAddress!.isDefault)
+                        if (_selectedSavedAddress != null &&
+                            _selectedSavedAddress!.isDefault)
                           Padding(
                             padding: const EdgeInsets.only(top: 8),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: AppColors.primary.withOpacity(0.1),
                                 borderRadius: BorderRadius.circular(12),
@@ -733,22 +848,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
   }
 
   Widget _buildPaymentSection() {
-    // Define payment methods by country
-    final List<Map<String, dynamic>> paymentOptions = [
-      {'value': 'COD', 'label': 'Cash on Delivery', 'icon': Icons.money},
-    ];
-    if (_userCountry == 'Nepal') {
-      paymentOptions.addAll([
-        {'value': 'eSewa', 'label': 'eSewa', 'icon': Icons.account_balance_wallet},
-        {'value': 'Khalti', 'label': 'Khalti', 'icon': Icons.credit_card},
-      ]);
-    } else if (_userCountry == 'India') {
-      paymentOptions.addAll([
-        {'value': 'UPI', 'label': 'UPI', 'icon': Icons.account_balance},
-        {'value': 'Paytm', 'label': 'Paytm', 'icon': Icons.payment},
-        {'value': 'PhonePe', 'label': 'PhonePe', 'icon': Icons.phone_android},
-      ]);
-    }
+    // Get payment methods from provider based on user's country
+    final paymentMethods = ref.watch(paymentMethodsProvider);
+    final currency = ref.watch(currencyProvider);
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -773,17 +876,30 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
                     color: AppColors.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.payment_outlined, color: AppColors.primary, size: 20),
+                  child: const Icon(
+                    Icons.payment_outlined,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
-                const Text(
-                  'Payment Method',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                const Expanded(
+                  child: Text(
+                    'Payment Method',
+                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                  ),
+                ),
+                Text(
+                  '${currency.flag} ${currency.code}',
+                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                 ),
               ],
             ),
           ),
-          ...paymentOptions.map((opt) => _buildPaymentOption(opt['value'], opt['label'], opt['icon'])),
+          ...paymentMethods.map(
+            (method) =>
+                _buildPaymentOption(method.id, method.label, method.icon),
+          ),
         ],
       ),
     );
@@ -801,14 +917,18 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
             context: context,
             builder: (context) => AlertDialog(
               title: Text('Simulate $label Payment'),
-              content: Text('This is a mock payment for $label. Press Pay to simulate a successful payment.'),
+              content: Text(
+                'This is a mock payment for $label. Press Pay to simulate a successful payment.',
+              ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
                   child: const Text('Cancel'),
                 ),
                 ElevatedButton(
-                  style: ButtonStyle(foregroundColor: WidgetStateProperty.all(AppColors.surface)),
+                  style: ButtonStyle(
+                    foregroundColor: WidgetStateProperty.all(AppColors.surface),
+                  ),
                   onPressed: () => Navigator.of(context).pop(true),
                   child: const Text('Pay'),
                 ),
@@ -828,7 +948,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
                 ),
                 backgroundColor: AppColors.success,
                 behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 margin: const EdgeInsets.all(16),
                 duration: const Duration(seconds: 2),
               ),
@@ -843,7 +965,9 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
         margin: const EdgeInsets.all(16),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withOpacity(0.05) : Colors.grey[50],
+          color: isSelected
+              ? AppColors.primary.withOpacity(0.05)
+              : Colors.grey[50],
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? AppColors.primary : Colors.grey[200]!,
@@ -855,10 +979,16 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.grey[200],
+                color: isSelected
+                    ? AppColors.primary.withOpacity(0.1)
+                    : Colors.grey[200],
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(icon, color: isSelected ? AppColors.primary : Colors.grey[600], size: 24),
+              child: Icon(
+                icon,
+                color: isSelected ? AppColors.primary : Colors.grey[600],
+                size: 24,
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -893,7 +1023,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
   }
 
   Widget _buildOrderDetails(List<CartItemModel> cartItems) {
-    final subtotal = cartItems.fold<double>(0, (sum, item) => sum + item.price * item.quantity);
+    final subtotal = cartItems.fold<double>(
+      0,
+      (sum, item) => sum + item.price * item.quantity,
+    );
     final shipping = cartItems.isEmpty ? 0.0 : 10.0;
     final taxRate = ref.watch(taxRateProvider);
     final tax = subtotal * taxRate;
@@ -945,10 +1078,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-        ),
+        Text(label, style: TextStyle(fontSize: 14, color: Colors.grey[700])),
         isFree
             ? Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -966,15 +1096,22 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
                 ),
               )
             : Text(
-                '${currencyFormatter(amount)}',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Colors.grey[800]),
+                currencyFormatter(amount),
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.grey[800],
+                ),
               ),
       ],
     );
   }
 
   Widget _buildBottomBar(List<CartItemModel> cartItems, double cartTotal) {
-    final subtotal = cartItems.fold<double>(0, (sum, item) => sum + item.price * item.quantity);
+    final subtotal = cartItems.fold<double>(
+      0,
+      (sum, item) => sum + item.price * item.quantity,
+    );
     final shipping = cartItems.isEmpty ? 0.0 : 10.0;
     final taxRate = ref.watch(taxRateProvider);
     final tax = subtotal * taxRate;
@@ -997,12 +1134,16 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
           width: double.infinity,
           height: 56,
           child: ElevatedButton(
-            onPressed: _isPlacingOrder ? null : () => _placeOrder(cartItems, total),
+            onPressed: _isPlacingOrder
+                ? null
+                : () => _placeOrder(cartItems, total),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               disabledBackgroundColor: Colors.grey[300],
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               elevation: 0,
             ),
             child: _isPlacingOrder
@@ -1021,12 +1162,18 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> with TickerProv
                       const SizedBox(width: 8),
                       const Text(
                         'Place Order',
-                        style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                        style: TextStyle(
+                          fontWeight: FontWeight.w600,
+                          fontSize: 16,
+                        ),
                       ),
                       const SizedBox(width: 4),
                       Text(
                         '• ${currencyFormatter(total)}',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
                     ],
                   ),
@@ -1050,7 +1197,8 @@ class _AddressModal extends StatefulWidget {
   State<_AddressModal> createState() => _AddressModalState();
 }
 
-class _AddressModalState extends State<_AddressModal> with TickerProviderStateMixin {
+class _AddressModalState extends State<_AddressModal>
+    with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -1071,13 +1219,9 @@ class _AddressModalState extends State<_AddressModal> with TickerProviderStateMi
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-    _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _scaleController,
-      curve: Curves.easeOutBack,
-    ));
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.easeOutBack),
+    );
     _scaleController.forward();
 
     // Pre-fill name and phone from user data
@@ -1100,7 +1244,7 @@ class _AddressModalState extends State<_AddressModal> with TickerProviderStateMi
 
   Future<void> _useCurrentLocation() async {
     setState(() => _isLoadingLocation = true);
-    
+
     try {
       // Check if location services are enabled
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -1162,7 +1306,8 @@ class _AddressModalState extends State<_AddressModal> with TickerProviderStateMi
         setState(() {
           // Clear house number field for user input
           _streetController.text = ''; // House number will be entered by user
-          _cityController.text = place.locality ?? place.subAdministrativeArea ?? '';
+          _cityController.text =
+              place.locality ?? place.subAdministrativeArea ?? '';
           _stateController.text = place.administrativeArea ?? '';
           _zipController.text = place.postalCode ?? '';
           _countryController.text = place.country ?? 'Nepal';
@@ -1278,7 +1423,10 @@ class _AddressModalState extends State<_AddressModal> with TickerProviderStateMi
                     const SizedBox(height: 16),
                     const Text(
                       'Shipping Address',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
                     ),
                   ],
                 ),
@@ -1297,21 +1445,32 @@ class _AddressModalState extends State<_AddressModal> with TickerProviderStateMi
                           width: double.infinity,
                           margin: const EdgeInsets.only(bottom: 20),
                           child: OutlinedButton.icon(
-                            onPressed: _isLoadingLocation ? null : _useCurrentLocation,
+                            onPressed: _isLoadingLocation
+                                ? null
+                                : _useCurrentLocation,
                             icon: _isLoadingLocation
                                 ? const SizedBox(
                                     width: 18,
                                     height: 18,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
                                   )
                                 : const Icon(Icons.my_location, size: 20),
                             label: Text(
-                              _isLoadingLocation ? 'Getting location...' : 'Use Current Location',
-                              style: const TextStyle(fontWeight: FontWeight.w600),
+                              _isLoadingLocation
+                                  ? 'Getting location...'
+                                  : 'Use Current Location',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppColors.primary,
-                              side: const BorderSide(color: AppColors.primary, width: 1.5),
+                              side: const BorderSide(
+                                color: AppColors.primary,
+                                width: 1.5,
+                              ),
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(12),
@@ -1394,7 +1553,9 @@ class _AddressModalState extends State<_AddressModal> with TickerProviderStateMi
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
                               elevation: 0,
                             ),
                             child: const Row(
@@ -1404,7 +1565,10 @@ class _AddressModalState extends State<_AddressModal> with TickerProviderStateMi
                                 SizedBox(width: 8),
                                 Text(
                                   'Save Address',
-                                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 16,
+                                  ),
                                 ),
                               ],
                             ),
@@ -1444,7 +1608,8 @@ class _AddressField extends StatelessWidget {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
-      validator: (v) => v == null || v.trim().isEmpty ? 'This field is required' : null,
+      validator: (v) =>
+          v == null || v.trim().isEmpty ? 'This field is required' : null,
       decoration: InputDecoration(
         prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
         labelText: label,
@@ -1468,7 +1633,10 @@ class _AddressField extends StatelessWidget {
         ),
         filled: true,
         fillColor: Colors.grey[50],
-        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 16,
+          horizontal: 16,
+        ),
       ),
     );
   }
@@ -1486,10 +1654,12 @@ class _AddressSelectionModal extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<_AddressSelectionModal> createState() => _AddressSelectionModalState();
+  ConsumerState<_AddressSelectionModal> createState() =>
+      _AddressSelectionModalState();
 }
 
-class _AddressSelectionModalState extends ConsumerState<_AddressSelectionModal> with TickerProviderStateMixin {
+class _AddressSelectionModalState extends ConsumerState<_AddressSelectionModal>
+    with TickerProviderStateMixin {
   late TabController _tabController;
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
@@ -1553,7 +1723,9 @@ class _AddressSelectionModalState extends ConsumerState<_AddressSelectionModal> 
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(20),
+              ),
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.05),
@@ -1576,10 +1748,7 @@ class _AddressSelectionModalState extends ConsumerState<_AddressSelectionModal> 
                 const SizedBox(height: 16),
                 const Text(
                   'Select Shipping Address',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 16),
                 // Tab Bar
@@ -1629,154 +1798,182 @@ class _AddressSelectionModalState extends ConsumerState<_AddressSelectionModal> 
     return addressState.isLoading
         ? const Center(child: CircularProgressIndicator())
         : addressState.errorMessage != null
-            ? Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Failed to load addresses',
-                      style: TextStyle(color: Colors.red[600]),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      addressState.errorMessage!,
-                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton(
-                      onPressed: () => ref.read(addressViewModelProvider.notifier).loadUserAddresses(),
-                      child: const Text('Retry'),
-                    ),
-                  ],
+        ? Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
+                const SizedBox(height: 16),
+                Text(
+                  'Failed to load addresses',
+                  style: TextStyle(color: Colors.red[600]),
                 ),
-              )
-            : addressState.addresses.isEmpty
-                ? Center(
+                const SizedBox(height: 8),
+                Text(
+                  addressState.errorMessage!,
+                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () => ref
+                      .read(addressViewModelProvider.notifier)
+                      .loadUserAddresses(),
+                  child: const Text('Retry'),
+                ),
+              ],
+            ),
+          )
+        : addressState.addresses.isEmpty
+        ? Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.location_off_outlined,
+                  size: 48,
+                  color: Colors.grey[400],
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'No saved addresses',
+                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Add addresses in your profile to use them here',
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton.icon(
+                  onPressed: () => _tabController.animateTo(1),
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add Address'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          )
+        : ListView.builder(
+            padding: const EdgeInsets.all(16),
+            itemCount: addressState.addresses.length,
+            itemBuilder: (context, index) {
+              final address = addressState.addresses[index];
+              final isSelected = widget.selectedAddress?.id == address.id;
+
+              return Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  side: BorderSide(
+                    color: isSelected ? AppColors.primary : Colors.transparent,
+                    width: 2,
+                  ),
+                ),
+                child: InkWell(
+                  onTap: () {
+                    widget.onAddressSelected(address);
+                    Navigator.of(context).pop();
+                  },
+                  borderRadius: BorderRadius.circular(12),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.location_off_outlined, size: 48, color: Colors.grey[400]),
-                        const SizedBox(height: 16),
-                        const Text(
-                          'No saved addresses',
-                          style: TextStyle(fontSize: 16, color: Colors.grey),
+                        Row(
+                          children: [
+                            Icon(
+                              isSelected
+                                  ? Icons.check_circle
+                                  : Icons.radio_button_unchecked,
+                              color: isSelected
+                                  ? AppColors.primary
+                                  : Colors.grey[400],
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                address.fullName,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                            if (address.isDefault)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Text(
+                                  'Default',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w500,
+                                    color: AppColors.primary,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                         const SizedBox(height: 8),
-                        const Text(
-                          'Add addresses in your profile to use them here',
-                          style: TextStyle(color: Colors.grey,fontSize: 12),
-                          textAlign: TextAlign.center,
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.phone_outlined,
+                              size: 14,
+                              color: Colors.grey[600],
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              address.phone,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey[700],
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-                        ElevatedButton.icon(
-                          onPressed: () => _tabController.animateTo(1),
-                          icon: const Icon(Icons.add),
-                          label: const Text('Add Address'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.white,
-                          ),
+                        const SizedBox(height: 8),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Icon(
+                              Icons.location_on_outlined,
+                              size: 14,
+                              color: Colors.grey[600],
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                address.toString(),
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  color: Colors.grey[700],
+                                  height: 1.4,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: addressState.addresses.length,
-                    itemBuilder: (context, index) {
-                      final address = addressState.addresses[index];
-                      final isSelected = widget.selectedAddress?.id == address.id;
-
-                      return Card(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: BorderSide(
-                            color: isSelected ? AppColors.primary : Colors.transparent,
-                            width: 2,
-                          ),
-                        ),
-                        child: InkWell(
-                          onTap: () {
-                            widget.onAddressSelected(address);
-                            Navigator.of(context).pop();
-                          },
-                          borderRadius: BorderRadius.circular(12),
-                          child: Padding(
-                            padding: const EdgeInsets.all(16),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Icon(
-                                      isSelected ? Icons.check_circle : Icons.radio_button_unchecked,
-                                      color: isSelected ? AppColors.primary : Colors.grey[400],
-                                      size: 20,
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Text(
-                                        address.fullName,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 16,
-                                        ),
-                                      ),
-                                    ),
-                                    if (address.isDefault)
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                        decoration: BoxDecoration(
-                                          color: AppColors.primary.withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(12),
-                                        ),
-                                        child: Text(
-                                          'Default',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w500,
-                                            color: AppColors.primary,
-                                          ),
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  children: [
-                                    Icon(Icons.phone_outlined, size: 14, color: Colors.grey[600]),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      address.phone,
-                                      style: TextStyle(fontSize: 13, color: Colors.grey[700]),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 8),
-                                Row(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Icon(Icons.location_on_outlined, size: 14, color: Colors.grey[600]),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text(
-                                        address.toString(),
-                                        style: TextStyle(fontSize: 13, color: Colors.grey[700], height: 1.4),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  );
+                  ),
+                ),
+              );
+            },
+          );
   }
 
   Widget _buildManualEntryTab() {
@@ -1897,7 +2094,8 @@ class _ModalAddressFormField extends StatelessWidget {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
-      validator: (v) => v == null || v.trim().isEmpty ? 'This field is required' : null,
+      validator: (v) =>
+          v == null || v.trim().isEmpty ? 'This field is required' : null,
       decoration: InputDecoration(
         prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
         labelText: label,
@@ -1921,7 +2119,10 @@ class _ModalAddressFormField extends StatelessWidget {
         ),
         filled: true,
         fillColor: Colors.grey[50],
-        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 16,
+          horizontal: 16,
+        ),
       ),
     );
   }

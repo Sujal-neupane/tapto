@@ -29,8 +29,8 @@ class TermsOfServiceScreen extends StatelessWidget {
           children: [
             // Last Updated
             Text(
-              'lastUpdated'.tr() + ': February 6, 2026',
-              style: AppTextStyles.body?.copyWith(
+              '${'lastUpdated'.tr()}: February 6, 2026',
+              style: AppTextStyles.body.copyWith(
                 color: AppColors.textSecondary,
                 fontStyle: FontStyle.italic,
               ),
@@ -114,7 +114,7 @@ class TermsOfServiceScreen extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         Text(
           content,
-          style: AppTextStyles.body?.copyWith(
+          style: AppTextStyles.body.copyWith(
             color: AppColors.textSecondary,
             height: 1.6,
           ),
