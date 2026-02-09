@@ -63,8 +63,8 @@ class AddressRepositoryImpl implements AddressRepository {
           'city': city,
           'zipCode': zipCode,
           'country': country,
-          if (state != null) 'state': state,
-          if (isDefault != null) 'isDefault': isDefault,
+          'state': ?state,
+          'isDefault': ?isDefault,
         };
 
         final address = await remoteDataSource.createAddress(addressData);
@@ -92,14 +92,14 @@ class AddressRepositoryImpl implements AddressRepository {
     if (await networkInfo.isConnected) {
       try {
         final addressData = {
-          if (fullName != null) 'fullName': fullName,
-          if (phone != null) 'phone': phone,
-          if (street != null) 'street': street,
-          if (city != null) 'city': city,
-          if (state != null) 'state': state,
-          if (zipCode != null) 'zipCode': zipCode,
-          if (country != null) 'country': country,
-          if (isDefault != null) 'isDefault': isDefault,
+          'fullName': ?fullName,
+          'phone': ?phone,
+          'street': ?street,
+          'city': ?city,
+          'state': ?state,
+          'zipCode': ?zipCode,
+          'country': ?country,
+          'isDefault': ?isDefault,
         };
 
         final address = await remoteDataSource.updateAddress(addressId, addressData);

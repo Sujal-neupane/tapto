@@ -375,7 +375,7 @@ class _OrderCard extends ConsumerWidget {
                     style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                   ),
                   Text(
-                    '${ref.watch(currencyFormatterProvider)(order.total)}',
+                    ref.watch(currencyFormatterProvider)(order.total),
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,

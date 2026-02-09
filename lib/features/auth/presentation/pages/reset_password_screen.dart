@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -49,6 +50,14 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen>
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authViewModelProvider);
+    final screenSize = MediaQuery.of(context).size;
+    final textScaler = MediaQuery.of(context).textScaler;
+    final isTablet = screenSize.width > 600;
+    final padding = (screenSize.width * 0.06).toDouble(); // 6% of width
+    final logoSize = min(120.0, screenSize.width * 0.25); // Max 120, or 25% of width
+    final buttonHeight = max(48.0, screenSize.height * 0.07); // Min 48, or 7% of height
+    final titleFontSize = min(36.0, 32 * textScaler.scale(1.0) * (isTablet ? 1.2 : 1.0));
+    final subtitleFontSize = min(18.0, 16 * textScaler.scale(1.0));
 
     ref.listen<AuthState>(authViewModelProvider, (previous, next) {
       if (!mounted) return;
@@ -88,17 +97,17 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen>
         child: FadeTransition(
           opacity: _controller,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(padding),
             child: Form(
               key: _formKey,
               child: Column(
                 children: [
-                  const SizedBox(height: 20),
+                  SizedBox(height: screenSize.height * 0.025), // 2.5% of height
                   Hero(
                     tag: 'app_logo',
                     child: Container(
-                      width: 90,
-                      height: 90,
+                      width: logoSize,
+                      height: logoSize,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
@@ -129,7 +138,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen>
                     child: Text(
                       'resetPassword'.tr(),
                       style: AppTextStyles.heading.copyWith(
-                        fontSize: 30,
+                        fontSize: titleFontSize,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
                       ),
@@ -138,7 +147,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen>
                   const SizedBox(height: 8),
                   Text(
                     'enterOtpAndNewPassword'.tr(),
-                    style: TextStyle(color: Colors.grey[600], fontSize: 15),
+                    style: TextStyle(color: Colors.grey[600], fontSize: subtitleFontSize),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
@@ -248,9 +257,9 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen>
                       ],
                     ),
                   ),
-                  const SizedBox(height: 28),
+                  SizedBox(height: screenSize.height * 0.035), // 3.5% of height
                   Container(
-                    height: 58,
+                    height: buttonHeight,
                     width: double.infinity,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),

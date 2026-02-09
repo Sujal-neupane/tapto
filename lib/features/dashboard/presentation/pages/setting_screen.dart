@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tapto/features/dashboard/presentation/pages/help_center_screen.dart';
+import 'package:tapto/features/dashboard/presentation/pages/privacy_policy_screen.dart';
 import '../../../../app/routes/app_routes.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
@@ -11,6 +13,9 @@ import '../../../../app/widgets/logout_dialog.dart';
 import '../../../auth/presentation/viewmodel/auth_viewmodel.dart';
 import '../../../auth/presentation/state/auth_state.dart';
 import '../../../../core/providers/language_provider.dart';
+import '../../../../core/providers/theme_provider.dart';
+import '../../../../core/services/notification_service.dart'; // <-- ADDED: Notification service
+import 'terms_of_service_screen.dart'; 
 
 class SettingScreen extends ConsumerStatefulWidget {
   const SettingScreen({super.key});
@@ -21,21 +26,22 @@ class SettingScreen extends ConsumerStatefulWidget {
 
 class _SettingScreenState extends ConsumerState<SettingScreen> {
   bool _notificationsEnabled = true;
-  bool _darkModeEnabled = false;
   bool _emailUpdates = true;
   String _selectedLanguage = 'english'.tr();
 
   @override
   void initState() {
     super.initState();
-    _loadSavedLanguage();
+    _loadSettings();
   }
 
-  Future<void> _loadSavedLanguage() async {
+  Future<void> _loadSettings() async {
     final prefs = await SharedPreferences.getInstance();
     final savedLanguage = prefs.getString('languageCode') ?? 'en';
     setState(() {
       _selectedLanguage = _getLanguageDisplayName(savedLanguage);
+      _notificationsEnabled = prefs.getBool('notificationsEnabled') ?? true;
+      _emailUpdates = prefs.getBool('emailUpdates') ?? true;
     });
   }
 
@@ -97,26 +103,30 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final padding = (screenSize.width * 0.05).toDouble(); // 5% of width
+    final themeMode = ref.watch(themeProvider);
+
     // Listen for logout completion
     ref.listen<AuthState>(authViewModelProvider, (previous, next) {
       if (next.status == AuthStatus.loggedOut && context.mounted) {
         Navigator.pushNamedAndRemoveUntil(
           context,
           AppRoutes.login,
+
           (_) => false,
         );
       }
     });
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
       appBar: CustomAppBar(
         title: 'settings'.tr(),
         subtitle: "managePreferences".tr(),
         showBackButton: true,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSpacing.lg),
+        padding: EdgeInsets.all(padding),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -172,10 +182,24 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
               title: 'pushNotifications'.tr(),
               subtitle: 'receiveNotifications'.tr(),
               value: _notificationsEnabled,
-              onChanged: (value) {
+              onChanged: (value) async {
                 setState(() {
                   _notificationsEnabled = value;
                 });
+                await ref.read(notificationServiceProvider).setNotificationsEnabled(value);
+
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        value
+                          ? 'notificationsEnabled'.tr()
+                          : 'notificationsDisabled'.tr()
+                      ),
+                      backgroundColor: value ? Colors.green : Colors.orange,
+                    ),
+                  );
+                }
               },
             ),
             const SizedBox(height: AppSpacing.xs),
@@ -184,10 +208,21 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
               title: 'emailUpdates'.tr(),
               subtitle: 'receiveEmailUpdates'.tr(),
               value: _emailUpdates,
-              onChanged: (value) {
+              onChanged: (value) async {
                 setState(() {
                   _emailUpdates = value;
                 });
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setBool('emailUpdates', value);
+              },
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            _buildSettingsTile(
+              icon: Icons.notifications_active_outlined,
+              title: 'testNotification'.tr(),
+              subtitle: 'testNotificationSubtitle'.tr(),
+              onTap: () {
+                ref.read(notificationServiceProvider).showTestNotification(context);
               },
             ),
 
@@ -200,11 +235,9 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
               icon: Icons.dark_mode_outlined,
               title: 'darkMode'.tr(),
               subtitle: 'enableDarkTheme'.tr(),
-              value: _darkModeEnabled,
+              value: themeMode == ThemeMode.dark,
               onChanged: (value) {
-                setState(() {
-                  _darkModeEnabled = value;
-                });
+                ref.read(themeProvider.notifier).toggle();
               },
             ),
             const SizedBox(height: AppSpacing.xs),
@@ -227,9 +260,10 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
               title: 'helpCenter'.tr(),
               subtitle: 'getHelp'.tr(),
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('helpCenterComingSoon'.tr()),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const HelpCenterScreen(),
                   ),
                 );
               },
@@ -267,9 +301,10 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
               title: 'privacyPolicy'.tr(),
               subtitle: 'viewPrivacy'.tr(),
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('privacyComingSoon'.tr()),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const PrivacyPolicyScreen(),
                   ),
                 );
               },
@@ -280,9 +315,10 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
               title: 'termsOfService'.tr(),
               subtitle: 'viewTerms'.tr(),
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('termsComingSoon'.tr()),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const TermsOfServiceScreen(),
                   ),
                 );
               },
@@ -325,6 +361,7 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
     return Text(
       title,
       style: AppTextStyles.body.copyWith(
+        backgroundColor: AppColors.surface,
         color: AppColors.textPrimary,
         fontWeight: FontWeight.bold,
       ),
@@ -339,9 +376,9 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: Colors.grey.shade300),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(
@@ -352,7 +389,7 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
           width: 45,
           height: 45,
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(
@@ -392,9 +429,9 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.background,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.border),
+        border: Border.all(color: Colors.grey.shade300),
       ),
       child: SwitchListTile(
         contentPadding: const EdgeInsets.symmetric(
@@ -405,7 +442,7 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
           width: 45,
           height: 45,
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(

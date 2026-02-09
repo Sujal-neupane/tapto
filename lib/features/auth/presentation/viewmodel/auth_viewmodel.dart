@@ -5,8 +5,6 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/core/api/api_endpoint.dart';
 import 'package:tapto/core/services/hive/hive_services.dart';
-import 'package:tapto/core/services/storage/user_session_service.dart';
-import 'package:tapto/core/services/storage/token_storage_service.dart';
 import 'package:tapto/core/services/storage/storage_provider.dart';
 import 'package:tapto/features/auth/domain/usecases/get_current_user_usecase.dart';
 import 'package:tapto/features/auth/domain/usecases/login_usecase.dart';
@@ -16,7 +14,7 @@ import 'package:tapto/features/auth/domain/usecases/request_password_reset_useca
 import 'package:tapto/features/auth/domain/usecases/reset_password_usecase.dart';
 import 'package:tapto/features/auth/domain/usecases/auth_params.dart';
 import 'package:tapto/features/auth/presentation/state/auth_state.dart';
-import 'package:tapto/features/auth/data/models/user_model.dart'; // <-- Import UserModel
+import 'package:tapto/features/auth/domain/services/user_storage_service.dart'; // <-- ADDED: Domain service for storage
 
 final authViewModelProvider = NotifierProvider<AuthViewModel, AuthState>(
   AuthViewModel.new,
@@ -29,6 +27,8 @@ class AuthViewModel extends Notifier<AuthState> {
   late final LogoutUsecase _logoutUsecase;
   late final RequestPasswordResetUsecase _requestPasswordResetUsecase;
   late final ResetPasswordUsecase _resetPasswordUsecase;
+  late final UserStorageService
+  _userStorageService; // <-- ADDED: Domain service for storage
 
   @override
   AuthState build() {
@@ -36,8 +36,13 @@ class AuthViewModel extends Notifier<AuthState> {
     _loginUsecase = ref.read(loginUsecaseProvider);
     _getCurrentUserUsecase = ref.read(getCurrentUserUsecaseProvider);
     _logoutUsecase = ref.read(logoutUsecaseProvider);
-    _requestPasswordResetUsecase = ref.read(requestPasswordResetUsecaseProvider);
+    _requestPasswordResetUsecase = ref.read(
+      requestPasswordResetUsecaseProvider,
+    );
     _resetPasswordUsecase = ref.read(resetPasswordUsecaseProvider);
+    _userStorageService = ref.read(
+      userStorageServiceProvider,
+    ); // <-- ADDED: Initialize storage service
     return const AuthState();
   }
 
@@ -63,26 +68,24 @@ class AuthViewModel extends Notifier<AuthState> {
     );
 
     result.fold(
-      (failure) => state = state.copyWith(
-        status: AuthStatus.error,
-        errorMessage: failure.message,
-      ),
-      (user) async {
-        final hiveService = ref.read(hiveServiceProvider);
-        // Save as UserModel, using the password provided at registration
-        await hiveService.saveUser(
-          UserModel.fromEntity(user, password),
+      (failure) {
+        state = state.copyWith(
+          status: AuthStatus.error,
+          errorMessage: failure.message,
         );
-        // Save selected country for currency determination
-        await hiveService.put('user_country', country);
-
-        // Set current user in session service
-        final userSessionService = UserSessionService();
-        await userSessionService.setCurrentUser(user.id);
-
+      },
+      (user) {
+        // Mark as authenticated synchronously so state is set before fold returns
         state = state.copyWith(status: AuthStatus.authenticated, user: user);
       },
     );
+
+    // Perform async storage operations after state is set
+    if (state.status == AuthStatus.authenticated && state.user != null) {
+      await _userStorageService.saveUser(state.user!, password);
+      await _userStorageService.saveUserCountry(country);
+      await _userStorageService.setCurrentUser(state.user!);
+    }
   }
 
   Future<void> login({required String email, required String password}) async {
@@ -93,77 +96,74 @@ class AuthViewModel extends Notifier<AuthState> {
     );
 
     result.fold(
-      (failure) => state = state.copyWith(
-        status: AuthStatus.error,
-        errorMessage: failure.message,
-      ),
-      (user) async {
-        final hiveService = ref.read(hiveServiceProvider);
-        // Save as UserModel, using the password provided at login
-        await hiveService.saveUser(
-          UserModel.fromEntity(user, password),
+      (failure) {
+        state = state.copyWith(
+          status: AuthStatus.error,
+          errorMessage: failure.message,
         );
-        
-        // Set current user in session service
-        final userSessionService = UserSessionService();
-        await userSessionService.setCurrentUser(user.id);
-
-        // Set authenticated state immediately with login user data
+      },
+      (user) {
+        // Set authenticated state synchronously so state is set before fold returns
         state = state.copyWith(status: AuthStatus.authenticated, user: user);
-        
-        // Fetch complete user data including preference from backend in background
-        // This will update the state with more complete data if available
-        try {
-          await getCurrentUser();
-        } catch (e) {
-          // If getCurrentUser fails, we already have the user from login
-          // so we can continue with the authenticated state
-        }
       },
     );
+
+    // Perform async storage operations after state is set
+    if (state.status == AuthStatus.authenticated && state.user != null) {
+      await _userStorageService.saveUser(state.user!, password);
+      await _userStorageService.setCurrentUser(state.user!);
+
+      // Fetch complete user data including preference from backend in background
+      try {
+        await getCurrentUser();
+      } catch (e) {
+        // If getCurrentUser fails, we already have the user from login
+      }
+    }
   }
 
   Future<void> getCurrentUser() async {
-  state = state.copyWith(status: AuthStatus.loading);
+    state = state.copyWith(status: AuthStatus.loading);
 
-  final tokenStorage = ref.read(tokenStorageServiceProvider);
-  final String? token = tokenStorage.getToken();
+    final tokenStorage = ref.read(tokenStorageServiceProvider);
+    final String? token = tokenStorage.getToken();
 
-  if (token == null || token.isEmpty) {
-    state = state.copyWith(status: AuthStatus.unauthenticated, user: null);
-    return;
-  }
+    if (token == null || token.isEmpty) {
+      state = state.copyWith(status: AuthStatus.unauthenticated, user: null);
+      return;
+    }
 
-  // Always fetch from backend for freshness
-  final result = await _getCurrentUserUsecase();
+    // Always fetch from backend for freshness
+    final result = await _getCurrentUserUsecase();
 
-  result.fold(
-    (failure) => state = state.copyWith(
-      status: AuthStatus.unauthenticated,
-      errorMessage: failure.message,
-    ),
-    (user) async {
-      if (user != null) {
-        final hiveService = ref.read(hiveServiceProvider);
-        await hiveService.saveUser(UserModel.fromEntity(user, ''));
-        // Save country for currency determination
-        if (user.country != null && user.country!.isNotEmpty) {
-          await hiveService.put('user_country', user.country);
-        }
+    // Set state synchronously inside fold so it's updated before this method returns
+    result.fold(
+      (failure) {
+        state = state.copyWith(
+          status: AuthStatus.unauthenticated,
+          errorMessage: failure.message,
+        );
+      },
+      (user) {
+        state = state.copyWith(
+          status: user != null
+              ? AuthStatus.authenticated
+              : AuthStatus.unauthenticated,
+          user: user,
+        );
+      },
+    );
 
-        // Ensure current user is set in session service
-        final userSessionService = UserSessionService();
-        await userSessionService.setCurrentUser(user.id);
+    // Perform async storage operations after state is set
+    if (state.status == AuthStatus.authenticated && state.user != null) {
+      final user = state.user!;
+      await _userStorageService.saveUser(user, '');
+      if (user.country != null && user.country!.isNotEmpty) {
+        await _userStorageService.saveUserCountry(user.country!);
       }
-      state = state.copyWith(
-        status: user != null
-            ? AuthStatus.authenticated
-            : AuthStatus.unauthenticated,
-        user: user,
-      );
-    },
-  );
-}
+      await _userStorageService.setCurrentUser(user);
+    }
+  }
 
   Future<void> logout() async {
     state = state.copyWith(status: AuthStatus.loading);
@@ -171,20 +171,26 @@ class AuthViewModel extends Notifier<AuthState> {
     final result = await _logoutUsecase();
 
     result.fold(
-      (failure) => state = state.copyWith(
-        status: AuthStatus.error,
-        errorMessage: failure.message,
-      ),
-      (_) async {
-        final tokenStorage = ref.read(tokenStorageServiceProvider);
-        final userId = tokenStorage.getUserId();
-        if (userId != null) {
-          final hiveService = ref.read(hiveServiceProvider);
-          await hiveService.deleteUser(userId);
-        }
+      (failure) {
+        state = state.copyWith(
+          status: AuthStatus.error,
+          errorMessage: failure.message,
+        );
+      },
+      (_) {
         state = state.copyWith(status: AuthStatus.loggedOut, user: null);
       },
     );
+
+    // Perform async cleanup after state is set
+    if (state.status == AuthStatus.loggedOut) {
+      final tokenStorage = ref.read(tokenStorageServiceProvider);
+      final userId = tokenStorage.getUserId();
+      if (userId != null) {
+        final hiveService = ref.read(hiveServiceProvider);
+        await hiveService.deleteUser(userId);
+      }
+    }
   }
 
   Future<void> requestPasswordReset(String email) async {
@@ -204,15 +210,15 @@ class AuthViewModel extends Notifier<AuthState> {
     );
   }
 
-  Future<void> resetPassword(String email, String otp, String newPassword) async {
+  Future<void> resetPassword(
+    String email,
+    String otp,
+    String newPassword,
+  ) async {
     state = state.copyWith(status: AuthStatus.loading);
 
     final result = await _resetPasswordUsecase(
-      ResetPasswordParams(
-        email: email,
-        otp: otp,
-        newPassword: newPassword,
-      ),
+      ResetPasswordParams(email: email, otp: otp, newPassword: newPassword),
     );
 
     result.fold(
@@ -256,13 +262,15 @@ class AuthViewModel extends Notifier<AuthState> {
 
       debugPrint('Creating FormData...');
       final formData = FormData();
-      formData.files.add(MapEntry(
-        'profilePicture',
-        await MultipartFile.fromFile(
-          image.path,
-          filename: image.path.split('/').last,
+      formData.files.add(
+        MapEntry(
+          'profilePicture',
+          await MultipartFile.fromFile(
+            image.path,
+            filename: image.path.split('/').last,
+          ),
         ),
-      ));
+      );
       debugPrint('FormData created with ${formData.files.length} files');
 
       debugPrint('Sending upload request...');
@@ -283,14 +291,16 @@ class AuthViewModel extends Notifier<AuthState> {
       final data = response.data;
       if (data['success'] == true && data['data'] != null) {
         final profilePicturePath = data['data']['profilePicture'];
-        debugPrint('Profile picture uploaded successfully: $profilePicturePath');
+        debugPrint(
+          'Profile picture uploaded successfully: $profilePicturePath',
+        );
 
         if (state.user != null) {
-          final updatedUser = state.user!.copyWith(profilePicture: profilePicturePath);
-          final hiveService = ref.read(hiveServiceProvider);
-          await hiveService.saveUser(
-            UserModel.fromEntity(updatedUser, ''),
+          final updatedUser = state.user!.copyWith(
+            profilePicture: profilePicturePath,
           );
+          // Use domain service for storage operations (Clean Architecture compliant)
+          await _userStorageService.saveUser(updatedUser, '');
           // Refresh user from backend to ensure latest info
           await getCurrentUser();
           state = state.copyWith(
@@ -332,8 +342,8 @@ class AuthViewModel extends Notifier<AuthState> {
         "${ApiEndpoints.baseUrl}${ApiEndpoints.userById(userId)}",
         data: {
           'fullName': name,
-          if (phoneNumber != null) 'phoneNumber': phoneNumber,
-          if (preference != null) 'shoppingPreference': preference,
+          'phoneNumber': ?phoneNumber,
+          'shoppingPreference': ?preference,
         },
         options: Options(
           headers: {
@@ -370,7 +380,7 @@ final currentUserProvider = Provider((ref) {
 });
 
 final isAdminProvider = Provider<bool>((ref) {
-  final user = ref.watch(currentUserProvider);  
+  final user = ref.watch(currentUserProvider);
   return user?.isAdmin ?? false;
 });
 

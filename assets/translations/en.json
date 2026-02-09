@@ -236,12 +236,18 @@
   "searchProducts": "Search Products",
   "noProductsFound": "No products found",
   "tryAdjustingSearch": "Try adjusting your search or filters",
+  "tryAdjustingFilters": "Try adjusting your filters",
   "somethingWentWrong": "Something went wrong",
   "category": "Category",
   "priceRange": "Price Range",
   "applyFilters": "Apply Filters",
   "clearFilters": "Clear Filters",
   "tags": "Tags",
-  "reset": "Reset"
+  "reset": "Reset",
+  "filters": "Filters",
+  "clearAll": "Clear All",
+  "products": "Products",
+  "inStock": "In Stock",
+  "outOfStock": "Out of Stock"
 }
 

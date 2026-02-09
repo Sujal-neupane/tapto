@@ -327,7 +327,7 @@ class _OrderAssignmentCardState extends State<_OrderAssignmentCard> {
             data: (drivers) => Column(
               children: [
                 DropdownButtonFormField<String>(
-                  value: selectedDriverId,
+                  initialValue: selectedDriverId,
                   hint: const Text('Select a delivery driver'),
                   decoration: InputDecoration(
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

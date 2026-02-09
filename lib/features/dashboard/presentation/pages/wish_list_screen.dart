@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -21,10 +22,16 @@ class WishlistScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final wishlist = ref.watch(wishlistProvider);
+    final screenSize = MediaQuery.of(context).size;
+    final textScaler = MediaQuery.of(context).textScaler;
+    final isTablet = screenSize.width > 600;
+    final iconSize = min(50.0, screenSize.width * 0.1); // Max 50, or 10% of width
+    final containerSize = min(100.0, screenSize.width * 0.2); // Max 100, or 20% of width
+    final titleFontSize = min(20.0, 18 * textScaler.scale(1.0) * (isTablet ? 1.1 : 1.0));
 
     if (wishlist.isEmpty) {
       return Scaffold(
-        backgroundColor: Colors.grey[50],
+        backgroundColor: Colors.white,
         body: Center(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
@@ -32,24 +39,24 @@ class WishlistScreen extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  width: 100,
-                  height: 100,
+                  width: containerSize,
+                  height: containerSize,
                   decoration: BoxDecoration(
                     color: AppColors.primary.withOpacity(0.1),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.favorite_border,
-                    size: 50,
+                    size: iconSize,
                     color: AppColors.primary,
                   ),
                 ),
                 const SizedBox(height: AppSpacing.xl),
-                const Text(
+                Text(
                   'yourWishlistIsEmpty',
                   style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
+                    fontSize: titleFontSize,
+                    fontWeight: FontWeight.w600,
                     color: AppColors.textPrimary,
                   ),
                 ).tr(),
@@ -58,7 +65,7 @@ class WishlistScreen extends ConsumerWidget {
                   'doubleTapProductsToAdd',
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: min(16.0, 14 * textScaler.scale(1.0)),
                     color: AppColors.textSecondary,
                     height: 1.5,
                   ),
@@ -97,7 +104,7 @@ class WishlistScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: Text('Wishlist (${wishlist.length})'),
         backgroundColor: AppColors.primary,
@@ -315,7 +322,7 @@ class _WishlistItemCard extends ConsumerWidget {
                       Row(
                         children: [
                           Text(
-                            '${ref.watch(currencyFormatterProvider)(product.price)}',
+                            ref.watch(currencyFormatterProvider)(product.price),
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,

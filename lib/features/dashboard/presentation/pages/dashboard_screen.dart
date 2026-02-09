@@ -1,12 +1,13 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:tapto/features/dashboard/presentation/viewmodel/cart_viewmodel.dart';
+import 'package:tapto/features/products/presentation/pages/product_filter_screen.dart';
 import '../../presentation/pages/home_swipe_screen.dart';
 import '../../presentation/pages/wish_list_screen.dart';
 import '../../presentation/pages/profile_screen.dart';
 import '../../presentation/pages/search_screen.dart';
-import '../../presentation/pages/filter_screen.dart';
 import '../../presentation/pages/cart_screen.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
@@ -42,6 +43,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   Widget build(BuildContext context) {
     final cartState = ref.watch(cartViewModelProvider);
     final cartItemCount = cartState.itemCount;
+    final screenSize = MediaQuery.of(context).size;
+    final textScaler = MediaQuery.of(context).textScaler;
+    final isTablet = screenSize.width > 600;
+    final logoSize = min(40.0, screenSize.width * 0.08); // Max 40, or 8% of width
+    final titleFontSize = min(20.0, 18 * textScaler.scale(1.0) * (isTablet ? 1.1 : 1.0));
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -55,8 +61,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             Hero(
               tag: 'app_logo',
               child: Container(
-                width: 36,
-                height: 36,
+                width: logoSize,
+                height: logoSize,
                 decoration: BoxDecoration(
                   color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10),
@@ -64,10 +70,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 child: Image.asset(
                   'assets/images/logo1.png',
                   errorBuilder: (context, error, stackTrace) {
-                    return const Icon(
+                    return Icon(
                       Icons.shopping_bag,
                       color: AppColors.primary,
-                      size: 20,
+                      size: logoSize * 0.55, // Scale icon relative to container
                     );
                   },
                 ),
@@ -77,8 +83,8 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
             Expanded(
               child: Text(
                 _getTitle(),
-                style: const TextStyle(
-                  fontSize: 18,
+                style: TextStyle(
+                  fontSize: titleFontSize,
                   fontWeight: FontWeight.bold,
                   color: Colors.black87,
                 ),
@@ -104,7 +110,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const FilterScreen()),
+                  MaterialPageRoute(builder: (context) => const ProductFilterScreen()),
                 );
               },
             ),
@@ -228,13 +234,21 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final screenSize = MediaQuery.of(context).size;
+    final textScaler = MediaQuery.of(context).textScaler;
+    final isTablet = screenSize.width > 600;
+    final iconSize = min(30.0, 26 * (isTablet ? 1.2 : 1.0));
+    final textSize = min(14.0, 12 * textScaler.scale(1.0) * (isTablet ? 1.1 : 1.0));
+    final paddingVertical = max(8.0, screenSize.height * 0.012); // Min 8, or 1.2% of height
+    final paddingHorizontal = max(10.0, screenSize.width * 0.03); // Min 10, or 3% of width
+
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         behavior: HitTestBehavior.opaque,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: EdgeInsets.symmetric(horizontal: paddingHorizontal, vertical: paddingVertical),
           decoration: BoxDecoration(
             color: isSelected ? AppColors.primary : Colors.transparent,
             borderRadius: BorderRadius.circular(16),
@@ -248,7 +262,7 @@ class _NavItem extends StatelessWidget {
                   Icon(
                     icon,
                     color: isSelected ? Colors.white : Colors.grey[400],
-                    size: 26,
+                    size: iconSize,
                   ),
                   if (badge != null && badge! > 0)
                     Positioned(
@@ -282,7 +296,7 @@ class _NavItem extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: textSize,
                   fontWeight: FontWeight.w600,
                   color: isSelected ? Colors.white : Colors.grey[400],
                 ),

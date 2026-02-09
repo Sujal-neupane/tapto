@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -44,6 +45,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authViewModelProvider);
+    final screenSize = MediaQuery.of(context).size;
+    final textScaler = MediaQuery.of(context).textScaler;
+    final isTablet = screenSize.width > 600;
+    final padding = (screenSize.width * 0.06).toDouble(); // 6% of screen width
+    final logoSize = min(120.0, screenSize.width * 0.25); // Max 120, or 25% of width
+    final buttonHeight = max(48.0, screenSize.height * 0.07); // Min 48, or 7% of height
+    final titleFontSize = min(36.0, 32 * textScaler.scale(1.0) * (isTablet ? 1.2 : 1.0));
+    final subtitleFontSize = min(18.0, 16 * textScaler.scale(1.0));
 
     ref.listen<AuthState>(authViewModelProvider, (previous, next) async {
       if (!mounted) return;
@@ -75,17 +84,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
         child: FadeTransition(
           opacity: _controller,
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(padding),
             child: Form(
               key: _formKey,
               child: Column(
                 children: [
-                  const SizedBox(height: 40),
+                  SizedBox(height: (screenSize.height * 0.05).toDouble()), // 5% of height
                   Hero(
                     tag: 'app_logo',
                     child: Container(
-                      width: 100,
-                      height: 100,
+                      width: logoSize,
+                      height: logoSize,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
@@ -116,7 +125,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                     child: Text(
                       'welcomeBack'.tr(),
                       style: AppTextStyles.heading.copyWith(
-                        fontSize: 32,
+                        fontSize: titleFontSize,
                         fontWeight: FontWeight.w800,
                         color: Colors.white,
                       ),
@@ -125,9 +134,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   const SizedBox(height: 8),
                   Text(
                     'curatedDeals'.tr(),
-                    style: TextStyle(color: Colors.grey[600], fontSize: 16),
+                    style: TextStyle(color: Colors.grey[600], fontSize: subtitleFontSize),
                   ),
-                  const SizedBox(height: 48),
+                  SizedBox(height: (screenSize.height * 0.06).toDouble()), // 6% of height
                   AuthTextField(
                     controller: email,
                     label: 'emailAddress'.tr(),
@@ -175,7 +184,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                   ),
                   const SizedBox(height: 32),
                   Container(
-                    height: 58,
+                    height: buttonHeight,
                     width: double.infinity,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
@@ -234,7 +243,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                             ).tr(),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  SizedBox(height: (screenSize.height * 0.02).toDouble()), // 2% of height
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
@@ -253,7 +262,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
+                  SizedBox(height: (screenSize.height * 0.03).toDouble()), // 3% of height
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [

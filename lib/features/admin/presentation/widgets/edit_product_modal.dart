@@ -43,8 +43,8 @@ class _EditProductModalState extends ConsumerState<EditProductModal> {
   late String _category;
 
   List<String> _existingImages = [];
-  List<String> _imagesToRemove = [];
-  List<XFile> _newImages = [];
+  final List<String> _imagesToRemove = [];
+  final List<XFile> _newImages = [];
   bool _isLoading = false;
 
 
@@ -532,7 +532,7 @@ class _EditProductModalState extends ConsumerState<EditProductModal> {
 
         // Category Dropdown
         DropdownButtonFormField<String>(
-          value: _categories.contains(_category) ? _category : null,
+          initialValue: _categories.contains(_category) ? _category : null,
           decoration: _inputDecoration('Category', Icons.category),
           items: _categories.map((cat) {
             return DropdownMenuItem(value: cat, child: Text(cat));

@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -43,6 +44,12 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> with TickerPr
   @override
   Widget build(BuildContext context) {
     final addressState = ref.watch(addressViewModelProvider);
+    final screenSize = MediaQuery.of(context).size;
+    final textScaler = MediaQuery.of(context).textScaler;
+    final isTablet = screenSize.width > 600;
+    final padding = (screenSize.width * 0.04).toDouble(); // 4% of width
+    final iconSize = min(56.0, screenSize.width * 0.12); // Max 56, or 12% of width
+    final titleFontSize = min(20.0, 16 * textScaler.scale(1.0) * (isTablet ? 1.1 : 1.0));
 
     // Load addresses if not loaded yet
     if (addressState.addresses.isEmpty && !addressState.isLoading) {
@@ -52,7 +59,7 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> with TickerPr
     }
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Colors.white,
       appBar: AppBar(
         title: const Text('My Addresses'),
         backgroundColor: AppColors.primary,
@@ -76,34 +83,34 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> with TickerPr
                 ),
               )
             : addressState.addresses.isEmpty
-                ? _buildEmptyState()
+                ? _buildEmptyState(iconSize, titleFontSize, padding)
                 : _buildAddressesList(addressState),
       ),
     );
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(double iconSize, double titleFontSize, double padding) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(padding),
             decoration: BoxDecoration(
               color: AppColors.primary.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.location_on_outlined,
-              size: 48,
+              size: iconSize,
               color: AppColors.primary,
             ),
           ),
           const SizedBox(height: 24),
-          const Text(
+          Text(
             'No addresses yet',
             style: TextStyle(
-              fontSize: 20,
+              fontSize: titleFontSize,
               fontWeight: FontWeight.w600,
               color: Colors.black87,
             ),
@@ -125,7 +132,7 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> with TickerPr
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              padding: EdgeInsets.symmetric(horizontal: padding * 1.5, vertical: padding * 0.5),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -411,6 +418,7 @@ class _AddressModalState extends State<_AddressModal> with TickerProviderStateMi
           phone: _phoneController.text.trim(),
           street: _streetController.text.trim(),
           city: _cityController.text.trim(),
+          addressState: _stateController.text.trim(),
           zipCode: _zipController.text.trim(),
           country: _countryController.text.trim(),
           isDefault: _isDefault,
@@ -534,7 +542,7 @@ class _AddressModalState extends State<_AddressModal> with TickerProviderStateMi
                                 icon: Icons.map_outlined,
                                 label: 'State',
                                 controller: _stateController,
-                                hint: 'State (optional)',
+                                hint: 'State',
                               ),
                             ),
                           ],

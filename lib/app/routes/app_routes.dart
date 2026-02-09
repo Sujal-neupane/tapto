@@ -4,7 +4,6 @@ import 'package:tapto/features/auth/presentation/pages/forgot_password_screen.da
 import 'package:tapto/features/dashboard/presentation/pages/cart_screen.dart';
 import 'package:tapto/features/dashboard/presentation/pages/checkout_screen.dart';
 import 'package:tapto/features/dashboard/presentation/pages/dashboard_screen.dart';
-import 'package:tapto/features/dashboard/presentation/pages/filter_screen.dart';
 import 'package:tapto/features/dashboard/presentation/pages/setting_screen.dart';
 import 'package:tapto/features/onboarding/presentation/pages/onboarding_screen.dart';
 import 'package:tapto/features/dashboard/presentation/pages/search_screen.dart';
@@ -13,6 +12,8 @@ import 'package:tapto/features/orders/presentation/pages/my_orders_screen.dart';
 import 'package:tapto/features/splash/presentation/pages/splash_screen.dart';
 import 'package:tapto/features/auth/presentation/pages/login_screen.dart';
 import 'package:tapto/features/dashboard/presentation/pages/wish_list_screen.dart';
+
+import '../../features/products/presentation/pages/product_filter_screen.dart';
 
 /// Centralized route definitions for the application
 class AppRoutes {
@@ -43,7 +44,7 @@ class AppRoutes {
     dashboard: (context) => const DashboardScreen(),
     onboarding: (context) => const OnboardingScreen(),
     forgotPassword: (context) => const ForgotPasswordScreen(),
-    filter: (context) => const FilterScreen(),
+    filter: (context) => const ProductFilterScreen(),
     search: (context) => const SearchScreen(),
     cart: (context) => const CartScreen(),
     wishlist: (context) => const WishlistScreen(),

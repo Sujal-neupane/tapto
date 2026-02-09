@@ -20,28 +20,22 @@ class ThemeNotifier extends StateNotifier<ThemeMode> {
     final newMode = state == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
     state = newMode;
     final isDarkMode = newMode == ThemeMode.dark;
-    print('🌙 Dark Mode Toggled: $isDarkMode');
     SharedPreferences.getInstance().then((prefs) {
       prefs.setBool('isDarkMode', isDarkMode);
-      print('✅ Dark Mode Saved: $isDarkMode');
     });
   }
 
   void setLight() {
     state = ThemeMode.light;
-    print('🌙 Dark Mode Set to Light');
     SharedPreferences.getInstance().then((prefs) {
       prefs.setBool('isDarkMode', false);
-      print('✅ Dark Mode Saved: false');
     });
   }
 
   void setDark() {
     state = ThemeMode.dark;
-    print('🌙 Dark Mode Set to Dark');
     SharedPreferences.getInstance().then((prefs) {
       prefs.setBool('isDarkMode', true);
-      print('✅ Dark Mode Saved: true');
     });
   }
 }

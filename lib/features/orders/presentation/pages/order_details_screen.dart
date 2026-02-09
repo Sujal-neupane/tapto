@@ -518,7 +518,7 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
                       ),
                     ),
                     Text(
-                      '${currencyFormatter(item.price * item.quantity)}',
+                      currencyFormatter(item.price * item.quantity),
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,

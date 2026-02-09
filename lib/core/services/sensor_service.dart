@@ -48,7 +48,7 @@ class SensorService {
   bool _isListening = false;
   bool _isNearFace = false; // Track proximity state
   DeviceOrientation _currentOrientation = DeviceOrientation.portrait;
-  LightLevel _currentLightLevel = LightLevel.normal;
+  final LightLevel _currentLightLevel = LightLevel.normal;
 
   /// Stream of shake directions
   Stream<ShakeDirection> get shakeStream => _shakeController.stream;
