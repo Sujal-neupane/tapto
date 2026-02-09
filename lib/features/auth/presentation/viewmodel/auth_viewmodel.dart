@@ -15,6 +15,7 @@ import 'package:tapto/features/auth/domain/usecases/reset_password_usecase.dart'
 import 'package:tapto/features/auth/domain/usecases/auth_params.dart';
 import 'package:tapto/features/auth/presentation/state/auth_state.dart';
 import 'package:tapto/features/auth/domain/services/user_storage_service.dart'; // <-- ADDED: Domain service for storage
+import 'package:tapto/features/dashboard/presentation/viewmodel/cart_viewmodel.dart';
 
 final authViewModelProvider = NotifierProvider<AuthViewModel, AuthState>(
   AuthViewModel.new,
@@ -112,6 +113,13 @@ class AuthViewModel extends Notifier<AuthState> {
     if (state.status == AuthStatus.authenticated && state.user != null) {
       await _userStorageService.saveUser(state.user!, password);
       await _userStorageService.setCurrentUser(state.user!);
+
+      // Sync local cart to server after login
+      try {
+        await ref.read(cartViewModelProvider.notifier).loadCart();
+      } catch (e) {
+        // Cart sync failure shouldn't block login
+      }
 
       // Fetch complete user data including preference from backend in background
       try {

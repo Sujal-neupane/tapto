@@ -3,9 +3,9 @@ import 'dart:math';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tapto/core/api/api_endpoint.dart';
 import 'package:tapto/core/providers/app_providers.dart';
 import 'package:tapto/core/utils/image_utils.dart';
+import 'package:tapto/core/widgets/cached_image.dart';
 import 'package:tapto/core/services/sensor_service.dart';
 import 'package:tapto/features/dashboard/data/models/cart_item_model.dart';
 import 'package:tapto/features/dashboard/presentation/pages/product_details_screen.dart';
@@ -34,7 +34,8 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
   StreamSubscription<bool>? _proximitySubscription;
   StreamSubscription<DeviceOrientation>? _orientationSubscription;
   bool _shakeEnabled = true; // Toggle for shake gestures
-  bool _isPausedByProximity = false; // Track if browsing is paused due to proximity
+  bool _isPausedByProximity =
+      false; // Track if browsing is paused due to proximity
   DeviceOrientation _currentOrientation = DeviceOrientation.portrait;
 
   @override
@@ -64,7 +65,8 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
     super.dispose();
   }
 
-  String Function(double) get currencyFormatter => ref.watch(currencyFormatterProvider);
+  String Function(double) get currencyFormatter =>
+      ref.watch(currencyFormatterProvider);
 
   void _resetDrag() {
     setState(() => _dragOffset = Offset.zero);
@@ -98,7 +100,10 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
       setState(() => _isPausedByProximity = isNearFace);
 
       if (isNearFace) {
-        _showShakeFeedback('Phone detected on table - browsing paused', Colors.blue);
+        _showShakeFeedback(
+          'Phone detected on table - browsing paused',
+          Colors.blue,
+        );
       } else {
         _showShakeFeedback('Browsing resumed', Colors.green);
       }
@@ -109,9 +114,10 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
     final sensorService = ref.read(sensorServiceProvider);
     sensorService.startListening(); // Ensure sensors are started
 
-    _orientationSubscription = sensorService.orientationStream.listen((orientation) {
+    _orientationSubscription = sensorService.orientationStream.listen((
+      orientation,
+    ) {
       setState(() => _currentOrientation = orientation);
-      debugPrint('📱 Device orientation changed to: $orientation');
     });
   }
 
@@ -120,7 +126,7 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
     // Don't handle shake gestures if disabled or if browsing is paused by proximity
     if (!_shakeEnabled || _isPausedByProximity) return;
 
-    final productsAsync = ref.watch(userProductsProvider);
+    final productsAsync = ref.read(userProductsProvider);
 
     productsAsync.whenData((products) {
       if (products.isEmpty || _currentIndex >= products.length) return;
@@ -154,11 +160,7 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
       SnackBar(
         content: Row(
           children: [
-            Icon(
-              Icons.info_outline,
-              color: Colors.white,
-              size: 20,
-            ),
+            Icon(Icons.info_outline, color: Colors.white, size: 20),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -174,9 +176,7 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
         backgroundColor: color,
         duration: const Duration(milliseconds: 800),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         margin: const EdgeInsets.all(16),
       ),
     );
@@ -184,16 +184,13 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
 
   /// Swipe to next product
   void _swipeToNext() {
-    final productsAsync = ref.watch(userProductsProvider);
+    final productsAsync = ref.read(userProductsProvider);
 
     productsAsync.whenData((products) {
-      if (_currentIndex < products.length - 1) {
-        setState(() => _currentIndex++);
-      } else {
-        // Reset to first product or show completion message
-        setState(() => _currentIndex = 0);
-        _showShakeFeedback('Reached end of products!', Colors.blue);
-      }
+      setState(() {
+        _currentIndex++;
+        _dragOffset = Offset.zero;
+      });
     });
   }
 
@@ -224,11 +221,7 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
       SnackBar(
         content: Row(
           children: [
-            Icon(
-              Icons.shopping_cart,
-              color: Colors.white,
-              size: 20,
-            ),
+            Icon(Icons.shopping_cart, color: Colors.white, size: 20),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
@@ -244,28 +237,24 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
         behavior: SnackBarBehavior.floating,
         duration: const Duration(milliseconds: 1500),
         backgroundColor: AppColors.success,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(8),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         margin: const EdgeInsets.all(16),
       ),
     );
   }
 
   void _addToWishlist(ProductModel product) {
-    final isInWishlist = ref.read(wishlistProvider).any((p) => p.id == product.id);
-    
+    final isInWishlist = ref
+        .read(wishlistProvider)
+        .any((p) => p.id == product.id);
+
     if (isInWishlist) {
       ref.read(wishlistProvider.notifier).removeFromWishlist(product.id);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
             children: [
-              Icon(
-                Icons.favorite_border,
-                color: Colors.white,
-                size: 20,
-              ),
+              Icon(Icons.favorite_border, color: Colors.white, size: 20),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -281,9 +270,7 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
           behavior: SnackBarBehavior.floating,
           duration: const Duration(milliseconds: 1500),
           backgroundColor: Colors.grey,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -293,11 +280,7 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
         SnackBar(
           content: Row(
             children: [
-              Icon(
-                Icons.favorite,
-                color: Colors.white,
-                size: 20,
-              ),
+              Icon(Icons.favorite, color: Colors.white, size: 20),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -313,9 +296,7 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
           behavior: SnackBarBehavior.floating,
           duration: const Duration(milliseconds: 1500),
           backgroundColor: AppColors.secondary,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
           margin: const EdgeInsets.all(16),
         ),
       );
@@ -408,8 +389,14 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
     final screenSize = MediaQuery.of(context).size;
     final textScaler = MediaQuery.of(context).textScaler;
     final isTablet = screenSize.width > 600;
-    final iconSize = min(48.0, screenSize.width * 0.1); // Max 48, or 10% of width
-    final titleFontSize = min(18.0, 16 * textScaler.scale(1.0) * (isTablet ? 1.1 : 1.0));
+    final iconSize = min(
+      48.0,
+      screenSize.width * 0.1,
+    ); // Max 48, or 10% of width
+    final titleFontSize = min(
+      18.0,
+      16 * textScaler.scale(1.0) * (isTablet ? 1.1 : 1.0),
+    );
 
     return Container(
       color: Colors.white,
@@ -420,7 +407,11 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.error_outline, size: iconSize, color: Colors.red.shade300),
+                Icon(
+                  Icons.error_outline,
+                  size: iconSize,
+                  color: Colors.red.shade300,
+                ),
                 const SizedBox(height: AppSpacing.md),
                 Text(
                   'failedToLoadProducts'.tr(),
@@ -576,7 +567,10 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
     }
   }
 
-  Widget _buildPortraitDeck(List<ProductModel> products, List<ProductModel> visible) {
+  Widget _buildPortraitDeck(
+    List<ProductModel> products,
+    List<ProductModel> visible,
+  ) {
     return Scaffold(
       backgroundColor: Colors.transparent,
       floatingActionButton: FloatingActionButton(
@@ -610,8 +604,12 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
                         product: visible.first,
                       )
                     : null,
-                onDoubleTap: !_isPausedByProximity ? () => _addToWishlist(visible[i]) : null,
-                onSwipeUp: !_isPausedByProximity ? () => _showDetails(visible[i]) : null,
+                onDoubleTap: !_isPausedByProximity
+                    ? () => _addToWishlist(visible[i])
+                    : null,
+                onSwipeUp: !_isPausedByProximity
+                    ? () => _showDetails(visible[i])
+                    : null,
               ),
             ),
 
@@ -686,7 +684,10 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
     );
   }
 
-  Widget _buildLandscapeDeck(List<ProductModel> products, List<ProductModel> visible) {
+  Widget _buildLandscapeDeck(
+    List<ProductModel> products,
+    List<ProductModel> visible,
+  ) {
     return Scaffold(
       backgroundColor: Colors.transparent,
       floatingActionButton: FloatingActionButton(
@@ -714,23 +715,40 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
                       ),
                       margin: const EdgeInsets.all(8),
                       child: _SwipeCard(
-                        product: visible.isNotEmpty ? visible[0] : products[_currentIndex],
+                        product: visible.isNotEmpty
+                            ? visible[0]
+                            : products[_currentIndex],
                         depth: 0,
                         isTop: true,
                         dragOffset: _dragOffset,
                         getImageUrl: _getImageUrl,
                         currencyFormatter: currencyFormatter,
                         onPanUpdate: !_isPausedByProximity
-                            ? (details) => setState(() => _dragOffset += details.delta)
+                            ? (details) =>
+                                  setState(() => _dragOffset += details.delta)
                             : null,
                         onPanEnd: !_isPausedByProximity
                             ? (details) => _handleSwipe(
                                 offset: _dragOffset,
-                                product: visible.isNotEmpty ? visible[0] : products[_currentIndex],
+                                product: visible.isNotEmpty
+                                    ? visible[0]
+                                    : products[_currentIndex],
                               )
                             : null,
-                        onDoubleTap: !_isPausedByProximity ? () => _addToWishlist(visible.isNotEmpty ? visible[0] : products[_currentIndex]) : null,
-                        onSwipeUp: !_isPausedByProximity ? () => _showDetails(visible.isNotEmpty ? visible[0] : products[_currentIndex]) : null,
+                        onDoubleTap: !_isPausedByProximity
+                            ? () => _addToWishlist(
+                                visible.isNotEmpty
+                                    ? visible[0]
+                                    : products[_currentIndex],
+                              )
+                            : null,
+                        onSwipeUp: !_isPausedByProximity
+                            ? () => _showDetails(
+                                visible.isNotEmpty
+                                    ? visible[0]
+                                    : products[_currentIndex],
+                              )
+                            : null,
                       ),
                     ),
                   ),
@@ -881,13 +899,12 @@ class _SwipeCard extends StatelessWidget {
                   ClipRRect(
                     borderRadius: BorderRadius.circular(22),
                     child: imageUrl.isNotEmpty
-                        ? Image.network(
-                            imageUrl,
+                        ? AppCachedImage(
+                            imageUrl: imageUrl,
                             width: double.infinity,
                             height: 220,
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) =>
-                                _buildImagePlaceholder(),
+                            errorWidget: _buildImagePlaceholder(),
                           )
                         : _buildImagePlaceholder(),
                   ),

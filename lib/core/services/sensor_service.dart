@@ -4,25 +4,16 @@ import 'package:sensors_plus/sensors_plus.dart';
 import 'package:flutter/foundation.dart';
 
 /// Types of shake gestures
-enum ShakeDirection {
-  left,
-  right,
-  none,
-}
+enum ShakeDirection { left, right, none }
 
 /// Types of device orientation
-enum DeviceOrientation {
-  portrait,
-  landscape,
-  faceUp,
-  faceDown,
-}
+enum DeviceOrientation { portrait, landscape, faceUp, faceDown }
 
 /// Types of ambient light levels
 enum LightLevel {
-  dark,      // Low light, suggest dark theme
-  normal,    // Normal lighting
-  bright,    // Bright light, suggest light theme
+  dark, // Low light, suggest dark theme
+  normal, // Normal lighting
+  bright, // Bright light, suggest light theme
 }
 
 /// Sensor service for handling device sensors
@@ -30,14 +21,21 @@ class SensorService {
   static const double SHAKE_THRESHOLD = 15.0; // m/s²
   static const double DIRECTION_THRESHOLD = 5.0; // m/s²
   static const Duration SHAKE_COOLDOWN = Duration(milliseconds: 500);
-  static const double PROXIMITY_THRESHOLD = 2.0; // Acceleration threshold for proximity detection
-  static const double LIGHT_DARK_THRESHOLD = 10.0; // Lux threshold for dark mode
-  static const double LIGHT_BRIGHT_THRESHOLD = 1000.0; // Lux threshold for bright light
+  static const double PROXIMITY_THRESHOLD =
+      2.0; // Acceleration threshold for proximity detection
+  static const double LIGHT_DARK_THRESHOLD =
+      10.0; // Lux threshold for dark mode
+  static const double LIGHT_BRIGHT_THRESHOLD =
+      1000.0; // Lux threshold for bright light
 
-  final StreamController<ShakeDirection> _shakeController = StreamController<ShakeDirection>.broadcast();
-  final StreamController<bool> _proximityController = StreamController<bool>.broadcast();
-  final StreamController<DeviceOrientation> _orientationController = StreamController<DeviceOrientation>.broadcast();
-  final StreamController<LightLevel> _lightLevelController = StreamController<LightLevel>.broadcast();
+  final StreamController<ShakeDirection> _shakeController =
+      StreamController<ShakeDirection>.broadcast();
+  final StreamController<bool> _proximityController =
+      StreamController<bool>.broadcast();
+  final StreamController<DeviceOrientation> _orientationController =
+      StreamController<DeviceOrientation>.broadcast();
+  final StreamController<LightLevel> _lightLevelController =
+      StreamController<LightLevel>.broadcast();
 
   StreamSubscription<AccelerometerEvent>? _accelerometerSubscription;
   StreamSubscription<UserAccelerometerEvent>? _userAccelerometerSubscription;
@@ -57,7 +55,8 @@ class SensorService {
   Stream<bool> get proximityStream => _proximityController.stream;
 
   /// Stream of device orientation changes
-  Stream<DeviceOrientation> get orientationStream => _orientationController.stream;
+  Stream<DeviceOrientation> get orientationStream =>
+      _orientationController.stream;
 
   /// Stream of ambient light level changes
   Stream<LightLevel> get lightLevelStream => _lightLevelController.stream;
@@ -70,16 +69,22 @@ class SensorService {
     debugPrint('🎯 SensorService: Starting sensor listening');
 
     // Listen to accelerometer for shake detection
-    _accelerometerSubscription = accelerometerEventStream().listen(_onAccelerometerEvent);
+    _accelerometerSubscription = accelerometerEventStream().listen(
+      _onAccelerometerEvent,
+    );
 
     // Listen to user accelerometer (removes gravity) for better shake detection
-    _userAccelerometerSubscription = userAccelerometerEventStream().listen(_onUserAccelerometerEvent);
+    _userAccelerometerSubscription = userAccelerometerEventStream().listen(
+      _onUserAccelerometerEvent,
+    );
 
     // Listen to gyroscope for orientation detection
     _gyroscopeSubscription = gyroscopeEventStream().listen(_onGyroscopeEvent);
 
     // Listen to magnetometer for compass data
-    _magnetometerSubscription = magnetometerEventStream().listen(_onMagnetometerEvent);
+    _magnetometerSubscription = magnetometerEventStream().listen(
+      _onMagnetometerEvent,
+    );
   }
 
   /// Stop listening to sensors
@@ -101,32 +106,37 @@ class SensorService {
 
   /// Handle accelerometer events for shake detection and proximity
   void _onAccelerometerEvent(AccelerometerEvent event) {
-    debugPrint('📱 Accel: x=${event.x.toStringAsFixed(2)}, y=${event.y.toStringAsFixed(2)}, z=${event.z.toStringAsFixed(2)}');
     final now = DateTime.now();
 
     // Detect device orientation
     _detectOrientation(event);
 
     // Calculate acceleration magnitude (excluding gravity)
-    final magnitude = sqrt(event.x * event.x + event.y * event.y + event.z * event.z) - 9.8;
+    final magnitude =
+        sqrt(event.x * event.x + event.y * event.y + event.z * event.z) - 9.8;
 
     // Improved proximity detection: detect when phone is face up on table (idle detection)
     // Face up: z < 0.0 (negative z), very stable, minimal movement
     final isVeryStable = magnitude < 10.0; // Very relaxed threshold
     final isFaceUp = event.z < 0.0; // Negative z means face up
-    final hasLowMovement = event.x.abs() < 10.0 && event.y.abs() < 10.0; // Very relaxed threshold
+    final hasLowMovement =
+        event.x.abs() < 10.0 && event.y.abs() < 10.0; // Very relaxed threshold
 
     final isNearFace = isVeryStable && isFaceUp && hasLowMovement;
 
     // Debug: print values
     if (isNearFace != _isNearFace) {
-      debugPrint('📱 Proximity change: stable=$isVeryStable, faceUp=$isFaceUp, lowMove=$hasLowMovement, z=${event.z}, mag=$magnitude');
+      debugPrint(
+        '📱 Proximity change: stable=$isVeryStable, faceUp=$isFaceUp, lowMove=$hasLowMovement, z=${event.z}, mag=$magnitude',
+      );
     }
 
     if (isNearFace != _isNearFace) {
       _isNearFace = isNearFace;
       _proximityController.add(_isNearFace);
-      debugPrint('📱 Proximity: ${_isNearFace ? "NEAR FACE (Call detected)" : "FAR FROM FACE"}');
+      debugPrint(
+        '📱 Proximity: ${_isNearFace ? "NEAR FACE (Call detected)" : "FAR FROM FACE"}',
+      );
     }
 
     // Shake detection with cooldown
@@ -191,7 +201,8 @@ class SensorService {
 
     DeviceOrientation newOrientation;
 
-    if (absZ > 8.0) { // Device is roughly flat
+    if (absZ > 8.0) {
+      // Device is roughly flat
       if (absX > absY) {
         newOrientation = DeviceOrientation.landscape;
       } else {

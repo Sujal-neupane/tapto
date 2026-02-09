@@ -13,39 +13,45 @@ class HiveService {
   static const String _ordersBoxName = 'orders';
   static const String _orderCacheBoxName = 'order_cache';
   static const String _generalBoxName = 'general';
+  static const String _productsBoxName = 'products';
+  static const String _productCacheBoxName = 'product_cache';
 
   // Boxes
   Box<UserModel>? _userBox;
   Box? _ordersBox;
   Box? _orderCacheBox;
   Box? _generalBox;
+  Box? _productsBox;
+  Box? _productCacheBox;
 
   bool _isInitialized = false;
 
   /// Initialize Hive and register adapters
-// In HiveService
-Future<void> init({bool useFlutter = true, String? testPath}) async {
-  if (_isInitialized) return;
-  
-  if (useFlutter) {
-    await Hive.initFlutter();
-  } else if (testPath != null) {
-    Hive.init(testPath);
+  // In HiveService
+  Future<void> init({bool useFlutter = true, String? testPath}) async {
+    if (_isInitialized) return;
+
+    if (useFlutter) {
+      await Hive.initFlutter();
+    } else if (testPath != null) {
+      Hive.init(testPath);
+    }
+
+    // Register UserModel adapter (generated from user_model.g.dart)
+    if (!Hive.isAdapterRegistered(0)) {
+      Hive.registerAdapter(UserModelAdapter());
+    }
+
+    // Open boxes
+    _userBox = await Hive.openBox<UserModel>(_userBoxName);
+    _ordersBox = await Hive.openBox(_ordersBoxName);
+    _orderCacheBox = await Hive.openBox(_orderCacheBoxName);
+    _generalBox = await Hive.openBox(_generalBoxName);
+    _productsBox = await Hive.openBox(_productsBoxName);
+    _productCacheBox = await Hive.openBox(_productCacheBoxName);
+
+    _isInitialized = true;
   }
-
-  // Register UserModel adapter (generated from user_model.g.dart)
-  if (!Hive.isAdapterRegistered(0)) {
-    Hive.registerAdapter(UserModelAdapter());
-  }
-
-  // Open boxes
-  _userBox = await Hive.openBox<UserModel>(_userBoxName);
-  _ordersBox = await Hive.openBox(_ordersBoxName);
-  _orderCacheBox = await Hive.openBox(_orderCacheBoxName);
-  _generalBox = await Hive.openBox(_generalBoxName);
-
-  _isInitialized = true;
-}
 
   /// Ensure initialization before operations
   Future<void> _ensureInitialized() async {
@@ -53,8 +59,6 @@ Future<void> init({bool useFlutter = true, String? testPath}) async {
       await init();
     }
   }
-
- 
 
   /// Save a new user
   Future<void> saveUser(UserModel user) async {
@@ -136,10 +140,10 @@ Future<void> init({bool useFlutter = true, String? testPath}) async {
   List<Map<String, dynamic>>? getOrders() {
     try {
       if (_ordersBox == null) return null;
-      
+
       final orders = _ordersBox!.get('my_orders');
       if (orders == null) return null;
-      
+
       return List<Map<String, dynamic>>.from(orders);
     } catch (e) {
       throw Exception('Failed to get cached orders: $e');
@@ -160,7 +164,7 @@ Future<void> init({bool useFlutter = true, String? testPath}) async {
   Map<String, dynamic>? getOrder(String orderId) {
     try {
       if (_ordersBox == null) return null;
-      
+
       final order = _ordersBox!.get('order_$orderId');
       return order != null ? Map<String, dynamic>.from(order) : null;
     } catch (e) {
@@ -169,7 +173,10 @@ Future<void> init({bool useFlutter = true, String? testPath}) async {
   }
 
   /// Save tracking data
-  Future<void> saveTracking(String orderId, Map<String, dynamic> tracking) async {
+  Future<void> saveTracking(
+    String orderId,
+    Map<String, dynamic> tracking,
+  ) async {
     await _ensureInitialized();
     try {
       await _ordersBox!.put('tracking_$orderId', tracking);
@@ -182,7 +189,7 @@ Future<void> init({bool useFlutter = true, String? testPath}) async {
   Map<String, dynamic>? getTracking(String orderId) {
     try {
       if (_ordersBox == null) return null;
-      
+
       final tracking = _ordersBox!.get('tracking_$orderId');
       return tracking != null ? Map<String, dynamic>.from(tracking) : null;
     } catch (e) {
@@ -205,7 +212,7 @@ Future<void> init({bool useFlutter = true, String? testPath}) async {
   bool isOrderCacheValid({int maxAgeInMinutes = 30}) {
     try {
       if (_orderCacheBox == null) return false;
-      
+
       final lastSync = _orderCacheBox!.get('last_sync');
       if (lastSync == null) return false;
 
@@ -215,6 +222,91 @@ Future<void> init({bool useFlutter = true, String? testPath}) async {
       return difference.inMinutes < maxAgeInMinutes;
     } catch (e) {
       return false;
+    }
+  }
+
+  // ========================================
+  // PRODUCT METHODS
+  // ========================================
+
+  /// Save products list with a cache key (e.g. 'user_products', 'admin_products')
+  Future<void> saveProducts(
+    String cacheKey,
+    List<Map<String, dynamic>> products,
+  ) async {
+    await _ensureInitialized();
+    try {
+      await _productsBox!.put(cacheKey, products);
+      await _productCacheBox!.put(
+        '${cacheKey}_last_sync',
+        DateTime.now().toIso8601String(),
+      );
+    } catch (e) {
+      throw Exception('Failed to cache products: $e');
+    }
+  }
+
+  /// Deep cast helper for Hive maps
+  Map<String, dynamic> _deepCastMap(dynamic item) {
+    if (item is Map<String, dynamic>) return item;
+    if (item is Map) {
+      return item.map((key, value) {
+        if (value is Map) {
+          return MapEntry(key.toString(), _deepCastMap(value));
+        } else if (value is List) {
+          return MapEntry(
+            key.toString(),
+            value.map((e) => e is Map ? _deepCastMap(e) : e).toList(),
+          );
+        }
+        return MapEntry(key.toString(), value);
+      });
+    }
+    return {};
+  }
+
+  /// Get cached products by cache key
+  List<Map<String, dynamic>>? getProducts(String cacheKey) {
+    try {
+      if (_productsBox == null) return null;
+
+      final products = _productsBox!.get(cacheKey);
+      if (products == null) return null;
+
+      return List<Map<String, dynamic>>.from(
+        (products as List).map((e) => _deepCastMap(e)),
+      );
+    } catch (e) {
+      print('Error reading cached products for $cacheKey: $e');
+      return null;
+    }
+  }
+
+  /// Check if product cache is valid
+  bool isProductCacheValid(String cacheKey, {int maxAgeInMinutes = 30}) {
+    try {
+      if (_productCacheBox == null) return false;
+
+      final lastSync = _productCacheBox!.get('${cacheKey}_last_sync');
+      if (lastSync == null) return false;
+
+      final lastSyncTime = DateTime.parse(lastSync);
+      final difference = DateTime.now().difference(lastSyncTime);
+
+      return difference.inMinutes < maxAgeInMinutes;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Clear all product cache
+  Future<void> clearProducts() async {
+    await _ensureInitialized();
+    try {
+      await _productsBox!.clear();
+      await _productCacheBox!.clear();
+    } catch (e) {
+      throw Exception('Failed to clear product cache: $e');
     }
   }
 
@@ -261,6 +353,8 @@ Future<void> init({bool useFlutter = true, String? testPath}) async {
     await _userBox?.close();
     await _ordersBox?.close();
     await _orderCacheBox?.close();
+    await _productsBox?.close();
+    await _productCacheBox?.close();
     await _generalBox?.close();
   }
 
@@ -270,6 +364,8 @@ Future<void> init({bool useFlutter = true, String? testPath}) async {
     await _userBox?.clear();
     await _ordersBox?.clear();
     await _orderCacheBox?.clear();
+    await _productsBox?.clear();
+    await _productCacheBox?.clear();
     await _generalBox?.clear();
   }
 }

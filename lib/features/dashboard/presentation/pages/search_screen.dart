@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/core/api/api_endpoint.dart';
 import 'package:tapto/core/utils/currency_formatter.dart';
+import 'package:tapto/core/widgets/cached_image.dart';
 import 'package:tapto/features/dashboard/presentation/pages/product_details_screen.dart';
 import 'package:tapto/features/dashboard/presentation/provider/wishlist_provider.dart';
 import 'package:tapto/features/products/data/models/product_model.dart';
@@ -27,7 +28,8 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     super.dispose();
   }
 
-  String Function(double) get currencyFormatter => ref.watch(currencyFormatterProvider);
+  String Function(double) get currencyFormatter =>
+      ref.watch(currencyFormatterProvider);
 
   String _getImageUrl(String path) {
     if (path.startsWith('http')) return path;
@@ -70,7 +72,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: AppColors.primary,
-              borderRadius: const BorderRadius.vertical(bottom: Radius.circular(24)),
+              borderRadius: const BorderRadius.vertical(
+                bottom: Radius.circular(24),
+              ),
             ),
             child: TextField(
               controller: _searchController,
@@ -112,21 +116,31 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                     if (filters.category != null)
                       _FilterChip(
                         label: filters.category!,
-                        onRemove: () => ref.read(searchFiltersProvider.notifier).setCategory(null),
+                        onRemove: () => ref
+                            .read(searchFiltersProvider.notifier)
+                            .setCategory(null),
                       ),
                     if (filters.minPrice != null || filters.maxPrice != null)
                       _FilterChip(
-                        label: '\$${filters.minPrice?.toInt() ?? 0} - \$${filters.maxPrice?.toInt() ?? '∞'}',
-                        onRemove: () => ref.read(searchFiltersProvider.notifier).setPriceRange(null, null),
+                        label:
+                            '\$${filters.minPrice?.toInt() ?? 0} - \$${filters.maxPrice?.toInt() ?? '∞'}',
+                        onRemove: () => ref
+                            .read(searchFiltersProvider.notifier)
+                            .setPriceRange(null, null),
                       ),
                     if (filters.tags != null && filters.tags!.isNotEmpty)
-                      ...filters.tags!.map((tag) => _FilterChip(
-                            label: tag,
-                            onRemove: () {
-                              final newTags = List<String>.from(filters.tags!)..remove(tag);
-                              ref.read(searchFiltersProvider.notifier).setTags(newTags.isEmpty ? null : newTags);
-                            },
-                          )),
+                      ...filters.tags!.map(
+                        (tag) => _FilterChip(
+                          label: tag,
+                          onRemove: () {
+                            final newTags = List<String>.from(filters.tags!)
+                              ..remove(tag);
+                            ref
+                                .read(searchFiltersProvider.notifier)
+                                .setTags(newTags.isEmpty ? null : newTags);
+                          },
+                        ),
+                      ),
                   ],
                 ),
               ),
@@ -243,7 +257,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         final product = products[index];
         return _ProductCard(
           product: product,
-          imageUrl: product.images.isNotEmpty ? _getImageUrl(product.images.first) : '',
+          imageUrl: product.images.isNotEmpty
+              ? _getImageUrl(product.images.first)
+              : '',
           onTap: () {
             final allImageUrls = product.images
                 .map((img) => _getImageUrl(img))
@@ -254,7 +270,9 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                 builder: (_) => ProductDetailsScreen(
                   productId: product.id,
                   productName: product.name,
-                  productImage: product.images.isNotEmpty ? _getImageUrl(product.images.first) : '',
+                  productImage: product.images.isNotEmpty
+                      ? _getImageUrl(product.images.first)
+                      : '',
                   productImages: allImageUrls,
                   price: product.price,
                   description: product.description,
@@ -266,15 +284,23 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
           },
           onFavorite: () {
             ref.read(wishlistProvider.notifier).toggleWishlist(product);
-            final isNowInWishlist = ref.read(wishlistProvider).any((p) => p.id == product.id);
+            final isNowInWishlist = ref
+                .read(wishlistProvider)
+                .any((p) => p.id == product.id);
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text(isNowInWishlist ? 'Added to wishlist' : 'Removed from wishlist'),
+                content: Text(
+                  isNowInWishlist
+                      ? 'Added to wishlist'
+                      : 'Removed from wishlist',
+                ),
                 duration: const Duration(seconds: 1),
               ),
             );
           },
-          isInWishlist: ref.watch(wishlistProvider).any((p) => p.id == product.id),
+          isInWishlist: ref
+              .watch(wishlistProvider)
+              .any((p) => p.id == product.id),
           currencyFormatter: currencyFormatter,
         );
       },
@@ -371,17 +397,15 @@ class _ProductCard extends StatelessWidget {
             Stack(
               children: [
                 ClipRRect(
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(16),
+                  ),
                   child: Container(
                     height: 140,
                     width: double.infinity,
                     color: Colors.grey[200],
                     child: imageUrl.isNotEmpty
-                        ? Image.network(
-                            imageUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => Icon(Icons.image, color: Colors.grey[400]),
-                          )
+                        ? AppCachedImage(imageUrl: imageUrl, fit: BoxFit.cover)
                         : Icon(Icons.image, color: Colors.grey[400]),
                   ),
                 ),
@@ -415,14 +439,21 @@ class _ProductCard extends StatelessWidget {
                     top: 8,
                     left: 8,
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.red,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         '-${product.discount!.toInt()}%',
-                        style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -436,7 +467,10 @@ class _ProductCard extends StatelessWidget {
                 children: [
                   Text(
                     product.name,
-                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 14,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -480,10 +514,7 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
     super.initState();
     final filters = ref.read(searchFiltersProvider);
     _selectedCategory = filters.category;
-    _priceRange = RangeValues(
-      filters.minPrice ?? 0,
-      filters.maxPrice ?? 1000,
-    );
+    _priceRange = RangeValues(filters.minPrice ?? 0, filters.maxPrice ?? 1000);
   }
 
   @override
@@ -515,7 +546,10 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
           const SizedBox(height: 24),
 
           // Category Filter
-          const Text('category', style: TextStyle(fontWeight: FontWeight.w600)).tr(),
+          const Text(
+            'category',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ).tr(),
           const SizedBox(height: 12),
           Wrap(
             spacing: 8,
@@ -525,17 +559,24 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
                 label: Text(category),
                 selected: isSelected,
                 onSelected: (selected) {
-                  setState(() => _selectedCategory = selected ? category : null);
+                  setState(
+                    () => _selectedCategory = selected ? category : null,
+                  );
                 },
                 selectedColor: AppColors.primary,
-                labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.black),
+                labelStyle: TextStyle(
+                  color: isSelected ? Colors.white : Colors.black,
+                ),
               );
             }).toList(),
           ),
           const SizedBox(height: 24),
 
           // Price Range Filter
-          const Text('priceRange', style: TextStyle(fontWeight: FontWeight.w600)).tr(),
+          const Text(
+            'priceRange',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ).tr(),
           const SizedBox(height: 12),
           RangeSlider(
             values: _priceRange,
@@ -576,7 +617,9 @@ class _FilterSheetState extends ConsumerState<_FilterSheet> {
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
               child: const Text('applyFilters').tr(),
             ),

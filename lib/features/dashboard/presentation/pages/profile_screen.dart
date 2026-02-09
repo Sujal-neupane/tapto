@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:tapto/core/providers/currency_provider.dart';
 import 'package:tapto/core/utils/localization.dart';
@@ -377,7 +378,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           backgroundImage:
                               profileImageUrl != null &&
                                   profileImageUrl.isNotEmpty
-                              ? NetworkImage(
+                              ? CachedNetworkImageProvider(
                                   ImageUtils.getImageUrl(profileImageUrl),
                                 )
                               : null,

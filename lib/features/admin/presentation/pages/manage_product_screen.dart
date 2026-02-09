@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/core/api/api_endpoint.dart';
+import 'package:tapto/core/widgets/cached_image.dart';
 import 'package:tapto/features/admin/presentation/widgets/add_product_modal.dart';
 import 'package:tapto/features/admin/presentation/widgets/edit_product_modal.dart';
 import 'package:tapto/features/products/data/models/product_model.dart';
@@ -10,7 +11,8 @@ class ManageProductsScreen extends ConsumerStatefulWidget {
   const ManageProductsScreen({super.key});
 
   @override
-  ConsumerState<ManageProductsScreen> createState() => _ManageProductsScreenState();
+  ConsumerState<ManageProductsScreen> createState() =>
+      _ManageProductsScreenState();
 }
 
 class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
@@ -72,11 +74,17 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
     );
 
     if (confirmed == true) {
-      final success = await ref.read(productOperationProvider.notifier).deleteProduct(product.id);
+      final success = await ref
+          .read(productOperationProvider.notifier)
+          .deleteProduct(product.id);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(success ? 'Product deleted successfully' : 'Failed to delete product'),
+            content: Text(
+              success
+                  ? 'Product deleted successfully'
+                  : 'Failed to delete product',
+            ),
             backgroundColor: success ? Colors.green : Colors.red,
           ),
         );
@@ -125,7 +133,8 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
             // Search Bar
             TextField(
               controller: _searchController,
-              onChanged: (value) => setState(() => _searchQuery = value.toLowerCase()),
+              onChanged: (value) =>
+                  setState(() => _searchQuery = value.toLowerCase()),
               decoration: InputDecoration(
                 hintText: 'Search products...',
                 prefixIcon: const Icon(Icons.search),
@@ -165,11 +174,20 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey[400]),
+                          Icon(
+                            Icons.inventory_2_outlined,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
                           const SizedBox(height: 16),
                           Text(
-                            products.isEmpty ? 'No products yet' : 'No matching products',
-                            style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+                            products.isEmpty
+                                ? 'No products yet'
+                                : 'No matching products',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.grey[600],
+                            ),
                           ),
                           const SizedBox(height: 8),
                           if (products.isEmpty)
@@ -184,17 +202,19 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
                   }
 
                   return GridView.builder(
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,
-                      childAspectRatio: 0.65,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                    ),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 4,
+                          childAspectRatio: 0.65,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                        ),
                     itemCount: filteredProducts.length,
                     itemBuilder: (context, index) {
                       return _ProductCard(
                         product: filteredProducts[index],
-                        onEdit: () => _showEditProductModal(filteredProducts[index]),
+                        onEdit: () =>
+                            _showEditProductModal(filteredProducts[index]),
                         onDelete: () => _deleteProduct(filteredProducts[index]),
                       );
                     },
@@ -205,7 +225,11 @@ class _ManageProductsScreenState extends ConsumerState<ManageProductsScreen> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+                      Icon(
+                        Icons.error_outline,
+                        size: 64,
+                        color: Colors.red[300],
+                      ),
                       const SizedBox(height: 16),
                       Text(
                         'Failed to load products',
@@ -260,10 +284,7 @@ class _ProductCard extends StatelessWidget {
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-          ),
+          BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10),
         ],
       ),
       child: Column(
@@ -274,18 +295,26 @@ class _ProductCard extends StatelessWidget {
             height: 120,
             decoration: BoxDecoration(
               color: Colors.grey[200],
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(12),
+              ),
             ),
             child: product.images.isNotEmpty
                 ? ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                    child: Image.network(
-                      _getImageUrl(product.images.first),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(12),
+                    ),
+                    child: AppCachedImage(
+                      imageUrl: _getImageUrl(product.images.first),
                       width: double.infinity,
                       height: 120,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Center(
-                        child: Icon(Icons.image, size: 48, color: Colors.grey[400]),
+                      errorWidget: Center(
+                        child: Icon(
+                          Icons.image,
+                          size: 48,
+                          color: Colors.grey[400],
+                        ),
                       ),
                     ),
                   )
@@ -313,10 +342,7 @@ class _ProductCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     product.category,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                   const Spacer(),
                   Row(
@@ -334,7 +360,9 @@ class _ProductCard extends StatelessWidget {
                         'Stock: ${product.stock}',
                         style: TextStyle(
                           fontSize: 11,
-                          color: product.stock > 0 ? Colors.grey[600] : Colors.red,
+                          color: product.stock > 0
+                              ? Colors.grey[600]
+                              : Colors.red,
                         ),
                       ),
                     ],
@@ -348,7 +376,10 @@ class _ProductCard extends StatelessWidget {
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 4),
                           ),
-                          child: const Text('Edit', style: TextStyle(fontSize: 11)),
+                          child: const Text(
+                            'Edit',
+                            style: TextStyle(fontSize: 11),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 4),
@@ -360,7 +391,10 @@ class _ProductCard extends StatelessWidget {
                             foregroundColor: Colors.white,
                             padding: const EdgeInsets.symmetric(vertical: 4),
                           ),
-                          child: const Text('Delete', style: TextStyle(fontSize: 11)),
+                          child: const Text(
+                            'Delete',
+                            style: TextStyle(fontSize: 11),
+                          ),
                         ),
                       ),
                     ],

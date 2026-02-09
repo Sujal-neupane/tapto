@@ -7,6 +7,7 @@ import 'package:tapto/core/api/api_endpoint.dart';
 import 'package:tapto/core/services/storage/storage_provider.dart';
 import 'package:tapto/app/theme/app_colors.dart';
 import 'package:tapto/app/theme/app_spacing.dart';
+import 'package:tapto/core/widgets/cached_image.dart';
 import 'package:tapto/features/products/data/models/product_model.dart';
 import 'package:tapto/features/products/presentation/providers/product_providers.dart';
 
@@ -20,16 +21,16 @@ class EditProductModal extends ConsumerStatefulWidget {
 }
 
 class _EditProductModalState extends ConsumerState<EditProductModal> {
-    static const _menCategories = [
-      'T-Shirts',
-      'Shirts',
-      'Jeans',
-      'Trousers',
-      'Shoes',
-      'Formal Wear',
-      'Jackets',
-      'Accessories',
-    ];
+  static const _menCategories = [
+    'T-Shirts',
+    'Shirts',
+    'Jeans',
+    'Trousers',
+    'Shoes',
+    'Formal Wear',
+    'Jackets',
+    'Accessories',
+  ];
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
@@ -46,7 +47,6 @@ class _EditProductModalState extends ConsumerState<EditProductModal> {
   final List<String> _imagesToRemove = [];
   final List<XFile> _newImages = [];
   bool _isLoading = false;
-
 
   static const _womenCategories = [
     'Dresses',
@@ -338,10 +338,10 @@ class _EditProductModalState extends ConsumerState<EditProductModal> {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        child: Image.network(
-                          _getImageUrl(image),
+                        child: AppCachedImage(
+                          imageUrl: _getImageUrl(image),
                           fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const Icon(Icons.error),
+                          errorWidget: const Icon(Icons.error),
                         ),
                       ),
                     ),
@@ -543,7 +543,6 @@ class _EditProductModalState extends ConsumerState<EditProductModal> {
       ],
     );
   }
-
 
   Widget _buildVariantsSection() {
     return Column(

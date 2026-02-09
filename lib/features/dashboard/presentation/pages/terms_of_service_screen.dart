@@ -12,8 +12,6 @@ class TermsOfServiceScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
-    final textScaler = MediaQuery.of(context).textScaler;
-    final isTablet = screenSize.width > 600;
     final padding = (screenSize.width * 0.05).toDouble();
 
     return Scaffold(
