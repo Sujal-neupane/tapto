@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
@@ -13,10 +14,10 @@ class ProductViewModel extends StateNotifier<AsyncValue<List<ProductEntity>>> {
   ProductViewModel() : super(const AsyncValue.loading());
 }
 
-
-final productViewModelProvider = StateNotifierProvider<ProductViewModel, AsyncValue<List<ProductEntity>>>(
-  (ref) => throw UnimplementedError(), // Provide your repository here
-);
+final productViewModelProvider =
+    StateNotifierProvider<ProductViewModel, AsyncValue<List<ProductEntity>>>(
+      (ref) => throw UnimplementedError(), // Provide your repository here
+    );
 
 class ProductListScreen extends ConsumerWidget {
   const ProductListScreen({super.key});
@@ -50,7 +51,8 @@ class ProductListScreen extends ConsumerWidget {
         ],
       ),
       body: productState.when(
-        data: (products) => _buildProductList(products, filters, currencyFormatter),
+        data: (products) =>
+            _buildProductList(products, filters, currencyFormatter),
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, st) => Center(child: Text('${'error'.tr()}: $e')),
       ),
@@ -64,7 +66,11 @@ class ProductListScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildProductList(List<ProductEntity> products, SearchFilters filters, String Function(double) currencyFormatter) {
+  Widget _buildProductList(
+    List<ProductEntity> products,
+    SearchFilters filters,
+    String Function(double) currencyFormatter,
+  ) {
     // Apply filters
     final filteredProducts = _filterProducts(products, filters);
 
@@ -73,26 +79,16 @@ class ProductListScreen extends ConsumerWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              Icons.search_off,
-              size: 64,
-              color: Colors.grey.shade400,
-            ),
+            Icon(Icons.search_off, size: 64, color: Colors.grey.shade400),
             const SizedBox(height: 16),
             Text(
               'noProductsFound'.tr(),
-              style: const TextStyle(
-                fontSize: 18,
-                color: Colors.grey,
-              ),
+              style: const TextStyle(fontSize: 18, color: Colors.grey),
             ),
             const SizedBox(height: 8),
             Text(
               'tryAdjustingFilters'.tr(),
-              style: const TextStyle(
-                fontSize: 14,
-                color: Colors.grey,
-              ),
+              style: const TextStyle(fontSize: 14, color: Colors.grey),
               textAlign: TextAlign.center,
             ),
           ],
@@ -120,7 +116,7 @@ class ProductListScreen extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(8),
                 image: product.images.isNotEmpty
                     ? DecorationImage(
-                        image: NetworkImage(product.images.first),
+                        image: CachedNetworkImageProvider(product.images.first),
                         fit: BoxFit.cover,
                       )
                     : null,
@@ -132,10 +128,7 @@ class ProductListScreen extends ConsumerWidget {
             ),
             title: Text(
               product.name,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
             subtitle: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -143,10 +136,7 @@ class ProductListScreen extends ConsumerWidget {
                 const SizedBox(height: 4),
                 Text(
                   product.category,
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
-                  ),
+                  style: const TextStyle(color: Colors.grey, fontSize: 14),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -162,13 +152,17 @@ class ProductListScreen extends ConsumerWidget {
             trailing: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: product.stock > 0 ? Colors.green.shade100 : Colors.red.shade100,
+                color: product.stock > 0
+                    ? Colors.green.shade100
+                    : Colors.red.shade100,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
                 product.stock > 0 ? 'inStock'.tr() : 'outOfStock'.tr(),
                 style: TextStyle(
-                  color: product.stock > 0 ? Colors.green.shade800 : Colors.red.shade800,
+                  color: product.stock > 0
+                      ? Colors.green.shade800
+                      : Colors.red.shade800,
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
@@ -183,7 +177,10 @@ class ProductListScreen extends ConsumerWidget {
     );
   }
 
-  List<ProductEntity> _filterProducts(List<ProductEntity> products, SearchFilters filters) {
+  List<ProductEntity> _filterProducts(
+    List<ProductEntity> products,
+    SearchFilters filters,
+  ) {
     return products.where((product) {
       // Filter by search query
       if (filters.query.isNotEmpty) {
@@ -218,9 +215,11 @@ class ProductListScreen extends ConsumerWidget {
         ];
 
         // Check if product has any of the selected tags
-        final hasMatchingTag = filters.tags!.any((filterTag) =>
-            productTags.any((productTag) =>
-                productTag.toLowerCase() == filterTag.toLowerCase()));
+        final hasMatchingTag = filters.tags!.any(
+          (filterTag) => productTags.any(
+            (productTag) => productTag.toLowerCase() == filterTag.toLowerCase(),
+          ),
+        );
 
         if (!hasMatchingTag) {
           return false;

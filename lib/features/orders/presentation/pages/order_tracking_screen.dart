@@ -131,8 +131,6 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
-    final textScaler = MediaQuery.of(context).textScaler;
-    final isTablet = screenSize.width > 600;
     final iconSize = min(60.0, screenSize.width * 0.12); // Max 60, or 12% of width
 
     if (isLoading) {

@@ -12,13 +12,15 @@ import 'package:tapto/features/orders/domain/enitites/order_entity.dart';
 import 'package:tapto/features/products/presentation/providers/product_providers.dart';
 import 'package:tapto/features/products/data/models/product_model.dart';
 import 'package:tapto/core/api/api_endpoint.dart';
+import 'package:tapto/core/widgets/cached_image.dart';
 import 'package:tapto/features/admin/presentation/pages/assign_delivery_screen.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
 
   @override
-  ConsumerState<AdminDashboardScreen> createState() => _AdminDashboardScreenState();
+  ConsumerState<AdminDashboardScreen> createState() =>
+      _AdminDashboardScreenState();
 }
 
 class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
@@ -44,8 +46,14 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(_fadeController);
-    _slideAnimation = Tween<Offset>(begin: const Offset(0.0, 0.1), end: Offset.zero).animate(_slideController);
+    _fadeAnimation = Tween<double>(
+      begin: 0.0,
+      end: 1.0,
+    ).animate(_fadeController);
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0.0, 0.1),
+      end: Offset.zero,
+    ).animate(_slideController);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(adminViewModelProvider.notifier).fetchDashboardData();
@@ -80,22 +88,22 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
               child: adminState.isLoading
                   ? _buildLoadingState()
                   : adminState.error != null
-                      ? _buildErrorState(adminState.error!)
-                      : FadeTransition(
-                          opacity: _fadeAnimation,
-                          child: SlideTransition(
-                            position: _slideAnimation,
-                            child: TabBarView(
-                              controller: _tabController,
-                              children: [
-                                _buildDashboardTab(adminState),
-                                _buildOrdersTab(adminState),
-                                _buildProductsTab(),
-                                const AssignDeliveryScreen(),
-                              ],
-                            ),
-                          ),
+                  ? _buildErrorState(adminState.error!)
+                  : FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: SlideTransition(
+                        position: _slideAnimation,
+                        child: TabBarView(
+                          controller: _tabController,
+                          children: [
+                            _buildDashboardTab(adminState),
+                            _buildOrdersTab(adminState),
+                            _buildProductsTab(),
+                            const AssignDeliveryScreen(),
+                          ],
                         ),
+                      ),
+                    ),
             ),
           ],
         ),
@@ -118,7 +126,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
     );
   }
 
-
   Widget _buildAppBar(String userName) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
@@ -140,7 +147,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
             children: [
               CircleAvatar(
                 backgroundColor: Colors.white.withOpacity(0.2),
-                child: const Icon(Icons.admin_panel_settings_rounded, color: Colors.white),
+                child: const Icon(
+                  Icons.admin_panel_settings_rounded,
+                  color: Colors.white,
+                ),
               ),
               const SizedBox(width: 12),
               Column(
@@ -210,8 +220,14 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
         tabs: const [
           Tab(icon: Icon(Icons.dashboard_rounded, size: 22), text: 'OVERVIEW'),
           Tab(icon: Icon(Icons.receipt_long_rounded, size: 22), text: 'ORDERS'),
-          Tab(icon: Icon(Icons.inventory_2_rounded, size: 22), text: 'PRODUCTS'),
-          Tab(icon: Icon(Icons.local_shipping_rounded, size: 22), text: 'ASSIGN DELIVERY'),
+          Tab(
+            icon: Icon(Icons.inventory_2_rounded, size: 22),
+            text: 'PRODUCTS',
+          ),
+          Tab(
+            icon: Icon(Icons.local_shipping_rounded, size: 22),
+            text: 'ASSIGN DELIVERY',
+          ),
         ],
       ),
     );
@@ -255,7 +271,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.analytics_outlined, color: AppColors.primary, size: 20),
+              child: const Icon(
+                Icons.analytics_outlined,
+                color: AppColors.primary,
+                size: 20,
+              ),
             ),
             const SizedBox(width: 12),
             const Text(
@@ -331,7 +351,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
                 color: Colors.green.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.account_balance_wallet_outlined, color: Colors.green, size: 20),
+              child: const Icon(
+                Icons.account_balance_wallet_outlined,
+                color: Colors.green,
+                size: 20,
+              ),
             ),
             const SizedBox(width: 12),
             const Text(
@@ -388,7 +412,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.history_rounded, color: AppColors.primary, size: 20),
+                  child: const Icon(
+                    Icons.history_rounded,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 const Text(
@@ -404,9 +432,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
               },
               icon: const Icon(Icons.arrow_forward, size: 16),
               label: const Text('View All'),
-              style: TextButton.styleFrom(
-                foregroundColor: AppColors.primary,
-              ),
+              style: TextButton.styleFrom(foregroundColor: AppColors.primary),
             ),
           ],
         ),
@@ -456,7 +482,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
 
   Widget _buildProductsTab() {
     final productsAsync = ref.watch(adminProductsProvider);
-    
+
     return RefreshIndicator(
       onRefresh: () async {
         HapticFeedback.mediumImpact();
@@ -469,7 +495,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.inventory_2_outlined, size: 64, color: Colors.grey[400]),
+                  Icon(
+                    Icons.inventory_2_outlined,
+                    size: 64,
+                    color: Colors.grey[400],
+                  ),
                   const SizedBox(height: 16),
                   Text(
                     'No products yet',
@@ -485,7 +515,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
               ),
             );
           }
-          
+
           return Padding(
             padding: const EdgeInsets.all(16),
             child: GridView.builder(
@@ -510,7 +540,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
             children: [
               Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
               const SizedBox(height: 16),
-              Text('Failed to load products', style: TextStyle(color: Colors.grey[600])),
+              Text(
+                'Failed to load products',
+                style: TextStyle(color: Colors.grey[600]),
+              ),
               const SizedBox(height: 8),
               ElevatedButton.icon(
                 onPressed: () => ref.invalidate(adminProductsProvider),
@@ -546,24 +579,34 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
             height: 100,
             decoration: BoxDecoration(
               color: Colors.grey[200],
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(12),
+              ),
             ),
             child: product.images.isNotEmpty
                 ? ClipRRect(
-                    borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                    child: Image.network(
-                      getImageUrl(product.images.first),
+                    borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(12),
+                    ),
+                    child: AppCachedImage(
+                      imageUrl: getImageUrl(product.images.first),
                       width: double.infinity,
                       height: 100,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Center(
-                        child: Icon(Icons.image, size: 40, color: Colors.grey[400]),
+                      errorWidget: Center(
+                        child: Icon(
+                          Icons.image,
+                          size: 40,
+                          color: Colors.grey[400],
+                        ),
                       ),
                     ),
                   )
-                : Center(child: Icon(Icons.image, size: 40, color: Colors.grey[400])),
+                : Center(
+                    child: Icon(Icons.image, size: 40, color: Colors.grey[400]),
+                  ),
           ),
-          
+
           Expanded(
             child: Padding(
               padding: const EdgeInsets.all(10),
@@ -572,7 +615,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
                 children: [
                   Text(
                     product.name,
-                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -597,7 +643,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
                         'Stock: ${product.stock}',
                         style: TextStyle(
                           fontSize: 10,
-                          color: product.stock > 0 ? Colors.grey[600] : Colors.red,
+                          color: product.stock > 0
+                              ? Colors.grey[600]
+                              : Colors.red,
                         ),
                       ),
                     ],
@@ -683,7 +731,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
         ref.invalidate(adminProductsProvider);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Product deleted'), backgroundColor: Colors.green),
+            const SnackBar(
+              content: Text('Product deleted'),
+              backgroundColor: Colors.green,
+            ),
           );
         }
       } catch (e) {
@@ -695,10 +746,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
       }
     }
   }
-
-  
-
-
 
   Widget _buildLoadingState() {
     return Center(
@@ -736,7 +783,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
                 color: Colors.red.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.error_outline_rounded, size: 64, color: Colors.red),
+              child: const Icon(
+                Icons.error_outline_rounded,
+                size: 64,
+                color: Colors.red,
+              ),
             ),
             const SizedBox(height: 20),
             const Text(
@@ -760,8 +811,13 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
                 elevation: 0,
               ),
             ),
@@ -789,7 +845,11 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
             const SizedBox(height: 24),
             Text(
               message,
-              style: TextStyle(fontSize: 18, color: Colors.grey[600], fontWeight: FontWeight.w500),
+              style: TextStyle(
+                fontSize: 18,
+                color: Colors.grey[600],
+                fontWeight: FontWeight.w500,
+              ),
               textAlign: TextAlign.center,
             ),
           ],
@@ -810,7 +870,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
             Text('Logout'),
           ],
         ),
-        content: const Text('Are you sure you want to logout from admin panel?'),
+        content: const Text(
+          'Are you sure you want to logout from admin panel?',
+        ),
         actions: [
           TextButton(
             onPressed: () {
@@ -831,7 +893,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: const Text('Logout'),
           ),
@@ -869,7 +933,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
             ),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             margin: const EdgeInsets.all(16),
           ),
         );
@@ -888,7 +954,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
             ),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
             margin: const EdgeInsets.all(16),
           ),
         );
@@ -953,7 +1021,10 @@ class _StatCard extends StatelessWidget {
               ),
               if (showTrend)
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.2),
                     borderRadius: BorderRadius.circular(12),
@@ -962,7 +1033,9 @@ class _StatCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
-                        isPositive ? Icons.arrow_upward_rounded : Icons.arrow_downward_rounded,
+                        isPositive
+                            ? Icons.arrow_upward_rounded
+                            : Icons.arrow_downward_rounded,
                         size: 12,
                         color: Colors.white,
                       ),
@@ -1048,7 +1121,10 @@ class _RevenueCard extends StatelessWidget {
             children: [
               Icon(icon, color: Colors.white, size: 32),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
                   borderRadius: BorderRadius.circular(12),
@@ -1129,10 +1205,7 @@ class _UserStatBubble extends StatelessWidget {
         const SizedBox(height: 2),
         Text(
           label,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.white.withOpacity(0.9),
-          ),
+          style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.9)),
         ),
       ],
     );
@@ -1144,10 +1217,7 @@ class _OrderListItem extends StatelessWidget {
   final OrderEntity order;
   final VoidCallback onTap;
 
-  const _OrderListItem({
-    required this.order,
-    required this.onTap,
-  });
+  const _OrderListItem({required this.order, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -1205,7 +1275,11 @@ class _OrderListItem extends StatelessWidget {
                 color: statusColor.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(Icons.receipt_long_rounded, color: statusColor, size: 22),
+              child: Icon(
+                Icons.receipt_long_rounded,
+                color: statusColor,
+                size: 22,
+              ),
             ),
             const SizedBox(width: 14),
             Expanded(
@@ -1222,10 +1296,7 @@ class _OrderListItem extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     DateFormat('MMM dd, yyyy').format(order.createdAt),
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.grey[600],
-                    ),
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                   ),
                 ],
               ),
@@ -1243,7 +1314,10 @@ class _OrderListItem extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: statusColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(12),
@@ -1344,17 +1418,19 @@ class _OrderCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        DateFormat('MMM dd, yyyy • hh:mm a').format(order.createdAt),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
+                        DateFormat(
+                          'MMM dd, yyyy • hh:mm a',
+                        ).format(order.createdAt),
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                       ),
                     ],
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: statusColor.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
@@ -1377,7 +1453,10 @@ class _OrderCard extends StatelessWidget {
               children: [
                 Icon(Icons.person_outline, size: 16, color: Colors.grey[600]),
                 const SizedBox(width: 8),
-                Text(order.shippingAddress.fullName, style: const TextStyle(fontSize: 13)),
+                Text(
+                  order.shippingAddress.fullName,
+                  style: const TextStyle(fontSize: 13),
+                ),
               ],
             ),
             const SizedBox(height: 8),
@@ -1385,7 +1464,10 @@ class _OrderCard extends StatelessWidget {
               children: [
                 Icon(Icons.phone_outlined, size: 16, color: Colors.grey[600]),
                 const SizedBox(width: 8),
-                Text(order.shippingAddress.phone, style: const TextStyle(fontSize: 13)),
+                Text(
+                  order.shippingAddress.phone,
+                  style: const TextStyle(fontSize: 13),
+                ),
               ],
             ),
             const SizedBox(height: 12),
@@ -1403,10 +1485,7 @@ class _OrderCard extends StatelessWidget {
               children: [
                 const Text(
                   'Total Amount',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                 ),
                 Text(
                   '\$${order.total.toStringAsFixed(2)}',
@@ -1446,7 +1525,7 @@ class _OrderCard extends StatelessWidget {
       'outForDelivery',
       'delivered',
       'cancelled',
-      'refunded'
+      'refunded',
     ];
     showDialog(
       context: context,
@@ -1503,10 +1582,7 @@ class _OrderDetailsSheet extends StatelessWidget {
                 children: [
                   const Text(
                     'Order Details',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   IconButton(
                     icon: const Icon(Icons.close),
@@ -1523,42 +1599,66 @@ class _OrderDetailsSheet extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    _DetailRow('Order ID', '#${order.id.substring(order.id.length - 8)}'),
-                    _DetailRow('Date', DateFormat('MMM dd, yyyy • hh:mm a').format(order.createdAt)),
+                    _DetailRow(
+                      'Order ID',
+                      '#${order.id.substring(order.id.length - 8)}',
+                    ),
+                    _DetailRow(
+                      'Date',
+                      DateFormat(
+                        'MMM dd, yyyy • hh:mm a',
+                      ).format(order.createdAt),
+                    ),
                     _DetailRow('Status', order.status.name.toUpperCase()),
                     const SizedBox(height: 16),
                     const Divider(),
                     const SizedBox(height: 16),
                     const Text(
                       'Shipping Address',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(order.shippingAddress.fullName),
                     Text(order.shippingAddress.phone),
                     Text(order.shippingAddress.street),
-                    Text('${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.zipCode}'),
+                    Text(
+                      '${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.zipCode}',
+                    ),
                     const SizedBox(height: 16),
                     const Divider(),
                     const SizedBox(height: 16),
                     Text(
                       'Items (${order.items.length})',
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 8),
-                    ...order.items.map((item) => Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(child: Text('${item.quantity}x ${item.productName}')),
-                              Text(
-                                '\$${(item.price * item.quantity).toStringAsFixed(2)}',
-                                style: const TextStyle(fontWeight: FontWeight.w500),
+                    ...order.items.map(
+                      (item) => Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                '${item.quantity}x ${item.productName}',
                               ),
-                            ],
-                          ),
-                        )),
+                            ),
+                            Text(
+                              '\$${(item.price * item.quantity).toStringAsFixed(2)}',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 16),
                     const Divider(),
                     const SizedBox(height: 16),
@@ -1573,7 +1673,10 @@ class _OrderDetailsSheet extends StatelessWidget {
                       children: [
                         const Text(
                           'Total',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         Text(
                           '\$${order.total.toStringAsFixed(2)}',
@@ -1610,19 +1713,10 @@ class _DetailRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
-          ),
+          Text(label, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
           Text(
             value,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
           ),
         ],
       ),
@@ -1644,13 +1738,7 @@ class _PriceRow extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.grey[600],
-            ),
-          ),
+          Text(label, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
           Text(
             '\$${amount.toStringAsFixed(2)}',
             style: const TextStyle(

@@ -24,13 +24,14 @@ class UserModelAdapter extends TypeAdapter<UserModel> {
       preference: fields[4] as String?,
       isAdmin: fields[5] as bool,
       country: fields[6] as String?,
+      profilePicture: fields[7] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, UserModel obj) {
     writer
-      ..writeByte(7)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.id)
       ..writeByte(1)
@@ -44,7 +45,9 @@ class UserModelAdapter extends TypeAdapter<UserModel> {
       ..writeByte(5)
       ..write(obj.isAdmin)
       ..writeByte(6)
-      ..write(obj.country);
+      ..write(obj.country)
+      ..writeByte(7)
+      ..write(obj.profilePicture);
   }
 
   @override

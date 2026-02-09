@@ -27,6 +27,9 @@ class UserModel extends HiveObject {
   @HiveField(6)
   final String? country;
 
+  @HiveField(7)
+  final String? profilePicture;
+
   UserModel({
     required this.id,
     required this.name,
@@ -35,11 +38,12 @@ class UserModel extends HiveObject {
     this.preference,
     this.isAdmin = false,
     this.country = 'United States',
+    this.profilePicture,
   });
 
   /// Convert to domain entity
   User toEntity() {
-    return User(id: id, name: name, email: email, preference: preference, isAdmin: isAdmin, country: country);
+    return User(id: id, name: name, email: email, preference: preference, profilePicture: profilePicture, isAdmin: isAdmin, country: country);
   }
 
   /// Create from domain entity
@@ -52,6 +56,7 @@ class UserModel extends HiveObject {
       preference: user.preference,
       isAdmin: user.isAdmin,
       country: user.country ?? 'United States',
+      profilePicture: user.profilePicture,
     );
   }
 
@@ -88,6 +93,7 @@ class UserModel extends HiveObject {
     String? preference,
     bool? isAdmin,
     String? country,
+    String? profilePicture,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -97,6 +103,7 @@ class UserModel extends HiveObject {
       preference: preference ?? this.preference,
       isAdmin: isAdmin ?? this.isAdmin,
       country: country ?? this.country,
+      profilePicture: profilePicture ?? this.profilePicture,
     );
   }
 }

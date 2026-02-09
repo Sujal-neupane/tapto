@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:tapto/core/widgets/cached_image.dart';
 import 'package:tapto/features/dashboard/data/models/cart_item_model.dart';
 import 'package:tapto/features/dashboard/presentation/viewmodel/cart_viewmodel.dart';
 import 'package:tapto/core/utils/currency_formatter.dart';
@@ -213,11 +214,12 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen>
                   padding: const EdgeInsets.all(40),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(16),
-                    child: Image.network(
-                      _allImages[index],
+                    child: AppCachedImage(
+                      imageUrl: _allImages[index],
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) =>
-                          _buildImagePlaceholder('imageNotAvailable'.tr()),
+                      errorWidget: _buildImagePlaceholder(
+                        'imageNotAvailable'.tr(),
+                      ),
                     ),
                   ),
                 );

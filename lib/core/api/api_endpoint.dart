@@ -7,7 +7,7 @@ class ApiEndpoints {
 
   static const bool isPhysicalDevice = false;
   static const String compIpAddress =
-      "10.1.1.95"; // Replace with your computer's local IP address
+      "http://localhost4000"; 
 
   static String get baseUrl {
     if (isPhysicalDevice) {
@@ -16,10 +16,10 @@ class ApiEndpoints {
     if (kIsWeb) {
       return 'http://$compIpAddress:4000';
     } else if (Platform.isAndroid) {
-      // Android emulator uses 10.0.2.2 to reach host machine's localhost
+   
       return 'http://10.0.2.2:4000';
     } else if (Platform.isIOS) {
-      // iOS simulator shares the host's network — localhost works
+ 
       return 'http://localhost:4000';
     } else {
       // macOS, Linux, Windows desktop
@@ -74,5 +74,6 @@ class ApiEndpoints {
 
   // Cart Endpoints
   static const String cart = '/api/cart';
+  static const String cartSync = '/api/cart/sync';
   static String cartItemById(String id) => '/api/cart/$id';
 }

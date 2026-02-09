@@ -7,11 +7,11 @@ import 'package:geocoding/geocoding.dart';
 import 'package:tapto/app/theme/app_colors.dart';
 import 'package:tapto/core/providers/currency_provider.dart';
 import 'package:tapto/core/utils/currency_formatter.dart';
+import 'package:tapto/core/widgets/cached_image.dart';
 import 'package:tapto/features/dashboard/presentation/viewmodel/cart_viewmodel.dart';
 import 'package:tapto/features/dashboard/data/models/cart_item_model.dart';
 import 'package:tapto/features/orders/presentation/pages/my_orders_screen.dart';
 import 'package:tapto/features/orders/presentation/viewmodel/order_viewmodel.dart';
-
 import 'package:tapto/core/services/storage/user_session_service.dart';
 import 'package:tapto/features/addresses/presentation/viewmodel/address_viewmodel.dart';
 import 'package:tapto/features/addresses/domain/entities/address_entity.dart';
@@ -563,8 +563,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
         children: [
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
-            child: Image.network(
-              item.productImage,
+            child: AppCachedImage(
+              imageUrl: item.productImage,
               width: 60,
               height: 60,
               fit: BoxFit.cover,
@@ -1669,12 +1669,14 @@ class _AddressSelectionModalState extends ConsumerState<_AddressSelectionModal>
   final _stateController = TextEditingController();
   final _zipCodeController = TextEditingController();
   final _countryController = TextEditingController();
+  bool _isLoadingLocation = false;
+  final int _currentStep = 0; // 0 = contact, 1 = address
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _countryController.text = 'Nepal'; // Default country
+    _countryController.text = 'Nepal';
   }
 
   @override
@@ -1692,6 +1694,7 @@ class _AddressSelectionModalState extends ConsumerState<_AddressSelectionModal>
 
   void _submitManualAddress() {
     if (_formKey.currentState!.validate()) {
+      HapticFeedback.mediumImpact();
       final addressData = {
         'fullName': _fullNameController.text.trim(),
         'phone': _phoneController.text.trim(),
@@ -1706,86 +1709,125 @@ class _AddressSelectionModalState extends ConsumerState<_AddressSelectionModal>
     }
   }
 
+  Future<void> _useCurrentLocation() async {
+    setState(() => _isLoadingLocation = true);
+    try {
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Row(
+                children: [
+                  Icon(Icons.location_off, color: Colors.white, size: 18),
+                  SizedBox(width: 8),
+                  Text('Please enable location services'),
+                ],
+              ),
+              backgroundColor: Colors.orange,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(16),
+            ),
+          );
+        }
+        setState(() => _isLoadingLocation = false);
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+        if (permission == LocationPermission.denied) {
+          setState(() => _isLoadingLocation = false);
+          return;
+        }
+      }
+      if (permission == LocationPermission.deniedForever) {
+        setState(() => _isLoadingLocation = false);
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.high,
+          timeLimit: Duration(seconds: 10),
+        ),
+      );
+
+      final placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        final place = placemarks.first;
+        setState(() {
+          _streetController.text = '';
+          _cityController.text = place.locality ?? place.subAdministrativeArea ?? '';
+          _stateController.text = place.administrativeArea ?? '';
+          _zipCodeController.text = place.postalCode ?? '';
+          _countryController.text = place.country ?? 'Nepal';
+        });
+
+        if (mounted) {
+          HapticFeedback.mediumImpact();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Row(
+                children: [
+                  Icon(Icons.check_circle, color: Colors.white, size: 18),
+                  SizedBox(width: 8),
+                  Text('Location detected! Enter your street address.'),
+                ],
+              ),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              margin: const EdgeInsets.all(16),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to detect location: $e'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoadingLocation = false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final addressState = ref.watch(addressViewModelProvider);
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
 
     return Container(
-      height: MediaQuery.of(context).size.height * 0.85,
+      height: MediaQuery.of(context).size.height * 0.88,
       decoration: const BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: Column(
         children: [
-          // Header
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                // Handle
-                Container(
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[300],
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Select Shipping Address',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                // Tab Bar
-                Container(
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[100],
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: TabBar(
-                    controller: _tabController,
-                    indicator: BoxDecoration(
-                      color: AppColors.primary,
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    labelColor: Colors.white,
-                    unselectedLabelColor: Colors.grey[600],
-                    labelStyle: const TextStyle(fontWeight: FontWeight.w600),
-                    tabs: [
-                      Tab(text: 'Saved Addresses'),
-                      Tab(text: 'Enter Manually'),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Tab Content
+          // ─── Header ───
+          _buildHeader(),
+          // ─── Tab Content ───
           Expanded(
             child: TabBarView(
               controller: _tabController,
               children: [
-                // Saved Addresses Tab
                 _buildSavedAddressesTab(addressState),
-                // Manual Entry Tab
-                _buildManualEntryTab(),
+                _buildManualEntryTab(bottomInset),
               ],
             ),
           ),
@@ -1794,276 +1836,577 @@ class _AddressSelectionModalState extends ConsumerState<_AddressSelectionModal>
     );
   }
 
-  Widget _buildSavedAddressesTab(AddressState addressState) {
-    return addressState.isLoading
-        ? const Center(child: CircularProgressIndicator())
-        : addressState.errorMessage != null
-        ? Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.error_outline, size: 48, color: Colors.red[300]),
-                const SizedBox(height: 16),
-                Text(
-                  'Failed to load addresses',
-                  style: TextStyle(color: Colors.red[600]),
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Drag handle
+          Container(
+            width: 36,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.grey[300],
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 16),
+          // Title row
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      AppColors.primary,
+                      AppColors.primary.withOpacity(0.7),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  addressState.errorMessage!,
-                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                  textAlign: TextAlign.center,
+                child: const Icon(
+                  Icons.location_on_rounded,
+                  color: Colors.white,
+                  size: 22,
                 ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () => ref
-                      .read(addressViewModelProvider.notifier)
-                      .loadUserAddresses(),
-                  child: const Text('Retry'),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Shipping Address',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Where should we deliver your order?',
+                      style: TextStyle(fontSize: 13, color: Colors.grey),
+                    ),
+                  ],
+                ),
+              ),
+              IconButton(
+                onPressed: () => Navigator.of(context).pop(),
+                icon: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: BoxDecoration(
+                    color: Colors.grey[100],
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(Icons.close, size: 18, color: Colors.grey[600]),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Tab bar
+          Container(
+            height: 44,
+            padding: const EdgeInsets.all(3),
+            decoration: BoxDecoration(
+              color: Colors.grey[100],
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicator: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+              ),
+              labelColor: AppColors.primary,
+              unselectedLabelColor: Colors.grey[500],
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
+              unselectedLabelStyle: const TextStyle(
+                fontWeight: FontWeight.w500,
+                fontSize: 13,
+              ),
+              dividerColor: Colors.transparent,
+              tabs: const [
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.bookmark_outline, size: 16),
+                      SizedBox(width: 6),
+                      Text('Saved'),
+                    ],
+                  ),
+                ),
+                Tab(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.edit_location_alt_outlined, size: 16),
+                      SizedBox(width: 6),
+                      Text('New Address'),
+                    ],
+                  ),
                 ),
               ],
             ),
-          )
-        : addressState.addresses.isEmpty
-        ? Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.location_off_outlined,
-                  size: 48,
-                  color: Colors.grey[400],
+          ),
+          const SizedBox(height: 4),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSavedAddressesTab(AddressState addressState) {
+    if (addressState.isLoading) {
+      return const Center(
+        child: CircularProgressIndicator(
+          valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+        ),
+      );
+    }
+
+    if (addressState.errorMessage != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.red.withOpacity(0.1),
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(height: 16),
-                const Text(
-                  'No saved addresses',
-                  style: TextStyle(fontSize: 16, color: Colors.grey),
+                child: Icon(Icons.cloud_off_rounded, size: 40, color: Colors.red[400]),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'Couldn\'t load addresses',
+                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                addressState.errorMessage!,
+                style: TextStyle(color: Colors.grey[500], fontSize: 13),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              OutlinedButton.icon(
+                onPressed: () =>
+                    ref.read(addressViewModelProvider.notifier).loadUserAddresses(),
+                icon: const Icon(Icons.refresh, size: 18),
+                label: const Text('Try Again'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppColors.primary,
+                  side: const BorderSide(color: AppColors.primary),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Add addresses in your profile to use them here',
-                  style: TextStyle(color: Colors.grey, fontSize: 12),
-                  textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    if (addressState.addresses.isEmpty) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withOpacity(0.08),
+                  shape: BoxShape.circle,
                 ),
-                const SizedBox(height: 16),
-                ElevatedButton.icon(
+                child: const Icon(
+                  Icons.add_location_alt_rounded,
+                  size: 44,
+                  color: AppColors.primary,
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                'No saved addresses yet',
+                style: TextStyle(
+                  fontSize: 17,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Add a new address to speed up\nfuture checkouts',
+                style: TextStyle(color: Colors.grey[500], fontSize: 13, height: 1.5),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
                   onPressed: () => _tabController.animateTo(1),
-                  icon: const Icon(Icons.add),
-                  label: const Text('Add Address'),
+                  icon: const Icon(Icons.add_rounded, size: 20),
+                  label: const Text('Add New Address'),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.primary,
                     foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    elevation: 0,
                   ),
                 ),
-              ],
-            ),
-          )
-        : ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: addressState.addresses.length,
-            itemBuilder: (context, index) {
-              final address = addressState.addresses[index];
-              final isSelected = widget.selectedAddress?.id == address.id;
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
-              return Card(
-                margin: const EdgeInsets.only(bottom: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide(
-                    color: isSelected ? AppColors.primary : Colors.transparent,
-                    width: 2,
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+      itemCount: addressState.addresses.length,
+      itemBuilder: (context, index) {
+        final address = addressState.addresses[index];
+        final isSelected = widget.selectedAddress?.id == address.id;
+
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () {
+                HapticFeedback.selectionClick();
+                widget.onAddressSelected(address);
+                Navigator.of(context).pop();
+              },
+              borderRadius: BorderRadius.circular(14),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isSelected
+                      ? AppColors.primary.withOpacity(0.04)
+                      : Colors.grey[50],
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isSelected ? AppColors.primary : Colors.grey[200]!,
+                    width: isSelected ? 2 : 1,
                   ),
                 ),
-                child: InkWell(
-                  onTap: () {
-                    widget.onAddressSelected(address);
-                    Navigator.of(context).pop();
-                  },
-                  borderRadius: BorderRadius.circular(12),
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Icon(
-                              isSelected
-                                  ? Icons.check_circle
-                                  : Icons.radio_button_unchecked,
-                              color: isSelected
-                                  ? AppColors.primary
-                                  : Colors.grey[400],
-                              size: 20,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Text(
-                                address.fullName,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ),
-                            if (address.isDefault)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.primary.withOpacity(0.1),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Radio indicator
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        width: 22,
+                        height: 22,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isSelected ? AppColors.primary : Colors.transparent,
+                          border: Border.all(
+                            color: isSelected ? AppColors.primary : Colors.grey[400]!,
+                            width: 2,
+                          ),
+                        ),
+                        child: isSelected
+                            ? const Icon(Icons.check, color: Colors.white, size: 14)
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    // Address content
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
                                 child: Text(
-                                  'Default',
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w500,
-                                    color: AppColors.primary,
+                                  address.fullName,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 15,
                                   ),
                                 ),
                               ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.phone_outlined,
-                              size: 14,
-                              color: Colors.grey[600],
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              address.phone,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey[700],
+                              if (address.isDefault)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: const Text(
+                                    'Default',
+                                    style: TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              Icon(Icons.phone_outlined, size: 13, color: Colors.grey[500]),
+                              const SizedBox(width: 6),
+                              Text(
+                                address.phone,
+                                style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                               ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Icon(
-                              Icons.location_on_outlined,
-                              size: 14,
-                              color: Colors.grey[600],
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                address.toString(),
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.grey[700],
-                                  height: 1.4,
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.only(top: 2),
+                                child: Icon(Icons.place_outlined, size: 13, color: Colors.grey[500]),
+                              ),
+                              const SizedBox(width: 6),
+                              Expanded(
+                                child: Text(
+                                  '${address.street}, ${address.city}${address.state != null ? ', ${address.state}' : ''} ${address.zipCode}, ${address.country}',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.grey[600],
+                                    height: 1.4,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
-                        ),
-                      ],
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
+                  ],
                 ),
-              );
-            },
-          );
+              ),
+            ),
+          ),
+        );
+      },
+    );
   }
 
-  Widget _buildManualEntryTab() {
+  Widget _buildManualEntryTab(double bottomInset) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.fromLTRB(20, 12, 20, 20 + bottomInset),
       child: Form(
         key: _formKey,
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _ModalAddressFormField(
-              icon: Icons.person_outline,
-              label: 'Full Name',
-              controller: _fullNameController,
-              hint: 'Enter your full name',
-            ),
-            const SizedBox(height: 16),
-            _ModalAddressFormField(
-              icon: Icons.phone_outlined,
-              label: 'Phone Number',
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              hint: 'Enter your phone number',
-            ),
-            const SizedBox(height: 16),
-            _ModalAddressFormField(
-              icon: Icons.location_on_outlined,
-              label: 'Street Address',
-              controller: _streetController,
-              hint: 'Street, building, apartment',
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _ModalAddressFormField(
-                    icon: Icons.location_city_outlined,
-                    label: 'City',
-                    controller: _cityController,
-                    hint: 'City name',
+            // GPS Auto-fill Button
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _isLoadingLocation ? null : _useCurrentLocation,
+                borderRadius: BorderRadius.circular(12),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        AppColors.primary.withOpacity(0.06),
+                        AppColors.primary.withOpacity(0.02),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.primary.withOpacity(0.2),
+                    ),
                   ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _ModalAddressFormField(
-                    icon: Icons.map_outlined,
-                    label: 'State',
-                    controller: _stateController,
-                    hint: 'State/Province',
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppColors.primary.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: _isLoadingLocation
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                                ),
+                              )
+                            : const Icon(Icons.my_location_rounded, size: 18, color: AppColors.primary),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              _isLoadingLocation ? 'Detecting location...' : 'Use Current Location',
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 14,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Auto-fill city, state, and country',
+                              style: TextStyle(fontSize: 11, color: Colors.grey[500]),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey[400]),
+                    ],
                   ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: _ModalAddressFormField(
-                    icon: Icons.pin_drop_outlined,
-                    label: 'ZIP Code',
-                    controller: _zipCodeController,
-                    keyboardType: TextInputType.number,
-                    hint: 'ZIP/Postal code',
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _ModalAddressFormField(
-                    icon: Icons.flag_outlined,
-                    label: 'Country',
-                    controller: _countryController,
-                    hint: 'Country',
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
-            ElevatedButton(
-              onPressed: _submitManualAddress,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
-                'Use This Address',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+            ),
+            const SizedBox(height: 20),
+
+            // ─── Section: Contact Info ───
+            _buildSectionLabel('Contact Information', Icons.person_outline),
+            const SizedBox(height: 12),
+            _StyledAddressField(
+              controller: _fullNameController,
+              label: 'Full Name',
+              hint: 'e.g. Sujal Neupane',
+              icon: Icons.badge_outlined,
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: 12),
+            _StyledAddressField(
+              controller: _phoneController,
+              label: 'Phone Number',
+              hint: '+977 98XXXXXXXX',
+              icon: Icons.phone_outlined,
+              keyboardType: TextInputType.phone,
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: 24),
+
+            // ─── Section: Address ───
+            _buildSectionLabel('Delivery Address', Icons.location_on_outlined),
+            const SizedBox(height: 12),
+            _StyledAddressField(
+              controller: _streetController,
+              label: 'Street / House No.',
+              hint: 'e.g. 123 Main Street',
+              icon: Icons.home_outlined,
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _StyledAddressField(
+                    controller: _cityController,
+                    label: 'City',
+                    hint: 'e.g. Kathmandu',
+                    icon: Icons.location_city_outlined,
+                    textInputAction: TextInputAction.next,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _StyledAddressField(
+                    controller: _stateController,
+                    label: 'State',
+                    hint: 'e.g. Bagmati',
+                    icon: Icons.map_outlined,
+                    textInputAction: TextInputAction.next,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _StyledAddressField(
+                    controller: _zipCodeController,
+                    label: 'ZIP Code',
+                    hint: '44600',
+                    icon: Icons.pin_drop_outlined,
+                    keyboardType: TextInputType.number,
+                    textInputAction: TextInputAction.next,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _StyledAddressField(
+                    controller: _countryController,
+                    label: 'Country',
+                    hint: 'Nepal',
+                    icon: Icons.flag_outlined,
+                    textInputAction: TextInputAction.done,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 28),
+
+            // Submit button
+            SizedBox(
+              width: double.infinity,
+              height: 54,
+              child: ElevatedButton(
+                onPressed: _submitManualAddress,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  elevation: 0,
+                ),
+                child: const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.check_circle_outline_rounded, size: 20),
+                    SizedBox(width: 8),
+                    Text(
+                      'Use This Address',
+                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 16),
@@ -2072,21 +2415,46 @@ class _AddressSelectionModalState extends ConsumerState<_AddressSelectionModal>
       ),
     );
   }
+
+  Widget _buildSectionLabel(String title, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: AppColors.primary),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: AppColors.primary,
+            letterSpacing: 0.3,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Container(height: 1, color: Colors.grey[200]),
+        ),
+      ],
+    );
+  }
 }
 
-class _ModalAddressFormField extends StatelessWidget {
-  final IconData icon;
-  final String label;
+/// Modern styled form field for the address modal
+class _StyledAddressField extends StatelessWidget {
   final TextEditingController controller;
-  final TextInputType? keyboardType;
+  final String label;
   final String? hint;
+  final IconData icon;
+  final TextInputType? keyboardType;
+  final TextInputAction? textInputAction;
 
-  const _ModalAddressFormField({
-    required this.icon,
-    required this.label,
+  const _StyledAddressField({
     required this.controller,
-    this.keyboardType,
+    required this.label,
     this.hint,
+    required this.icon,
+    this.keyboardType,
+    this.textInputAction,
   });
 
   @override
@@ -2094,13 +2462,24 @@ class _ModalAddressFormField extends StatelessWidget {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
+      textInputAction: textInputAction,
       validator: (v) =>
-          v == null || v.trim().isEmpty ? 'This field is required' : null,
+          v == null || v.trim().isEmpty ? '$label is required' : null,
+      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
       decoration: InputDecoration(
-        prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
+        prefixIcon: Padding(
+          padding: const EdgeInsets.only(left: 12, right: 8),
+          child: Icon(icon, color: AppColors.primary, size: 20),
+        ),
+        prefixIconConstraints: const BoxConstraints(minWidth: 44),
         labelText: label,
         hintText: hint,
-        hintStyle: TextStyle(color: Colors.grey[400]),
+        hintStyle: TextStyle(color: Colors.grey[400], fontSize: 14, fontWeight: FontWeight.w400),
+        labelStyle: TextStyle(color: Colors.grey[600], fontSize: 14),
+        floatingLabelStyle: const TextStyle(
+          color: AppColors.primary,
+          fontWeight: FontWeight.w600,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: Colors.grey[300]!),
@@ -2111,18 +2490,19 @@ class _ModalAddressFormField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Colors.red),
+          borderSide: BorderSide(color: Colors.red[300]!),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.red, width: 1.5),
         ),
         filled: true,
         fillColor: Colors.grey[50],
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 16,
-          horizontal: 16,
-        ),
+        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
       ),
     );
   }

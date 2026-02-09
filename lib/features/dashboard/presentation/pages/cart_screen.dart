@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/app/routes/app_routes.dart';
 import 'package:tapto/core/providers/currency_provider.dart';
 import 'package:tapto/core/utils/image_utils.dart';
+import 'package:tapto/core/widgets/cached_image.dart';
 import 'package:tapto/features/dashboard/presentation/viewmodel/cart_viewmodel.dart';
 import '../../../../app/theme/app_colors.dart';
 import 'package:tapto/core/utils/currency_formatter.dart';
@@ -313,13 +314,11 @@ class _CartScreenState extends ConsumerState<CartScreen> {
                 width: 100,
                 height: 100,
                 color: const Color(0xFFF0F2F5),
-                child: imageUrl.isNotEmpty
-                    ? Image.network(
-                        imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _buildImagePlaceholder(),
-                      )
-                    : _buildImagePlaceholder(),
+                child: AppCachedImage(
+                  imageUrl: imageUrl,
+                  fit: BoxFit.cover,
+                  errorWidget: _buildImagePlaceholder(),
+                ),
               ),
             ),
             const SizedBox(width: 14),
@@ -564,7 +563,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
           ),
           const SizedBox(height: 8),
           _buildSummaryRow(
-            'tax'.tr() + ' (${(taxRate * 100).toStringAsFixed(0)}%)',
+            '${'tax'.tr()} (${(taxRate * 100).toStringAsFixed(0)}%)',
             currencyFormatter(tax),
           ),
           Padding(
