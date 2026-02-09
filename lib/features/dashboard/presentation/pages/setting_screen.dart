@@ -13,8 +13,7 @@ import '../../../../app/widgets/logout_dialog.dart';
 import '../../../auth/presentation/viewmodel/auth_viewmodel.dart';
 import '../../../auth/presentation/state/auth_state.dart';
 import '../../../../core/providers/language_provider.dart';
-import '../../../../core/providers/theme_provider.dart';
-import '../../../../core/services/notification_service.dart'; // <-- ADDED: Notification service
+import '../../../../core/providers/theme_provider.dart';// <-- ADDED: Notification service
 import 'terms_of_service_screen.dart'; 
 
 class SettingScreen extends ConsumerStatefulWidget {
@@ -186,7 +185,6 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
                 setState(() {
                   _notificationsEnabled = value;
                 });
-                await ref.read(notificationServiceProvider).setNotificationsEnabled(value);
 
                 if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -222,7 +220,7 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
               title: 'testNotification'.tr(),
               subtitle: 'testNotificationSubtitle'.tr(),
               onTap: () {
-                ref.read(notificationServiceProvider).showTestNotification(context);
+
               },
             ),
 
