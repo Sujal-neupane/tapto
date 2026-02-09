@@ -7,10 +7,16 @@ import 'package:tapto/core/services/storage/storage_provider.dart';
 import 'package:tapto/core/services/storage/token_storage_service.dart';
 import 'package:tapto/core/services/storage/user_session_service.dart';
 import 'package:tapto/core/services/hive/hive_services.dart';
+import 'package:tapto/core/services/notifications/notification_service.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase
+  await Firebase.initializeApp();
+
   await EasyLocalization.ensureInitialized();
 
   SystemChrome.setSystemUIOverlayStyle(
@@ -30,14 +36,18 @@ void main() async {
   final userSessionService = UserSessionService();
   await userSessionService.initialize();
 
+  // Initialize Notification Service
+  final notificationService = NotificationService();
+  await notificationService.initialize();
+
   final sharedPreferences = await SharedPreferences.getInstance();
   final tokenStorageService = TokenStorageService(sharedPreferences);
-  
+
   // Get saved language preference
   final savedLanguageCode = sharedPreferences.getString('languageCode') ?? 'en';
   final savedLocale = Locale(savedLanguageCode);
-  
-  
+
+
   runApp(
     EasyLocalization(
       supportedLocales: const [Locale('en'), Locale('es'), Locale('fr'), Locale('de'), Locale('ne')],
@@ -48,6 +58,7 @@ void main() async {
         overrides: [
           sharedPreferencesProvider.overrideWithValue(sharedPreferences ),
           tokenStorageServiceProvider.overrideWithValue(tokenStorageService),
+          notificationServiceProvider.overrideWithValue(notificationService),
         ],
         child: const MyApp(),
       ),

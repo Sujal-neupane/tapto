@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/core/api/api_endpoint.dart';
 import 'package:tapto/core/services/hive/hive_services.dart';
 import 'package:tapto/core/services/storage/storage_provider.dart';
+import 'package:tapto/core/services/notifications/notification_service.dart';
 import 'package:tapto/features/auth/domain/usecases/get_current_user_usecase.dart';
 import 'package:tapto/features/auth/domain/usecases/login_usecase.dart';
 import 'package:tapto/features/auth/domain/usecases/logout_usecase.dart';
@@ -113,6 +114,18 @@ class AuthViewModel extends Notifier<AuthState> {
     if (state.status == AuthStatus.authenticated && state.user != null) {
       await _userStorageService.saveUser(state.user!, password);
       await _userStorageService.setCurrentUser(state.user!);
+
+      // Register FCM token for push notifications
+      try {
+        final notificationService = ref.read(notificationServiceProvider);
+        final fcmToken = await notificationService.getToken();
+        if (fcmToken != null) {
+          await _registerFCMToken(fcmToken);
+        }
+      } catch (e) {
+        // FCM registration failure shouldn't block login
+        print('FCM token registration failed: $e');
+      }
 
       // Sync local cart to server after login
       try {
@@ -373,6 +386,31 @@ class AuthViewModel extends Notifier<AuthState> {
         status: AuthStatus.error,
         errorMessage: e.toString(),
       );
+    }
+  }
+
+  /// Register FCM token with backend for push notifications
+  Future<void> _registerFCMToken(String fcmToken) async {
+    try {
+      final dio = Dio();
+      final tokenStorage = ref.read(tokenStorageServiceProvider);
+      final String? token = tokenStorage.getToken();
+
+      if (token == null || token.isEmpty) return;
+
+      await dio.post(
+        "${ApiEndpoints.baseUrl}/api/auth/register-fcm-token",
+        data: {'fcmToken': fcmToken},
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+    } catch (e) {
+      // FCM token registration failure shouldn't block login
+      print('FCM token registration failed: $e');
     }
   }
 }
