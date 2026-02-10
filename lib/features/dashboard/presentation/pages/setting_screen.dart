@@ -24,7 +24,6 @@ class SettingScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingScreenState extends ConsumerState<SettingScreen> {
-  bool _notificationsEnabled = true;
   bool _emailUpdates = true;
   String _selectedLanguage = 'english'.tr();
 
@@ -39,7 +38,6 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
     final savedLanguage = prefs.getString('languageCode') ?? 'en';
     setState(() {
       _selectedLanguage = _getLanguageDisplayName(savedLanguage);
-      _notificationsEnabled = prefs.getBool('notificationsEnabled') ?? true;
       _emailUpdates = prefs.getBool('emailUpdates') ?? true;
     });
   }
@@ -168,59 +166,6 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
                     content: Text('changePasswordComingSoon'.tr()),
                   ),
                 );
-              },
-            ),
-
-            const SizedBox(height: AppSpacing.xl),
-
-            // Notifications Section
-            _buildSectionHeader('notifications'.tr()),
-            const SizedBox(height: AppSpacing.sm),
-            _buildSwitchTile(
-              icon: Icons.notifications_outlined,
-              title: 'pushNotifications'.tr(),
-              subtitle: 'receiveNotifications'.tr(),
-              value: _notificationsEnabled,
-              onChanged: (value) async {
-                setState(() {
-                  _notificationsEnabled = value;
-                });
-
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        value
-                          ? 'notificationsEnabled'.tr()
-                          : 'notificationsDisabled'.tr()
-                      ),
-                      backgroundColor: value ? Colors.green : Colors.orange,
-                    ),
-                  );
-                }
-              },
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            _buildSwitchTile(
-              icon: Icons.email_outlined,
-              title: 'emailUpdates'.tr(),
-              subtitle: 'receiveEmailUpdates'.tr(),
-              value: _emailUpdates,
-              onChanged: (value) async {
-                setState(() {
-                  _emailUpdates = value;
-                });
-                final prefs = await SharedPreferences.getInstance();
-                await prefs.setBool('emailUpdates', value);
-              },
-            ),
-            const SizedBox(height: AppSpacing.xs),
-            _buildSettingsTile(
-              icon: Icons.notifications_active_outlined,
-              title: 'testNotification'.tr(),
-              subtitle: 'testNotificationSubtitle'.tr(),
-              onTap: () {
-
               },
             ),
 

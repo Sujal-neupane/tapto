@@ -7,14 +7,10 @@ import 'package:tapto/core/services/storage/storage_provider.dart';
 import 'package:tapto/core/services/storage/token_storage_service.dart';
 import 'package:tapto/core/services/storage/user_session_service.dart';
 import 'package:tapto/core/services/hive/hive_services.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
-  // Initialize Firebase
-  await Firebase.initializeApp();
 
   await EasyLocalization.ensureInitialized();
 

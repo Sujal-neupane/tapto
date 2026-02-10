@@ -73,11 +73,6 @@ dependencies:
   sensors_plus: ^7.0.0
   cached_network_image: ^3.4.1
 
-  # Firebase for push notifications
-  firebase_core: ^3.10.0
-  firebase_messaging: ^15.1.6
-  flutter_local_notifications: ^18.0.1
-
 dev_dependencies:
   flutter_test:
     sdk: flutter
