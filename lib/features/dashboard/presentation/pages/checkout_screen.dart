@@ -15,6 +15,8 @@ import 'package:tapto/features/orders/presentation/viewmodel/order_viewmodel.dar
 import 'package:tapto/core/services/storage/user_session_service.dart';
 import 'package:tapto/features/addresses/presentation/viewmodel/address_viewmodel.dart';
 import 'package:tapto/features/addresses/domain/entities/address_entity.dart';
+import 'package:tapto/core/services/khalti_payment_service.dart';
+import 'package:tapto/core/services/esewa_payment_service.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
@@ -180,6 +182,18 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
     setState(() => _isPlacingOrder = true);
 
     try {
+      // Handle Khalti payment
+      if (_selectedPayment.toLowerCase() == 'khalti') {
+        await _handleKhaltiPayment(cartItems, total);
+        return;
+      }
+
+      // Handle eSewa payment
+      if (_selectedPayment.toLowerCase() == 'esewa') {
+        await _handleESewaPayment(cartItems, total);
+        return;
+      }
+
       final paymentMethod = {
         'id': _selectedPayment.toLowerCase(),
         'type': _selectedPayment == 'COD'
@@ -239,6 +253,234 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
         );
         setState(() => _isPlacingOrder = false);
         return;
+      }
+
+      await ref
+          .read(orderViewModelProvider.notifier)
+          .createOrderFromCart(
+            cartItems
+                .map(
+                  (e) => CartItemModel(
+                    productId: e.productId,
+                    productName: e.productName,
+                    productImage: e.productImage,
+                    price: e.price,
+                    quantity: e.quantity,
+                    size: e.size,
+                    color: e.color,
+                  ),
+                )
+                .toList(),
+            address: addressData,
+            payment: paymentMethod,
+          );
+
+      ref.read(cartViewModelProvider.notifier).clearCart();
+
+      if (!mounted) return;
+      HapticFeedback.heavyImpact();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(child: Text('Order placed successfully!')),
+            ],
+          ),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
+      await Future.delayed(const Duration(milliseconds: 300));
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const MyOrdersScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          transitionDuration: const Duration(milliseconds: 400),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      HapticFeedback.heavyImpact();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(child: Text('Failed to place order: $e')),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+    }
+  }
+
+  Future<void> _handleKhaltiPayment(List<CartItemModel> cartItems, double total) async {
+    try {
+      await KhaltiPaymentService.initiatePayment(
+        context: context,
+        amount: total,
+        productName: 'TapTo Order',
+        productId: 'order_${DateTime.now().millisecondsSinceEpoch}',
+        onSuccess: (String pidx) async {
+          // Payment successful, now place the order
+          await _placeOrderAfterPayment(cartItems, total, pidx);
+        },
+        onError: (String error) {
+          if (!mounted) return;
+          HapticFeedback.heavyImpact();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text('Payment failed: $error')),
+                ],
+              ),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              margin: const EdgeInsets.all(16),
+            ),
+          );
+          setState(() => _isPlacingOrder = false);
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      HapticFeedback.heavyImpact();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(child: Text('Payment initialization failed: $e')),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+      setState(() => _isPlacingOrder = false);
+    }
+  }
+
+  Future<void> _handleESewaPayment(List<CartItemModel> cartItems, double total) async {
+    try {
+      await ESewaPaymentService.initiatePayment(
+        context: context,
+        amount: total,
+        productName: 'TapTo Order',
+        productId: 'order_${DateTime.now().millisecondsSinceEpoch}',
+        onSuccess: (String refId) async {
+          // Payment successful, now place the order
+          await _placeOrderAfterPayment(cartItems, total, refId);
+        },
+        onError: (String error) {
+          if (!mounted) return;
+          HapticFeedback.heavyImpact();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text('Payment failed: $error')),
+                ],
+              ),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              margin: const EdgeInsets.all(16),
+            ),
+          );
+          setState(() => _isPlacingOrder = false);
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      HapticFeedback.heavyImpact();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(child: Text('Payment initialization failed: $e')),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+      setState(() => _isPlacingOrder = false);
+    }
+  }
+
+  Future<void> _placeOrderAfterPayment(List<CartItemModel> cartItems, double total, String pidx) async {
+    try {
+      final paymentMethod = {
+        'id': 'khalti',
+        'type': 'Khalti',
+        'pidx': pidx,
+      };
+
+      // Prepare address data (same as in _placeOrder)
+      Map<String, String> addressData;
+      if (_selectedSavedAddress != null) {
+        addressData = {
+          'id': _selectedSavedAddress!.id,
+          'fullName': _selectedSavedAddress!.fullName,
+          'phone': _selectedSavedAddress!.phone,
+          'street': _selectedSavedAddress!.street,
+          'city': _selectedSavedAddress!.city,
+          'state': _selectedSavedAddress!.state ?? '',
+          'zipCode': _selectedSavedAddress!.zipCode,
+          'country': _selectedSavedAddress!.country,
+        };
+      } else {
+        addressData = {
+          'id': 'manual-address',
+          'fullName': _shippingAddress!['fullName'] ?? '',
+          'phone': _shippingAddress!['phone'] ?? '',
+          'street': _shippingAddress!['street'] ?? '',
+          'city': _shippingAddress!['city'] ?? '',
+          'state': _shippingAddress!['state'] ?? '',
+          'zipCode': _shippingAddress!['zipCode'] ?? '',
+          'country': _shippingAddress!['country'] ?? '',
+        };
       }
 
       await ref
@@ -911,8 +1153,8 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
       onTap: () async {
         HapticFeedback.selectionClick();
         setState(() => _selectedPayment = value);
-        // If not COD, show mock payment dialog
-        if (value != 'COD') {
+        // If not COD, Khalti, or eSewa, show mock payment dialog
+        if (value != 'COD' && value.toLowerCase() != 'khalti' && value.toLowerCase() != 'esewa') {
           final paid = await showDialog<bool>(
             context: context,
             builder: (context) => AlertDialog(

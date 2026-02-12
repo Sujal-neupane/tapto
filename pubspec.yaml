@@ -72,8 +72,9 @@ dependencies:
   # Sensors for gesture detection
   sensors_plus: ^7.0.0
   cached_network_image: ^3.4.1
-
-dev_dependencies:
+  
+  # Khalti payment integration for Nepali users
+  khalti: ^0.0.1
   flutter_test:
     sdk: flutter
   
