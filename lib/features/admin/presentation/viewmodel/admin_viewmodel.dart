@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tapto/core/api/api_client.dart';
-import 'package:tapto/features/admin/data/remote/admin_remote_datasource.dart';
+import 'package:tapto/features/admin/domain/usecases/admin_usecases.dart';
 import 'package:tapto/features/dashboard/domain/entities/dashboard_stats.dart';
 import 'package:tapto/features/orders/domain/enitites/order_entity.dart';
 
@@ -35,8 +34,15 @@ class AdminState {
 
 // Admin ViewModel
 class AdminViewModel extends Notifier<AdminState> {
+  late final GetDashboardStatsUsecase _getDashboardStatsUsecase;
+  late final GetAllOrdersUsecase _getAllOrdersUsecase;
+  late final UpdateOrderStatusUsecase _updateOrderStatusUsecase;
+
   @override
   AdminState build() {
+    _getDashboardStatsUsecase = ref.watch(getDashboardStatsUsecaseProvider);
+    _getAllOrdersUsecase = ref.watch(getAllOrdersUsecaseProvider);
+    _updateOrderStatusUsecase = ref.watch(updateOrderStatusUsecaseProvider);
     return AdminState();
   }
 
@@ -44,16 +50,27 @@ class AdminViewModel extends Notifier<AdminState> {
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final apiClient = ref.read(apiClientProvider);
-      final dataSource = AdminRemoteDataSourceImpl(apiClient: apiClient);
+      final statsResult = await _getDashboardStatsUsecase();
+      final ordersResult = await _getAllOrdersUsecase();
 
-      final stats = await dataSource.getDashboardStats();
-      final orders = await dataSource.getAllOrders();
-
-      state = state.copyWith(
-        stats: stats,
-        orders: orders,
-        isLoading: false,
+      statsResult.fold(
+        (failure) => state = state.copyWith(
+          isLoading: false,
+          error: failure.message,
+        ),
+        (stats) {
+          ordersResult.fold(
+            (failure) => state = state.copyWith(
+              isLoading: false,
+              error: failure.message,
+            ),
+            (orders) => state = state.copyWith(
+              stats: stats,
+              orders: orders,
+              isLoading: false,
+            ),
+          );
+        },
       );
     } catch (e) {
       state = state.copyWith(
@@ -65,13 +82,17 @@ class AdminViewModel extends Notifier<AdminState> {
 
   Future<void> updateOrderStatus(String orderId, String status) async {
     try {
-      final apiClient = ref.read(apiClientProvider);
-      final dataSource = AdminRemoteDataSourceImpl(apiClient: apiClient);
+      final result = await _updateOrderStatusUsecase(
+        UpdateOrderStatusParams(orderId: orderId, status: status),
+      );
 
-      await dataSource.updateOrderStatus(orderId, status);
-      
-      // Refresh data
-      await fetchDashboardData();
+      result.fold(
+        (failure) => state = state.copyWith(error: failure.message),
+        (updatedOrder) async {
+          // Refresh data
+          await fetchDashboardData();
+        },
+      );
     } catch (e) {
       state = state.copyWith(error: e.toString());
       rethrow;
