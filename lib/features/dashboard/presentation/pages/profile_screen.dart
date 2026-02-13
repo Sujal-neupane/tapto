@@ -1,22 +1,18 @@
 import 'dart:io';
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:tapto/core/providers/currency_provider.dart';
 import 'package:tapto/core/utils/localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:tapto/features/dashboard/presentation/provider/wishlist_provider.dart';
-import '../../../../app/routes/app_routes.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
-import '../../../../app/theme/app_text_styles.dart';
-import '../../../../core/utils/image_utils.dart';
 import '../../../auth/presentation/viewmodel/auth_viewmodel.dart';
 import '../../../orders/presentation/viewmodel/order_viewmodel.dart';
 import '../../../orders/presentation/pages/order_tracking_screen.dart';
-import 'edit_profile_screen.dart';
-import '../../../addresses/presentation/pages/addresses_screen.dart';
+import '../widgets/profile_header_card.dart';
+import '../widgets/quick_actions_section.dart';
+import '../widgets/account_section.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -332,17 +328,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUser = ref.watch(currentUserProvider);
     final screenSize = MediaQuery.of(context).size;
     final padding = (screenSize.width * 0.05).toDouble(); // 5% of width
-
-    final userName = currentUser?.name ?? 'Guest User';
-    final userEmail = currentUser?.email ?? 'guest@tapto.com';
-    final userInitial = userName.isNotEmpty ? userName[0].toUpperCase() : 'G';
-
-    final profileImageUrl = currentUser?.profilePicture;
-    print('Profile picture path: ${currentUser?.profilePicture}');
-    print('Profile image URL: $profileImageUrl');
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -354,347 +341,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               const SizedBox(height: AppSpacing.md),
 
               // Profile Header with Avatar and Stats
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.lg),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      AppColors.primary.withOpacity(0.1),
-                      AppColors.primary.withOpacity(0.05),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Column(
-                  children: [
-                    // Avatar with Camera Icon
-                    Stack(
-                      children: [
-                        CircleAvatar(
-                          radius: 50,
-                          backgroundColor: AppColors.primary,
-                          backgroundImage:
-                              profileImageUrl != null &&
-                                  profileImageUrl.isNotEmpty
-                              ? CachedNetworkImageProvider(
-                                  ImageUtils.getImageUrl(profileImageUrl),
-                                )
-                              : null,
-                          child: profileImageUrl == null
-                              ? Text(
-                                  userInitial,
-                                  style: const TextStyle(
-                                    fontSize: 36,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : null,
-                        ),
-                        Positioned(
-                          bottom: 0,
-                          right: 0,
-                          child: GestureDetector(
-                            onTap: _showPickOptions,
-                            child: Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: Colors.white,
-                                  width: 2,
-                                ),
-                              ),
-                              child: const Icon(
-                                Icons.camera_alt,
-                                size: 16,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Text(
-                      userName,
-                      style: AppTextStyles.subHeading.copyWith(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 20,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      userEmail,
-                      style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                    ),
-                    const SizedBox(height: AppSpacing.lg),
-
-                    // Stats Row - using real data from providers
-                    Builder(
-                      builder: (context) {
-                        final orderState = ref.watch(orderViewModelProvider);
-                        final wishlistCount = ref.watch(wishlistCountProvider);
-                        final ordersCount = orderState.orders.length;
-
-                        return Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                          children: [
-                            _StatItem(
-                              icon: Icons.shopping_bag_outlined,
-                              count: '$ordersCount',
-                              label: 'Orders',
-                            ),
-                            const _VerticalDivider(),
-                            _StatItem(
-                              icon: Icons.favorite_outline,
-                              count: '$wishlistCount',
-                              label: 'Wishlist',
-                            ),
-                            const _VerticalDivider(),
-                            const _StatItem(
-                              icon: Icons.star_outline,
-                              count: '4.8',
-                              label: 'Reviews',
-                            ),
-                          ],
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
+              ProfileHeaderCard(onAvatarTap: _showPickOptions),
 
               const SizedBox(height: AppSpacing.xl),
 
               // Quick Actions Section
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Quick Actions',
-                  style: AppTextStyles.body.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: _QuickActionCard(
-                      icon: Icons.shopping_bag_outlined,
-                      title: 'My Orders',
-                      color: Colors.blue,
-                      onTap: () {
-                        Navigator.pushNamed(context, AppRoutes.myOrders);
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: _QuickActionCard(
-                      icon: Icons.favorite_outline,
-                      title: 'Wishlist',
-                      color: Colors.red,
-                      onTap: () {
-                        Navigator.pushNamed(context, AppRoutes.wishlist);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Row(
-                children: [
-                  Expanded(
-                    child: _QuickActionCard(
-                      icon: Icons.local_shipping_outlined,
-                      title: 'Track Order',
-                      color: Colors.orange,
-                      onTap: () => _showTrackOrderSheet(context, ref),
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: _QuickActionCard(
-                      icon: Icons.receipt_long_outlined,
-                      title: 'Invoices',
-                      color: Colors.green,
-                      onTap: () {
-                        // Navigate to orders screen where invoices can be downloaded
-                        Navigator.pushNamed(context, AppRoutes.myOrders);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text(
-                              'Tap on an order to download its invoice',
-                            ),
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
+              QuickActionsSection(onTrackOrderTap: () => _showTrackOrderSheet(context, ref)),
 
               const SizedBox(height: AppSpacing.xl),
 
               // Account Section
-              Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Account',
-                  style: AppTextStyles.body.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.md),
-
-              _ProfileMenuItem(
-                icon: Icons.person_outline,
-                title: 'Edit Profile',
-                subtitle: 'Update your personal information',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const EditProfileScreen(),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              _ProfileMenuItem(
-                icon: Icons.location_on_outlined,
-                title: 'Addresses',
-                subtitle: 'Manage delivery addresses',
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const AddressesScreen()),
-                  );
-                },
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              _ProfileMenuItem(
-                icon: Icons.payment_outlined,
-                title: 'Payment Methods',
-                subtitle: 'Manage your payment options',
-                onTap: () => _showPaymentMethodsDialog(context, ref),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              _ProfileMenuItem(
-                icon: Icons.settings_outlined,
-                title: 'Settings',
-                subtitle: 'App preferences and account settings',
-                onTap: () {
-                  Navigator.pushNamed(context, AppRoutes.setting);
-                },
-              ),
+              AccountSection(onPaymentMethodsTap: () => _showPaymentMethodsDialog(context, ref)),
 
               const SizedBox(height: AppSpacing.lg),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// --------------------
-// Stats Widget
-// --------------------
-class _StatItem extends StatelessWidget {
-  final IconData icon;
-  final String count;
-  final String label;
-
-  const _StatItem({
-    required this.icon,
-    required this.count,
-    required this.label,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Icon(icon, color: AppColors.primary, size: 24),
-        const SizedBox(height: 4),
-        Text(
-          count,
-          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-        Text(label, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-      ],
-    );
-  }
-}
-
-// Vertical Divider between stats
-class _VerticalDivider extends StatelessWidget {
-  const _VerticalDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(height: 40, width: 1, color: Colors.grey[300]);
-  }
-}
-
-// --------------------
-// Quick Action Card Widget
-// --------------------
-class _QuickActionCard extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final Color color;
-  final VoidCallback onTap;
-
-  const _QuickActionCard({
-    required this.icon,
-    required this.title,
-    required this.color,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withOpacity(0.3)),
-          ),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.2),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: color, size: 28),
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                title,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
             ],
           ),
         ),
@@ -744,72 +403,4 @@ void _showPaymentMethodsDialog(BuildContext context, WidgetRef ref) {
       ],
     ),
   );
-}
-
-// --------------------
-// Profile Menu Item Widget
-// --------------------
-class _ProfileMenuItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final String subtitle;
-  final VoidCallback onTap;
-
-  const _ProfileMenuItem({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[300]!),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: AppColors.primary, size: 24),
-              ),
-              const SizedBox(width: AppSpacing.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(Icons.chevron_right, color: Colors.grey[400]),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }

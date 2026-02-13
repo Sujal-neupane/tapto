@@ -32,14 +32,13 @@ class ProductRemoteDataSourceImpl implements ProductRemoteDataSource {
     String? fashionType,
     bool? isActive,
   }) async {
-    // Use public products endpoint for user-facing product listing
     final response = await dio.get(
       ApiEndpoints.products,
       queryParameters: {
-        'category': ?category,
-        'category': ?fashionType, // Backend uses 'category' for filtering
-        'isActive': ?isActive,
-      },
+        'category': category,
+        'fashionType': fashionType,
+        'isActive': isActive,
+      }..removeWhere((key, value) => value == null),
     );
 
     final data = response.data;

@@ -1,20 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'dart:convert';
-import 'package:tapto/core/api/api_client.dart';
-import 'package:tapto/core/services/connectivity/network_info.dart';
-import 'package:tapto/core/services/storage/storage_provider.dart';
-import 'package:tapto/core/services/storage/user_session_service.dart';
-import 'package:tapto/features/dashboard/data/datasource/remote/cart_remote_datasource.dart';
-import 'package:tapto/features/dashboard/data/models/cart_item_model.dart';
+import 'package:tapto/features/dashboard/domain/entities/cart_item.dart';
+import 'package:tapto/features/dashboard/domain/usecases/cart_usecases.dart';
 
 // --- Providers ---
 
-final cartRemoteDataSourceProvider = Provider<CartRemoteDataSource>((ref) {
-  return CartRemoteDataSourceImpl(apiClient: ref.watch(apiClientProvider));
-});
-
 class CartState {
-  final List<CartItemModel> items;
+  final List<CartItem> items;
   final bool isLoading;
   final bool isSyncing;
   final String? error;
@@ -38,7 +29,7 @@ class CartState {
   int get itemCount => items.fold(0, (sum, item) => sum + item.quantity);
 
   CartState copyWith({
-    List<CartItemModel>? items,
+    List<CartItem>? items,
     bool? isLoading,
     bool? isSyncing,
     String? error,
@@ -54,33 +45,24 @@ class CartState {
 }
 
 class CartViewModel extends Notifier<CartState> {
-  static const String _cartKey = 'shopping_cart';
+
+  late final GetCartUsecase _getCartUsecase;
+  late final AddToCartUsecase _addToCartUsecase;
+  late final UpdateCartItemQuantityUsecase _updateCartItemQuantityUsecase;
+  late final RemoveFromCartUsecase _removeFromCartUsecase;
+  late final ClearCartUsecase _clearCartUsecase;
+  late final SyncCartUsecase _syncCartUsecase;
 
   @override
   CartState build() {
+    _getCartUsecase = ref.watch(getCartUsecaseProvider);
+    _addToCartUsecase = ref.watch(addToCartUsecaseProvider);
+    _updateCartItemQuantityUsecase = ref.watch(updateCartItemQuantityUsecaseProvider);
+    _removeFromCartUsecase = ref.watch(removeFromCartUsecaseProvider);
+    _clearCartUsecase = ref.watch(clearCartUsecaseProvider);
+    _syncCartUsecase = ref.watch(syncCartUsecaseProvider);
     return CartState();
   }
-
-  // --- Helpers ---
-
-  bool get _isLoggedIn {
-    try {
-      return ref.read(tokenStorageServiceProvider).hasToken();
-    } catch (_) {
-      return false;
-    }
-  }
-
-  Future<bool> get _isOnline async {
-    try {
-      return await ref.read(networkInfoProvider).isConnected;
-    } catch (_) {
-      return false;
-    }
-  }
-
-  CartRemoteDataSource get _remote =>
-      ref.read(cartRemoteDataSourceProvider);
 
   // --- Load Cart ---
 
@@ -89,26 +71,15 @@ class CartViewModel extends Notifier<CartState> {
   Future<void> loadCart() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
-      // Always load local first for instant UI
-      await _loadLocalCart();
-
-      // Then try to fetch from server and merge
-      if (_isLoggedIn && await _isOnline) {
-        try {
-          final serverItems = await _remote.getCart();
-          if (serverItems.isNotEmpty) {
-            // Server has data — use it as the source of truth
-            state = state.copyWith(items: serverItems);
-            await _saveLocalCart();
-          } else if (state.items.isNotEmpty) {
-            // Server is empty but we have local items — push to server
-            await _syncToServer();
-          }
-        } catch (e) {
-          // Server fetch failed — local cart is already loaded, just continue
-          print('Cart sync fetch failed, using local: $e');
-        }
-      }
+      final result = await _getCartUsecase();
+      result.fold(
+        (failure) {
+          state = state.copyWith(error: failure.message);
+        },
+        (items) {
+          state = state.copyWith(items: items);
+        },
+      );
     } catch (e) {
       state = state.copyWith(error: 'Failed to load cart');
     } finally {
@@ -116,82 +87,46 @@ class CartViewModel extends Notifier<CartState> {
     }
   }
 
-  Future<void> _loadLocalCart() async {
-    final prefs = ref.read(sharedPreferencesProvider);
-    final cartJson = prefs.getString(_cartKey);
-    if (cartJson != null) {
-      final List<dynamic> decoded = json.decode(cartJson);
-      final items =
-          decoded.map((item) => CartItemModel.fromJson(item)).toList();
-      state = state.copyWith(items: items);
-    }
-  }
-
-  Future<void> _saveLocalCart() async {
-    try {
-      final prefs = ref.read(sharedPreferencesProvider);
-      final cartModels = state.items.map((item) => item.toJson()).toList();
-      await prefs.setString(_cartKey, json.encode(cartModels));
-    } catch (e) {
-      state = state.copyWith(error: 'Failed to save cart locally');
-    }
-  }
-
-  /// Push the full local cart to the server via PUT /sync.
-  Future<void> _syncToServer() async {
-    if (!_isLoggedIn || !await _isOnline) return;
-    state = state.copyWith(isSyncing: true);
-    try {
-      final serverItems = await _remote.syncCart(state.items);
-      state = state.copyWith(items: serverItems, isSyncing: false);
-      await _saveLocalCart();
-    } catch (e) {
-      // Sync failed silently — local state is still good
-      state = state.copyWith(isSyncing: false);
-      print('Cart sync to server failed: $e');
-    }
-  }
-
   // --- Mutators ---
 
-  void addItem(CartItemModel item) {
-    final existingIndex = state.items.indexWhere(
-      (i) =>
-          i.productId == item.productId &&
-          i.size == item.size &&
-          i.color == item.color,
-    );
-
-    List<CartItemModel> updatedItems;
-
-    if (existingIndex >= 0) {
-      final existing = state.items[existingIndex];
-      updatedItems = List.from(state.items);
-      updatedItems[existingIndex] = existing.copyWith(
-        quantity: existing.quantity + item.quantity,
+  void addItem(CartItem item) {
+    state = state.copyWith(isLoading: true, error: null);
+    _addToCartUsecase(AddToCartParams(
+      productId: item.productId,
+      productName: item.productName,
+      productImage: item.productImage,
+      price: item.price,
+      quantity: item.quantity,
+      size: item.size,
+      color: item.color,
+    )).then((result) {
+      result.fold(
+        (failure) {
+          state = state.copyWith(error: failure.message, isLoading: false);
+        },
+        (updatedItems) {
+          state = state.copyWith(items: updatedItems, isLoading: false);
+        },
       );
-    } else {
-      updatedItems = [...state.items, item];
-    }
-
-    state = state.copyWith(items: updatedItems);
-    _saveLocalCart();
-    _syncToServer();
+    });
   }
 
   void removeItem(String productId, {String? size, String? color}) {
-    final updatedItems = state.items.where((item) {
-      if (size != null && color != null) {
-        return !(item.productId == productId &&
-            item.size == size &&
-            item.color == color);
-      }
-      return item.productId != productId;
-    }).toList().cast<CartItemModel>();
-
-    state = state.copyWith(items: updatedItems);
-    _saveLocalCart();
-    _syncToServer();
+    state = state.copyWith(isLoading: true, error: null);
+    _removeFromCartUsecase(RemoveFromCartParams(
+      productId: productId,
+      size: size,
+      color: color,
+    )).then((result) {
+      result.fold(
+        (failure) {
+          state = state.copyWith(error: failure.message, isLoading: false);
+        },
+        (updatedItems) {
+          state = state.copyWith(items: updatedItems, isLoading: false);
+        },
+      );
+    });
   }
 
   void updateQuantity(String productId, int quantity,
@@ -201,18 +136,22 @@ class CartViewModel extends Notifier<CartState> {
       return;
     }
 
-    final updatedItems = state.items.map((item) {
-      if (item.productId == productId &&
-          (size == null || item.size == size) &&
-          (color == null || item.color == color)) {
-        return item.copyWith(quantity: quantity);
-      }
-      return item;
-    }).toList();
-
-    state = state.copyWith(items: updatedItems);
-    _saveLocalCart();
-    _syncToServer();
+    state = state.copyWith(isLoading: true, error: null);
+    _updateCartItemQuantityUsecase(UpdateCartItemParams(
+      productId: productId,
+      quantity: quantity,
+      size: size,
+      color: color,
+    )).then((result) {
+      result.fold(
+        (failure) {
+          state = state.copyWith(error: failure.message, isLoading: false);
+        },
+        (updatedItems) {
+          state = state.copyWith(items: updatedItems, isLoading: false);
+        },
+      );
+    });
   }
 
   void incrementQuantity(String productId, {String? size, String? color}) {
@@ -232,24 +171,32 @@ class CartViewModel extends Notifier<CartState> {
   }
 
   void clearCart() {
-    state = state.copyWith(items: []);
-    _saveLocalCart();
-    _clearOnServer();
-  }
-
-  Future<void> _clearOnServer() async {
-    if (!_isLoggedIn || !await _isOnline) return;
-    try {
-      await _remote.clearCart();
-    } catch (e) {
-      print('Cart clear on server failed: $e');
-    }
+    state = state.copyWith(isLoading: true, error: null);
+    _clearCartUsecase().then((result) {
+      result.fold(
+        (failure) {
+          state = state.copyWith(error: failure.message, isLoading: false);
+        },
+        (_) {
+          state = state.copyWith(items: [], isLoading: false);
+        },
+      );
+    });
   }
 
   /// Force a full sync from local → server. Can be called manually
   /// (e.g. after login, or after regaining connectivity).
   Future<void> forceSyncToServer() async {
-    await _syncToServer();
+    state = state.copyWith(isSyncing: true, error: null);
+    final result = await _syncCartUsecase(SyncCartParams(items: state.items));
+    result.fold(
+      (failure) {
+        state = state.copyWith(error: failure.message, isSyncing: false);
+      },
+      (syncedItems) {
+        state = state.copyWith(items: syncedItems, isSyncing: false);
+      },
+    );
   }
 }
 

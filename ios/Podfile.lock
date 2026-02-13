@@ -113,6 +113,9 @@ PODS:
     - GoogleUtilities/Privacy
   - image_picker_ios (0.0.1):
     - Flutter
+  - local_auth_darwin (0.0.1):
+    - Flutter
+    - FlutterMacOS
   - nanopb (3.30910.0):
     - nanopb/decode (= 3.30910.0)
     - nanopb/encode (= 3.30910.0)
@@ -143,6 +146,7 @@ DEPENDENCIES:
   - geocoding_ios (from `.symlinks/plugins/geocoding_ios/ios`)
   - geolocator_apple (from `.symlinks/plugins/geolocator_apple/darwin`)
   - image_picker_ios (from `.symlinks/plugins/image_picker_ios/ios`)
+  - local_auth_darwin (from `.symlinks/plugins/local_auth_darwin/darwin`)
   - package_info_plus (from `.symlinks/plugins/package_info_plus/ios`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
   - printing (from `.symlinks/plugins/printing/ios`)
@@ -176,6 +180,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/geolocator_apple/darwin"
   image_picker_ios:
     :path: ".symlinks/plugins/image_picker_ios/ios"
+  local_auth_darwin:
+    :path: ".symlinks/plugins/local_auth_darwin/darwin"
   package_info_plus:
     :path: ".symlinks/plugins/package_info_plus/ios"
   permission_handler_apple:
@@ -205,6 +211,7 @@ SPEC CHECKSUMS:
   GoogleDataTransport: aae35b7ea0c09004c3797d53c8c41f66f219d6a7
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
   image_picker_ios: e0ece4aa2a75771a7de3fa735d26d90817041326
+  local_auth_darwin: c3ee6cce0a8d56be34c8ccb66ba31f7f180aaebb
   nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
   package_info_plus: af8e2ca6888548050f16fa2f1938db7b5a5df499
   permission_handler_apple: 4ed2196e43d0651e8ff7ca3483a069d469701f2d
