@@ -26,12 +26,7 @@ class GetDashboardStatsUsecase implements UsecaseWithoutParms<DashboardStats> {
 
   @override
   Future<Either<Failure, DashboardStats>> call() async {
-    try {
-      final result = await repository.getDashboardStats();
-      return Right(result);
-    } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
-    }
+    return await repository.getDashboardStats();
   }
 }
 
@@ -42,12 +37,7 @@ class GetAllOrdersUsecase implements UsecaseWithoutParms<List<OrderEntity>> {
 
   @override
   Future<Either<Failure, List<OrderEntity>>> call() async {
-    try {
-      final result = await repository.getAllOrders();
-      return Right(result);
-    } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
-    }
+    return await repository.getAllOrders();
   }
 }
 
@@ -58,12 +48,7 @@ class UpdateOrderStatusUsecase implements UsecaseWithParms<OrderEntity, UpdateOr
 
   @override
   Future<Either<Failure, OrderEntity>> call(UpdateOrderStatusParams params) async {
-    try {
-      final result = await repository.updateOrderStatus(params.orderId, params.status);
-      return Right(result);
-    } catch (e) {
-      return Left(ServerFailure(message: e.toString()));
-    }
+    return await repository.updateOrderStatus(params.orderId, params.status);
   }
 }
 
