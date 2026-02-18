@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 
 class ESewaPaymentService {
-  static const String _clientId = 'EPAYTEST'; // eSewa test merchant code
-  static const String _secretId = '8gBm/:&EnhH.1/q'; // eSewa test secret
 
   static Future<void> initiatePayment({
     required BuildContext context,

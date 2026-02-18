@@ -46,7 +46,6 @@ class SensorService {
   bool _isListening = false;
   bool _isNearFace = false; // Track proximity state
   DeviceOrientation _currentOrientation = DeviceOrientation.portrait;
-  final LightLevel _currentLightLevel = LightLevel.normal;
 
   /// Stream of shake directions
   Stream<ShakeDirection> get shakeStream => _shakeController.stream;
@@ -169,8 +168,8 @@ class SensorService {
   void _onMagnetometerEvent(MagnetometerEvent event) {
     // Calculate compass heading for potential location-based features
     // This could be used for AR product visualization or store direction features
-    final heading = atan2(event.y, event.x) * (180 / pi);
-    final normalizedHeading = (heading + 360) % 360;
+
+
 
     // Store heading for potential use in location-based features
     // For now, we don't emit this as a stream since we don't have UI for it yet

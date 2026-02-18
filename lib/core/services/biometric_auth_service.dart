@@ -10,7 +10,7 @@ class BiometricAuthService {
       final bool canAuthenticateWithBiometrics = await _localAuth.canCheckBiometrics;
       final bool canAuthenticate = canAuthenticateWithBiometrics || await _localAuth.isDeviceSupported();
       return canAuthenticate;
-    } on PlatformException catch (e){
+    } on PlatformException {
       return false;
     }
   }
@@ -18,7 +18,7 @@ class BiometricAuthService {
   static Future<List<BiometricType>> getAvailableBiometrics() async{
     try {
       return await _localAuth.getAvailableBiometrics();
-    }on PlatformException catch (e){
+    }on PlatformException {
       return [];
     }
   }
@@ -37,7 +37,7 @@ class BiometricAuthService {
         ),
       );
       return didAuthenticate;
-    } on PlatformException catch (e){
+    } on PlatformException {
       return false;
     }
   }
@@ -47,7 +47,7 @@ class BiometricAuthService {
   static Future<bool> canCheckBiometrics() async {
     try{
       return await _localAuth.canCheckBiometrics;
-    } on PlatformException catch (e){
+    } on PlatformException {
       return false;
     }
   }

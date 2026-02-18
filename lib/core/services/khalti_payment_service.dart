@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 
 class KhaltiPaymentService {
-  static const String _publicKey = 'test_public_key_dc74e0fd57cb46cd93832aee0a507256'; // Khalti test key
-
+  
   static Future<void> initiatePayment({
     required BuildContext context,
     required double amount,

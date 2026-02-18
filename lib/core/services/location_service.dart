@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:geolocator/geolocator.dart';
-import 'package:flutter/foundation.dart';
 
 /// Location service for handling device location and address services
 class LocationService {
