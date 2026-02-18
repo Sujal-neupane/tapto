@@ -66,7 +66,6 @@ class SensorService {
     if (_isListening) return;
 
     _isListening = true;
-    debugPrint('🎯 SensorService: Starting sensor listening');
 
     // Listen to accelerometer for shake detection
     _accelerometerSubscription = accelerometerEventStream().listen(
@@ -92,7 +91,6 @@ class SensorService {
     if (!_isListening) return;
 
     _isListening = false;
-    debugPrint('🎯 SensorService: Stopping sensor listening');
 
     _accelerometerSubscription?.cancel();
     _userAccelerometerSubscription?.cancel();
@@ -125,18 +123,10 @@ class SensorService {
     final isNearFace = isVeryStable && isFaceUp && hasLowMovement;
 
     // Debug: print values
-    if (isNearFace != _isNearFace) {
-      debugPrint(
-        '📱 Proximity change: stable=$isVeryStable, faceUp=$isFaceUp, lowMove=$hasLowMovement, z=${event.z}, mag=$magnitude',
-      );
-    }
 
     if (isNearFace != _isNearFace) {
       _isNearFace = isNearFace;
       _proximityController.add(_isNearFace);
-      debugPrint(
-        '📱 Proximity: ${_isNearFace ? "NEAR FACE (Call detected)" : "FAR FROM FACE"}',
-      );
     }
 
     // Shake detection with cooldown
@@ -152,13 +142,10 @@ class SensorService {
       ShakeDirection direction;
       if (event.x > DIRECTION_THRESHOLD) {
         direction = ShakeDirection.right;
-        debugPrint('🎯 Shake detected: RIGHT (x: ${event.x})');
       } else if (event.x < -DIRECTION_THRESHOLD) {
         direction = ShakeDirection.left;
-        debugPrint('🎯 Shake detected: LEFT (x: ${event.x})');
       } else {
         direction = ShakeDirection.none;
-        debugPrint('🎯 Shake detected: NONE (x: ${event.x})');
       }
 
       _shakeController.add(direction);

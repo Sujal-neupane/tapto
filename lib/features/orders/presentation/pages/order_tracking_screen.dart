@@ -696,7 +696,6 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
           InkWell(
             onTap: () {
               HapticFeedback.lightImpact();
-              // TODO: Implement call functionality
             },
             child: Container(
               width: double.infinity,

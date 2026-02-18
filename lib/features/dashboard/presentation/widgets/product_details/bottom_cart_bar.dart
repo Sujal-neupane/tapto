@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'dart:developer' as developer;
 import 'package:tapto/features/dashboard/data/models/cart_item_model.dart';
 import 'package:tapto/features/dashboard/presentation/viewmodel/cart_viewmodel.dart';
 import 'package:tapto/core/utils/currency_formatter.dart';
@@ -87,10 +86,6 @@ class BottomCartBar extends ConsumerWidget {
                 child: ElevatedButton(
                   onPressed: canAddToCart
                       ? () {
-                          developer.log(
-                            'Adding to cart: Size=$selectedSize, Color=$selectedColor',
-                            name: 'ProductDetailsScreen',
-                          );
 
                           ref
                               .read(cartViewModelProvider.notifier)

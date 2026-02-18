@@ -80,7 +80,6 @@ class ProductListScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Navigate to add product screen
         },
         backgroundColor: const Color(0xFF1687FF),
         child: const Icon(Icons.add),
@@ -191,7 +190,6 @@ class ProductListScreen extends ConsumerWidget {
               ),
             ),
             onTap: () {
-              // TODO: Navigate to product details
             },
           ),
         );

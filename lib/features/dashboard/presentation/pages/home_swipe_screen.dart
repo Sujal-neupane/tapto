@@ -92,7 +92,6 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
   }
 
   void _startProximityListening() {
-    debugPrint('📱 Starting proximity listening');
     final sensorService = ref.read(sensorServiceProvider);
     sensorService.startListening(); // Ensure sensors are started
 

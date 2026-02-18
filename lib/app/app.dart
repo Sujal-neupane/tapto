@@ -42,9 +42,7 @@ class MyApp extends ConsumerWidget {
           );
         },
       );
-    } catch (e, stackTrace) {
-      debugPrint('MyApp Error: $e');
-      debugPrint('Stack trace: $stackTrace');
+    } catch (e) {
       return MaterialApp(
         home: Scaffold(
           body: Center(

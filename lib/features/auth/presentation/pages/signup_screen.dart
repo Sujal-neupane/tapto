@@ -30,6 +30,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
   bool _acceptTerms = false;
   String? _selectedPreference;
   String _selectedCountry = 'United States';
+  String _selectedCurrency = 'USD';
   late AnimationController _controller;
 
   final List<String> _preferences = ['mensFashion', 'womensFashion'];
@@ -265,6 +266,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                             if (value != null) {
                               setState(() {
                                 _selectedCountry = value;
+                                _selectedCurrency = value;
                               });
                             }
                           },
@@ -520,6 +522,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                     countryCode = country['code']!;
                                     break;
                                   }
+                                  if (country['name'] == _selectedCurrency) {
+                                    countryCode = country['code']!;
+                                    break;
+                                  }
                                 }
 
                                 // Combine country code with phone number
@@ -547,6 +553,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen>
                                       preference: backendPreference,
                                       country: _selectedCountry,
                                       phoneNumber: fullPhoneNumber,
+                                      currency: _selectedCurrency,
                                     );
                               }
                             },

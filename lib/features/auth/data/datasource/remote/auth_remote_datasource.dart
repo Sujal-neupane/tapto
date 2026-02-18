@@ -23,6 +23,7 @@ abstract class AuthRemoteDataSource {
     String? preference,
     String? phoneNumber,
     String? country,
+    String? currency,
   });
 
   Future<AuthApiModel> login(String email, String password);
@@ -117,6 +118,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     String? preference,
     String? phoneNumber,
     String? country,
+    String? currency,
   }) async {
     try {
       final authModel = AuthApiModel(
@@ -126,6 +128,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
         preference: preference,
         phoneNumber: phoneNumber ?? '',
         country: country ?? 'United States', // Use passed country or default
+          currency: currency,
       );
 
       final response = await _apiClient.post(

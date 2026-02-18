@@ -88,14 +88,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       // On iOS simulator, skip permission check and go directly to image picker
       // iOS simulators have issues with permission dialogs
       if (Platform.isIOS) {
-        debugPrint('iOS detected, attempting direct image pick');
         final XFile? pickedFile = await _picker.pickImage(
           source: source,
           imageQuality: 80,
         );
 
         if (pickedFile != null) {
-          debugPrint('Image picked successfully on iOS: ${pickedFile.path}');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(context.translate('Uploading profile picture...')),
@@ -105,7 +103,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               .read(authViewModelProvider.notifier)
               .uploadProfilePicture(File(pickedFile.path));
         } else {
-          debugPrint('Image picker returned null on iOS');
         }
         return;
       }
@@ -113,25 +110,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       // For Android and other platforms, use normal permission flow
       PermissionStatus permissionStatus;
       if (source == ImageSource.camera) {
-        debugPrint('Requesting camera permission...');
         permissionStatus = await Permission.camera.request();
-        debugPrint('Camera permission status: $permissionStatus');
       } else {
-        debugPrint('Requesting storage permission...');
         permissionStatus = await Permission.storage.request();
-        debugPrint('Storage permission status: $permissionStatus');
       }
 
       // If permission is denied, show dialog
       if (!permissionStatus.isGranted &&
           permissionStatus != PermissionStatus.limited) {
         if (permissionStatus == PermissionStatus.permanentlyDenied) {
-          debugPrint(
-            'Permission permanently denied, opening settings directly',
-          );
           _showSettingsDialog();
         } else {
-          debugPrint('Permission not granted, showing dialog');
           _showPermissionDialog(source);
         }
         return;
@@ -139,7 +128,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
       // If limited access on iOS, show message but continue
       if (permissionStatus == PermissionStatus.limited) {
-        debugPrint('Limited permission granted');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -151,7 +139,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         );
       }
 
-      debugPrint('Permission granted, attempting to pick image...');
       // Now try to pick image
       final XFile? pickedFile = await _picker.pickImage(
         source: source,
@@ -159,7 +146,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       );
 
       if (pickedFile != null) {
-        debugPrint('Image picked successfully: ${pickedFile.path}');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(context.translate('Uploading profile picture...')),
@@ -177,7 +163,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
           );
         } catch (uploadError) {
-          debugPrint('Upload failed: $uploadError');
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
@@ -187,10 +172,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           );
         }
       } else {
-        debugPrint('Image picker returned null');
       }
     } catch (e) {
-      debugPrint('Error in _handleImagePick: $e');
       // If image picking fails, check if it's due to permissions
       if (e.toString().contains('permission') ||
           e.toString().contains('Permission') ||

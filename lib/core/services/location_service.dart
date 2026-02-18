@@ -44,7 +44,6 @@ class LocationService {
         timeLimit: timeout ?? LOCATION_TIMEOUT,
       );
     } catch (e) {
-      debugPrint('❌ Location error: $e');
       rethrow;
     }
   }
@@ -64,10 +63,8 @@ class LocationService {
     ).listen(
       (Position position) {
         _positionController.add(position);
-        debugPrint('📍 Position update: ${position.latitude}, ${position.longitude}');
       },
       onError: (error) {
-        debugPrint('❌ Position stream error: $error');
       },
     );
   }
@@ -83,7 +80,6 @@ class LocationService {
     try {
       return await Geolocator.getLastKnownPosition();
     } catch (e) {
-      debugPrint('❌ Last known position error: $e');
       return null;
     }
   }
