@@ -26,7 +26,6 @@ class AdminDashboardScreen extends ConsumerStatefulWidget {
 class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
     with TickerProviderStateMixin {
   late TabController _tabController;
-  int _selectedIndex = 0;
 
   late AnimationController _fadeController;
   late AnimationController _slideController;
@@ -215,7 +214,6 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
         ),
         onTap: (index) {
           HapticFeedback.selectionClick();
-          setState(() => _selectedIndex = index);
         },
         tabs: const [
           Tab(icon: Icon(Icons.dashboard_rounded, size: 22), text: 'OVERVIEW'),
@@ -1165,49 +1163,6 @@ class _RevenueCard extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-}
-
-// ==================== USER STAT BUBBLE ====================
-class _UserStatBubble extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-
-  const _UserStatBubble({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: Colors.white, size: 28),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: const TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          label,
-          style: TextStyle(fontSize: 12, color: Colors.white.withOpacity(0.9)),
-        ),
-      ],
     );
   }
 }

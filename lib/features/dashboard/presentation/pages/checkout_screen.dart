@@ -16,7 +16,6 @@ import 'package:tapto/features/addresses/presentation/viewmodel/address_viewmode
 import 'package:tapto/features/addresses/domain/entities/address_entity.dart';
 import 'package:tapto/core/services/khalti_payment_service.dart';
 import 'package:tapto/core/services/esewa_payment_service.dart';
-import 'package:tapto/core/services/biometric_auth_service.dart';
 import 'package:tapto/features/dashboard/presentation/widgets/checkout_progress_indicator.dart';
 import 'package:tapto/features/dashboard/presentation/widgets/order_summary_card.dart';
 import 'package:tapto/features/dashboard/presentation/widgets/shipping_address_section.dart';
@@ -385,27 +384,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
   }
 
   Future<void> _handleKhaltiPayment(List<CartItemModel> cartItems, double total) async {
-
-    final bool biometricAvailable = await BiometricAuthService.isBiometricAvailable();
-    
-    if (biometricAvailable) {
-      // Attempt biometric authentication
-      final bool authenticated = await BiometricAuthService.authenticate(
-        reason: 'Authenticate to proceed with Khalti payment',
-      );
-      
-      if (!authenticated) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Biometric authentication failed. Payment cancelled.'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-        setState(() => _isPlacingOrder = false);
-        return;
-      }
-    }
     try {
       await KhaltiPaymentService.initiatePayment(
         context: context,
@@ -464,26 +442,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
   }
 
   Future<void> _handleESewaPayment(List<CartItemModel> cartItems, double total) async {
-    final bool biometricAvailable = await BiometricAuthService.isBiometricAvailable();
-    
-    if (biometricAvailable) {
-      // Attempt biometric authentication
-      final bool authenticated = await BiometricAuthService.authenticate(
-        reason: 'Authenticate to proceed with eSewa payment',
-      );
-      
-      if (!authenticated) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Biometric authentication failed. Payment cancelled.'),
-            backgroundColor: Colors.orange,
-          ),
-        );
-        setState(() => _isPlacingOrder = false);
-        return;
-      }
-    }
     try {
       await ESewaPaymentService.initiatePayment(
         context: context,
