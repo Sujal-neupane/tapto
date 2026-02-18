@@ -5,9 +5,7 @@ import 'package:tapto/core/error/failures.dart';
 import 'package:tapto/core/services/connectivity/network_info.dart';
 import 'package:tapto/features/admin/data/remote/admin_remote_datasource.dart';
 import 'package:tapto/features/admin/domain/repository/admin_repository.dart';
-import 'package:tapto/features/dashboard/data/models/dashboard_stats_model.dart';
 import 'package:tapto/features/dashboard/domain/entities/dashboard_stats.dart';
-import 'package:tapto/features/orders/data/models/order_model.dart';
 import 'package:tapto/features/orders/domain/enitites/order_entity.dart';
 
 final adminRemoteDataSourceProvider = Provider<AdminRemoteDataSource>((ref) {

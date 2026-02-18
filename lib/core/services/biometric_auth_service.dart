@@ -11,7 +11,6 @@ class BiometricAuthService {
       final bool canAuthenticate = canAuthenticateWithBiometrics || await _localAuth.isDeviceSupported();
       return canAuthenticate;
     } on PlatformException catch (e){
-      print('Error checking biometric availability: $e');
       return false;
     }
   }
@@ -20,7 +19,6 @@ class BiometricAuthService {
     try {
       return await _localAuth.getAvailableBiometrics();
     }on PlatformException catch (e){
-      print('Error getting available biometrics: $e');
       return [];
     }
   }
@@ -40,7 +38,6 @@ class BiometricAuthService {
       );
       return didAuthenticate;
     } on PlatformException catch (e){
-      print('Error authenticating with biometrics: $e');
       return false;
     }
   }
@@ -51,7 +48,6 @@ class BiometricAuthService {
     try{
       return await _localAuth.canCheckBiometrics;
     } on PlatformException catch (e){
-      print('Error checking biometrics capability : $e');
       return false;
     }
   }

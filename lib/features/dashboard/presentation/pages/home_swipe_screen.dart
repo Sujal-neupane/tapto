@@ -36,7 +36,7 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
   bool _shakeEnabled = true; // Toggle for shake gestures
   bool _isPausedByProximity =
       false; // Track if browsing is paused due to proximity
-  DeviceOrientation _currentOrientation = DeviceOrientation.portrait;
+
 
   @override
   void initState() {
@@ -116,7 +116,8 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
     _orientationSubscription = sensorService.orientationStream.listen((
       orientation,
     ) {
-      setState(() => _currentOrientation = orientation);
+      // Orientation is monitored through the sensor service
+      // Current orientation is obtained from MediaQuery.of(context).orientation
     });
   }
 

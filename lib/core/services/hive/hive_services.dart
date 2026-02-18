@@ -277,7 +277,6 @@ class HiveService {
         (products as List).map((e) => _deepCastMap(e)),
       );
     } catch (e) {
-      print('Error reading cached products for $cacheKey: $e');
       return null;
     }
   }

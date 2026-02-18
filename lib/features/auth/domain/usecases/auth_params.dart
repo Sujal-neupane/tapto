@@ -35,5 +35,5 @@ class RegisterParams extends Equatable {
   });
 
   @override
-  List<Object?> get props => [name, email, password, preference, country, phoneNumber];
+  List<Object?> get props => [name, email, password, preference, country, phoneNumber, currency];
 }

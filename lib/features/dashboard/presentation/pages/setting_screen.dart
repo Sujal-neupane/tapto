@@ -24,7 +24,6 @@ class SettingScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingScreenState extends ConsumerState<SettingScreen> {
-  bool _emailUpdates = true;
   String _selectedLanguage = 'english'.tr();
 
   @override
@@ -38,7 +37,6 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
     final savedLanguage = prefs.getString('languageCode') ?? 'en';
     setState(() {
       _selectedLanguage = _getLanguageDisplayName(savedLanguage);
-      _emailUpdates = prefs.getBool('emailUpdates') ?? true;
     });
   }
 

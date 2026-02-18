@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/app/routes/app_routes.dart';
-import 'package:tapto/core/services/storage/storage_provider.dart';
 import 'package:tapto/core/services/storage/user_session_service.dart';
 import 'package:tapto/features/auth/presentation/viewmodel/auth_viewmodel.dart';
 import 'package:tapto/features/auth/presentation/state/auth_state.dart';
@@ -76,8 +75,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     _fadeController.forward();
     _slideController.forward();
 
-    final token = ref.read(tokenStorageServiceProvider).getToken();
-    print('Token on app start: $token');
   }
 
   Future<void> _navigateToNext() async {
@@ -96,8 +93,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
       if (isLoggedIn) {
         // Load user from Hive (and API fallback if needed)
         await ref.read(authViewModelProvider.notifier).getCurrentUser();
-        final token = ref.read(tokenStorageServiceProvider).getToken();
-        print('Fetching user with token: $token');
 
         // Wait for the AuthState to update (max 2 seconds)
         int waited = 0;
@@ -118,14 +113,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
 
         if (authState.status == AuthStatus.authenticated && user != null) {
           if (user.isAdmin) {
-            debugPrint('Admin user detected: ${user.email}');
             Navigator.pushReplacementNamed(context, AppRoutes.adminDashboard);
           } else {
             final isOnboardingComplete = await userSessionService
                 .isOnboardingComplete()
                 .timeout(const Duration(seconds: 5), onTimeout: () => false);
 
-            debugPrint('Regular user detected: ${user.email}');
             Navigator.pushReplacementNamed(
               context,
               isOnboardingComplete ? AppRoutes.dashboard : AppRoutes.onboarding,
@@ -138,7 +131,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
         Navigator.pushReplacementNamed(context, AppRoutes.login);
       }
     } catch (e) {
-      debugPrint('Error checking auth status: $e');
       if (mounted) {
         Navigator.pushReplacementNamed(context, AppRoutes.login);
       }

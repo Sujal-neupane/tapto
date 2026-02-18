@@ -50,7 +50,6 @@ class OrderViewModel extends Notifier<OrderState> {
     try {
       final apiClient = ref.read(apiClientProvider);
       final dataSource = OrderRemoteDataSourceImpl(apiClient: apiClient);
-      // TODO: Replace with actual localDataSource and networkInfo providers
       final localDataSource = ref.read(orderLocalDataSourceProvider);
       final networkInfo = ref.read(networkInfoProvider);
       final repository = OrderRepositoryImpl(
@@ -145,7 +144,6 @@ Future<void> createOrderFromCart(
     try {
       final apiClient = ref.read(apiClientProvider);
       final dataSource = OrderRemoteDataSourceImpl(apiClient: apiClient);
-      // TODO: Replace with actual localDataSource and networkInfo providers
       final localDataSource = ref.read(orderLocalDataSourceProvider);
       final networkInfo = ref.read(networkInfoProvider);
       final repository = OrderRepositoryImpl(
@@ -186,7 +184,6 @@ Future<void> createOrderFromCart(
     try {
       final apiClient = ref.read(apiClientProvider);
       final dataSource = OrderRemoteDataSourceImpl(apiClient: apiClient);
-      // TODO: Replace with actual localDataSource and networkInfo providers
       final localDataSource = ref.read(orderLocalDataSourceProvider);
       final networkInfo = ref.read(networkInfoProvider);
       final repository = OrderRepositoryImpl(

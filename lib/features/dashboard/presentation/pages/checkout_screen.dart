@@ -7,7 +7,6 @@ import 'package:geocoding/geocoding.dart';
 import 'package:tapto/app/theme/app_colors.dart';
 import 'package:tapto/core/providers/currency_provider.dart';
 import 'package:tapto/core/utils/currency_formatter.dart';
-import 'package:tapto/core/widgets/cached_image.dart';
 import 'package:tapto/features/dashboard/presentation/viewmodel/cart_viewmodel.dart';
 import 'package:tapto/features/dashboard/data/models/cart_item_model.dart';
 import 'package:tapto/features/orders/presentation/pages/my_orders_screen.dart';
@@ -35,11 +34,8 @@ class CheckoutScreen extends ConsumerStatefulWidget {
 class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
     with TickerProviderStateMixin {
   String _selectedPayment = 'COD';
-  String? _userCountry;
   bool _isPlacingOrder = false;
   Map<String, String>? _shippingAddress;
-  String? _userName;
-  String? _userPhone;
   AddressEntity? _selectedSavedAddress;
 
   late AnimationController _slideController;
@@ -88,11 +84,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
       final userSessionService = ref.read(userSessionServiceProvider);
       final user = await userSessionService.getCurrentUser();
       if (user != null) {
-        setState(() {
-          _userName = user.name;
-          _userPhone = user.phoneNumber;
-          _userCountry = user.country;
-        });
       }
 
       // Set default payment to first available method for user's country
@@ -118,7 +109,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
       }
     } catch (e) {
       // Handle error silently
-      debugPrint('Error loading user data: $e');
     }
   }
 
@@ -674,7 +664,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
     final screenSize = MediaQuery.of(context).size;
     final textScaler = MediaQuery.of(context).textScaler;
     final isTablet = screenSize.width > 600;
-    final padding = (screenSize.width * 0.04).toDouble(); // 4% of width
     final iconSize = min(
       80.0,
       screenSize.width * 0.15,
@@ -779,253 +768,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
     );
   }
 
-  Widget _buildCartItem(CartItemModel item) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: AppCachedImage(
-              imageUrl: item.productImage,
-              width: 60,
-              height: 60,
-              fit: BoxFit.cover,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.productName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    _buildItemDetail(Icons.straighten, item.size ?? ''),
-                    const SizedBox(width: 12),
-                    _buildItemDetail(Icons.palette_outlined, item.color ?? ''),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                ref.watch(currencyFormatterProvider)(item.price),
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  'Qty: ${item.quantity}',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildItemDetail(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 14, color: Colors.grey[600]),
-        const SizedBox(width: 4),
-        Text(text, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-      ],
-    );
-  }
-
-  Widget _buildPaymentOption(String value, String label, IconData icon) {
-    final isSelected = _selectedPayment == value;
-    return InkWell(
-      onTap: () async {
-        HapticFeedback.selectionClick();
-        setState(() => _selectedPayment = value);
-        // If not COD, Khalti, or eSewa, show mock payment dialog
-        if (value != 'COD' && value.toLowerCase() != 'khalti' && value.toLowerCase() != 'esewa') {
-          final paid = await showDialog<bool>(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Text('Simulate $label Payment'),
-              content: Text(
-                'This is a mock payment for $label. Press Pay to simulate a successful payment.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  style: ButtonStyle(
-                    foregroundColor: WidgetStateProperty.all(AppColors.surface),
-                  ),
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text('Pay'),
-                ),
-              ],
-            ),
-          );
-          if (paid == true) {
-            // Show a success snackbar
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Row(
-                  children: [
-                    const Icon(Icons.check_circle, color: Colors.white),
-                    const SizedBox(width: 12),
-                    Expanded(child: Text('$label payment successful!')),
-                  ],
-                ),
-                backgroundColor: AppColors.success,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                margin: const EdgeInsets.all(16),
-                duration: const Duration(seconds: 2),
-              ),
-            );
-          } else {
-            // If cancelled, revert to COD
-            setState(() => _selectedPayment = 'COD');
-          }
-        }
-      },
-      child: Container(
-        margin: const EdgeInsets.all(16),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary.withOpacity(0.05)
-              : Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : Colors.grey[200]!,
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppColors.primary.withOpacity(0.1)
-                    : Colors.grey[200],
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                icon,
-                color: isSelected ? AppColors.primary : Colors.grey[600],
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                  fontSize: 15,
-                  color: isSelected ? Colors.black87 : Colors.grey[700],
-                ),
-              ),
-            ),
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isSelected ? AppColors.primary : Colors.grey[400]!,
-                  width: 2,
-                ),
-                color: isSelected ? AppColors.primary : Colors.transparent,
-              ),
-              child: isSelected
-                  ? const Icon(Icons.check, color: Colors.white, size: 16)
-                  : null,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPriceRow(String label, double amount, {bool isFree = false}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: TextStyle(fontSize: 14, color: Colors.grey[700])),
-        isFree
-            ? Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Text(
-                  'FREE',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
-                ),
-              )
-            : Text(
-                currencyFormatter(amount),
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[800],
-                ),
-              ),
-      ],
-    );
-  }
-
 }
 
 // Removed duplicate _AddressModal class - using the updated version below
 
 // --- Address Modal Widget ---
 class _AddressModal extends StatefulWidget {
-  final String? initialName;
-  final String? initialPhone;
-
-  const _AddressModal({this.initialName, this.initialPhone});
+  const _AddressModal();
 
   @override
   State<_AddressModal> createState() => _AddressModalState();
@@ -1059,8 +808,7 @@ class _AddressModalState extends State<_AddressModal>
     _scaleController.forward();
 
     // Pre-fill name and phone from user data
-    _fullNameController.text = widget.initialName ?? '';
-    _phoneController.text = widget.initialPhone ?? '';
+    _phoneController.text = '';
   }
 
   @override
@@ -1504,7 +1252,6 @@ class _AddressSelectionModalState extends ConsumerState<_AddressSelectionModal>
   final _zipCodeController = TextEditingController();
   final _countryController = TextEditingController();
   bool _isLoadingLocation = false;
-  final int _currentStep = 0; // 0 = contact, 1 = address
 
   @override
   void initState() {

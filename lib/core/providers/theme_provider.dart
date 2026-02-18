@@ -12,7 +12,6 @@ class ThemeNotifier extends StateNotifier<ThemeMode> {
     SharedPreferences.getInstance().then((prefs) {
       final isDarkMode = prefs.getBool('isDarkMode') ?? false;
       state = isDarkMode ? ThemeMode.dark : ThemeMode.light;
-      print('🌙 Dark Mode Loaded: ${state == ThemeMode.dark}');
     });
   }
 
