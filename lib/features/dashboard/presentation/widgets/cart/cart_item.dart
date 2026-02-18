@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../app/theme/app_colors.dart';
+import '../../../../../core/utils/image_utils.dart';
 import '../../../../../core/widgets/cached_image.dart';
 import '../../../domain/entities/cart_item.dart';
 import '../../../presentation/viewmodel/cart_viewmodel.dart';
@@ -51,7 +52,7 @@ class CartItemWidget extends ConsumerWidget {
                     ? ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: AppCachedImage(
-                          imageUrl: item.productImage,
+                          imageUrl: ImageUtils.getImageUrl(item.productImage),
                           fit: BoxFit.cover,
                         ),
                       )
