@@ -6,17 +6,39 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:tapto/core/utils/currency_formatter.dart';
 
 import '../../domain/entities/product_entity.dart';
+import '../../domain/usecases/product_usecases.dart';
 import '../providers/product_providers.dart';
 import 'product_filter_screen.dart';
 
-// Minimal ProductViewModel implementation to fix the missing type error
+// Product ViewModel using Clean Architecture
 class ProductViewModel extends StateNotifier<AsyncValue<List<ProductEntity>>> {
-  ProductViewModel() : super(const AsyncValue.loading());
+  final GetProductsUsecase _getProductsUsecase;
+
+  ProductViewModel(this._getProductsUsecase) : super(const AsyncValue.loading()) {
+    loadProducts();
+  }
+
+  Future<void> loadProducts({String? category, bool? isActive}) async {
+    state = const AsyncValue.loading();
+    final result = await _getProductsUsecase(GetProductsParams(
+      category: category,
+      isActive: isActive,
+    ));
+
+    result.fold(
+      (failure) {
+        state = AsyncValue.error(failure.message, StackTrace.current);
+      },
+      (products) {
+        state = AsyncValue.data(products);
+      },
+    );
+  }
 }
 
 final productViewModelProvider =
     StateNotifierProvider<ProductViewModel, AsyncValue<List<ProductEntity>>>(
-      (ref) => throw UnimplementedError(), // Provide your repository here
+      (ref) => ProductViewModel(ref.watch(getProductsUsecaseProvider)),
     );
 
 class ProductListScreen extends ConsumerWidget {
@@ -31,7 +53,7 @@ class ProductListScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: Text('products'.tr()),
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
         actions: [
           IconButton(
@@ -58,7 +80,6 @@ class ProductListScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Navigate to add product screen
         },
         backgroundColor: const Color(0xFF1687FF),
         child: const Icon(Icons.add),
@@ -169,7 +190,6 @@ class ProductListScreen extends ConsumerWidget {
               ),
             ),
             onTap: () {
-              // TODO: Navigate to product details
             },
           ),
         );

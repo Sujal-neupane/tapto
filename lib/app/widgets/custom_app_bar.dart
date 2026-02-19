@@ -25,17 +25,16 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: colorScheme.surface,
       elevation: 0,
       automaticallyImplyLeading: false,
       leadingWidth: showBackButton ? 50 : null,
       leading: showBackButton
           ? IconButton(
-              icon: const Icon(
-                Icons.arrow_back_ios,
-                color: AppColors.textPrimary,
-              ),
+              icon: Icon(Icons.arrow_back_ios, color: colorScheme.onSurface),
               onPressed: onBackPressed ?? () => Navigator.pop(context),
             )
           : null,
@@ -50,7 +49,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                 gradient: LinearGradient(
                   colors: [
                     AppColors.primary,
-                    AppColors.primary.withOpacity(0.7),
+                    AppColors.primary.withValues(alpha: 0.7),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(12),
@@ -65,18 +64,18 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
+                    color: colorScheme.onSurface,
                   ),
                 ),
                 if (subtitle != null)
                   Text(
                     subtitle!,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppColors.textSecondary,
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
                       fontWeight: FontWeight.w400,
                     ),
                   ),

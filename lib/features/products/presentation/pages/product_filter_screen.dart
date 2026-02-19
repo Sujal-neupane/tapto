@@ -9,7 +9,8 @@ class ProductFilterScreen extends ConsumerStatefulWidget {
   const ProductFilterScreen({super.key});
 
   @override
-  ConsumerState<ProductFilterScreen> createState() => _ProductFilterScreenState();
+  ConsumerState<ProductFilterScreen> createState() =>
+      _ProductFilterScreenState();
 }
 
 class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
@@ -23,8 +24,26 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
   // Available filter options
   final List<String> _categories = ['Men', 'Women'];
   final List<String> _sizes = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
-  final List<String> _colors = ['Black', 'White', 'Red', 'Blue', 'Green', 'Yellow', 'Purple', 'Pink', 'Grey', 'Brown'];
-  final List<String> _tags = ['New Arrival', 'Sale', 'Trending', 'Limited Edition', 'Eco-Friendly', 'Premium'];
+  final List<String> _colors = [
+    'Black',
+    'White',
+    'Red',
+    'Blue',
+    'Green',
+    'Yellow',
+    'Purple',
+    'Pink',
+    'Grey',
+    'Brown',
+  ];
+  final List<String> _tags = [
+    'New Arrival',
+    'Sale',
+    'Trending',
+    'Limited Edition',
+    'Eco-Friendly',
+    'Premium',
+  ];
 
   late AnimationController _fabAnimationController;
   late Animation<double> _fabAnimation;
@@ -37,16 +56,22 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
       (_filters.minPrice ?? 0).clamp(0, 1000).toDouble(),
       (_filters.maxPrice ?? 1000).clamp(0, 1000).toDouble(),
     );
-    _selectedSizes = _filters.tags?.where((tag) => _sizes.contains(tag)).toList() ?? [];
-    _selectedColors = _filters.tags?.where((tag) => _colors.contains(tag)).toList() ?? [];
-    _selectedTags = _filters.tags?.where((tag) => _tags.contains(tag)).toList() ?? [];
+    _selectedSizes =
+        _filters.tags?.where((tag) => _sizes.contains(tag)).toList() ?? [];
+    _selectedColors =
+        _filters.tags?.where((tag) => _colors.contains(tag)).toList() ?? [];
+    _selectedTags =
+        _filters.tags?.where((tag) => _tags.contains(tag)).toList() ?? [];
 
     _fabAnimationController = AnimationController(
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
     _fabAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _fabAnimationController, curve: Curves.elasticOut),
+      CurvedAnimation(
+        parent: _fabAnimationController,
+        curve: Curves.elasticOut,
+      ),
     );
     _fabAnimationController.forward();
   }
@@ -60,20 +85,15 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: _buildAppBar(),
-      body: Stack(
-        children: [
-          _buildContent(),
-          _buildApplyButton(),
-        ],
-      ),
+      body: Stack(children: [_buildContent(), _buildApplyButton()]),
     );
   }
 
   PreferredSizeWidget _buildAppBar() {
     return AppBar(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       elevation: 0,
       shadowColor: Colors.black.withOpacity(0.05),
       surfaceTintColor: Colors.transparent,
@@ -81,10 +101,14 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
         icon: Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: Colors.grey.shade100,
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(12),
           ),
-          child: const Icon(Icons.close, color: AppColors.textPrimary, size: 20),
+          child: Icon(
+            Icons.close,
+            color: Theme.of(context).colorScheme.onSurface,
+            size: 20,
+          ),
         ),
         onPressed: () => Navigator.of(context).pop(),
       ),
@@ -93,7 +117,7 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
         style: AppTextStyles.heading.copyWith(
           fontSize: 20,
           fontWeight: FontWeight.w700,
-          color: AppColors.textPrimary,
+          color: Theme.of(context).colorScheme.onSurface,
         ),
       ),
       centerTitle: true,
@@ -175,11 +199,11 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
 
   bool _hasActiveFilters() {
     return _filters.category != null ||
-           _priceRange.start > 0 ||
-           _priceRange.end < 1000 ||
-           _selectedSizes.isNotEmpty ||
-           _selectedColors.isNotEmpty ||
-           _selectedTags.isNotEmpty;
+        _priceRange.start > 0 ||
+        _priceRange.end < 1000 ||
+        _selectedSizes.isNotEmpty ||
+        _selectedColors.isNotEmpty ||
+        _selectedTags.isNotEmpty;
   }
 
   Widget _buildActiveFiltersSummary() {
@@ -195,7 +219,10 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [AppColors.primary.withOpacity(0.1), AppColors.secondary.withOpacity(0.1)],
+          colors: [
+            AppColors.primary.withOpacity(0.1),
+            AppColors.secondary.withOpacity(0.1),
+          ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -210,11 +237,7 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
               color: AppColors.primary.withOpacity(0.2),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(
-              Icons.filter_list,
-              color: AppColors.primary,
-              size: 16,
-            ),
+            child: Icon(Icons.filter_list, color: AppColors.primary, size: 16),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -228,11 +251,7 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
           ),
           IconButton(
             onPressed: _clearAllFilters,
-            icon: Icon(
-              Icons.clear,
-              color: AppColors.primary,
-              size: 20,
-            ),
+            icon: Icon(Icons.clear, color: AppColors.primary, size: 20),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
           ),
@@ -257,11 +276,7 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
                 color: AppColors.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(10),
               ),
-              child: Icon(
-                icon,
-                color: AppColors.primary,
-                size: 18,
-              ),
+              child: Icon(icon, color: AppColors.primary, size: 18),
             ),
             const SizedBox(width: 12),
             Text(
@@ -269,7 +284,7 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
               style: AppTextStyles.body.copyWith(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ),
           ],
@@ -284,7 +299,7 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -310,22 +325,35 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
               },
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 4),
-                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 12,
+                ),
                 decoration: BoxDecoration(
                   gradient: isSelected
                       ? LinearGradient(
-                          colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
+                          colors: [
+                            AppColors.primary,
+                            AppColors.primary.withOpacity(0.8),
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         )
                       : LinearGradient(
-                          colors: [Colors.white, Colors.grey.shade50],
+                          colors: [
+                            Theme.of(
+                              context,
+                            ).colorScheme.surfaceContainerHighest,
+                            Theme.of(context).colorScheme.surfaceContainer,
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: isSelected ? AppColors.primary : Colors.grey.shade200,
+                    color: isSelected
+                        ? AppColors.primary
+                        : Colors.grey.shade200,
                     width: isSelected ? 2 : 1,
                   ),
                   boxShadow: isSelected
@@ -342,14 +370,20 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
                   children: [
                     Icon(
                       category == 'Men' ? Icons.man : Icons.woman,
-                      color: isSelected ? Colors.white : AppColors.textSecondary,
+                      color: isSelected
+                          ? Colors.white
+                          : Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.7),
                       size: 24,
                     ),
                     const SizedBox(height: 8),
                     Text(
                       category,
                       style: AppTextStyles.body.copyWith(
-                        color: isSelected ? Colors.white : AppColors.textPrimary,
+                        color: isSelected
+                            ? Colors.white
+                            : Theme.of(context).colorScheme.onSurface,
                         fontWeight: FontWeight.w600,
                         fontSize: 14,
                       ),
@@ -368,7 +402,7 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -384,7 +418,10 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -399,7 +436,10 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -423,7 +463,9 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
             divisions: 100,
             activeColor: AppColors.primary,
             inactiveColor: Colors.grey.shade200,
-            overlayColor: WidgetStateProperty.all(AppColors.primary.withOpacity(0.2)),
+            overlayColor: WidgetStateProperty.all(
+              AppColors.primary.withOpacity(0.2),
+            ),
             labels: RangeLabels(
               '\$${_priceRange.start.toInt()}',
               '\$${_priceRange.end.toInt()}',
@@ -437,8 +479,10 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
           const SizedBox(height: 8),
           Text(
             'priceRangeHint'.tr(),
-            style: AppTextStyles.caption?.copyWith(
-              color: AppColors.textSecondary,
+            style: AppTextStyles.caption.copyWith(
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.7),
               fontSize: 12,
             ),
             textAlign: TextAlign.center,
@@ -452,7 +496,7 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -484,12 +528,18 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
               decoration: BoxDecoration(
                 gradient: isSelected
                     ? LinearGradient(
-                        colors: [AppColors.primary, AppColors.primary.withOpacity(0.8)],
+                        colors: [
+                          AppColors.primary,
+                          AppColors.primary.withOpacity(0.8),
+                        ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       )
                     : LinearGradient(
-                        colors: [Colors.white, Colors.grey.shade50],
+                        colors: [
+                          Theme.of(context).colorScheme.surfaceContainerHighest,
+                          Theme.of(context).colorScheme.surfaceContainer,
+                        ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -518,7 +568,9 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
                 child: Text(
                   size,
                   style: AppTextStyles.body.copyWith(
-                    color: isSelected ? Colors.white : AppColors.textPrimary,
+                    color: isSelected
+                        ? Colors.white
+                        : Theme.of(context).colorScheme.onSurface,
                     fontWeight: FontWeight.w700,
                     fontSize: 14,
                   ),
@@ -548,7 +600,7 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -603,11 +655,7 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
                       ],
               ),
               child: isSelected
-                  ? const Icon(
-                      Icons.check,
-                      color: Colors.white,
-                      size: 20,
-                    )
+                  ? const Icon(Icons.check, color: Colors.white, size: 20)
                   : null,
             ),
           );
@@ -620,7 +668,7 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
@@ -651,18 +699,26 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
               decoration: BoxDecoration(
                 gradient: isSelected
                     ? LinearGradient(
-                        colors: [AppColors.secondary, AppColors.secondary.withOpacity(0.8)],
+                        colors: [
+                          AppColors.secondary,
+                          AppColors.secondary.withOpacity(0.8),
+                        ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       )
                     : LinearGradient(
-                        colors: [Colors.white, Colors.grey.shade50],
+                        colors: [
+                          Theme.of(context).colorScheme.surfaceContainerHighest,
+                          Theme.of(context).colorScheme.surfaceContainer,
+                        ],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                 borderRadius: BorderRadius.circular(25),
                 border: Border.all(
-                  color: isSelected ? AppColors.secondary : Colors.grey.shade200,
+                  color: isSelected
+                      ? AppColors.secondary
+                      : Colors.grey.shade200,
                   width: isSelected ? 2 : 1,
                 ),
                 boxShadow: isSelected
@@ -687,7 +743,9 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
                   Text(
                     tag,
                     style: AppTextStyles.body.copyWith(
-                      color: isSelected ? Colors.white : AppColors.textPrimary,
+                      color: isSelected
+                          ? Colors.white
+                          : Theme.of(context).colorScheme.onSurface,
                       fontWeight: FontWeight.w600,
                       fontSize: 13,
                     ),
@@ -709,7 +767,7 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(30),
             topRight: Radius.circular(30),

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'app_colors.dart';
 
 class AppTextStyles {
   static const String fontPrimary = 'Geom';
@@ -9,20 +8,11 @@ class AppTextStyles {
     fontSize: 30,
     fontWeight: FontWeight.bold,
     fontFamily: fontPrimary,
-    color: AppColors.primary,
   );
 
-  static const subHeading = TextStyle(
-    fontSize: 14,
-    fontFamily: fontSecondary,
-    color: AppColors.textSecondary,
-  );
+  static const subHeading = TextStyle(fontSize: 14, fontFamily: fontSecondary);
 
-  static const body = TextStyle(
-    fontSize: 14,
-    fontFamily: fontSecondary,
-    color: AppColors.textPrimary,
-  );
+  static const body = TextStyle(fontSize: 14, fontFamily: fontSecondary);
 
   static const button = TextStyle(
     fontSize: 16,
@@ -31,13 +21,25 @@ class AppTextStyles {
     color: Colors.white,
   );
 
-  static TextStyle? get appBar => null;
+  static const appBar = TextStyle(
+    fontSize: 18,
+    fontFamily: fontPrimary,
+    fontWeight: FontWeight.w700,
+  );
 
-  static TextStyle? get link => null;
+  static const link = TextStyle(
+    fontSize: 14,
+    fontFamily: fontSecondary,
+    fontWeight: FontWeight.w600,
+  );
 
-  static TextStyle? get hint => null;
+  static const hint = TextStyle(fontSize: 14, fontFamily: fontSecondary);
 
-  static TextStyle? get caption => null;
+  static const caption = TextStyle(fontSize: 12, fontFamily: fontSecondary);
 
-  static Null get h3 => null;
+  static const h3 = TextStyle(
+    fontSize: 20,
+    fontFamily: fontPrimary,
+    fontWeight: FontWeight.w700,
+  );
 }

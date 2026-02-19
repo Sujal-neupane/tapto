@@ -119,12 +119,10 @@ class AuthRepositoryImpl implements AuthRepository {
       return user;
     } catch (e) {
       // If remote fails, fallback to local storage
-      print('Failed to get current user from remote, trying local: $e');
       try {
         final userModel = await localDataSource.getCurrentUser();
         return userModel?.toEntity();
       } catch (localError) {
-        print('Failed to get current user from local storage: $localError');
         return null;
       }
     }

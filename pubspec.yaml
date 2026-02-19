@@ -73,7 +73,11 @@ dependencies:
   sensors_plus: ^7.0.0
   cached_network_image: ^3.4.1
 
-dev_dependencies:
+  # Biometric Authentication
+  local_auth: ^2.3.0
+  
+  # Khalti payment integration for Nepali users
+  khalti: ^0.0.1
   flutter_test:
     sdk: flutter
   

@@ -2,8 +2,8 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:tapto/core/api/api_endpoint.dart';
 import 'package:tapto/core/utils/currency_formatter.dart';
+import 'package:tapto/core/utils/image_utils.dart';
 import 'package:tapto/core/widgets/cached_image.dart';
 import 'package:tapto/features/dashboard/presentation/pages/product_details_screen.dart';
 import 'package:tapto/features/dashboard/presentation/provider/wishlist_provider.dart';
@@ -31,18 +31,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
   String Function(double) get currencyFormatter =>
       ref.watch(currencyFormatterProvider);
 
-  String _getImageUrl(String path) {
-    if (path.startsWith('http')) return path;
-    return '${ApiEndpoints.baseUrl}/$path';
-  }
-
   @override
   Widget build(BuildContext context) {
     final searchResults = ref.watch(searchResultsProvider);
     final filters = ref.watch(searchFiltersProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: const Text('searchProducts').tr(),
         backgroundColor: AppColors.primary,
@@ -258,11 +253,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
         return _ProductCard(
           product: product,
           imageUrl: product.images.isNotEmpty
-              ? _getImageUrl(product.images.first)
+              ? ImageUtils.getImageUrl(product.images.first)
               : '',
           onTap: () {
             final allImageUrls = product.images
-                .map((img) => _getImageUrl(img))
+                .map((img) => ImageUtils.getImageUrl(img))
                 .toList();
             Navigator.push(
               context,
@@ -271,7 +266,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
                   productId: product.id,
                   productName: product.name,
                   productImage: product.images.isNotEmpty
-                      ? _getImageUrl(product.images.first)
+                      ? ImageUtils.getImageUrl(product.images.first)
                       : '',
                   productImages: allImageUrls,
                   price: product.price,

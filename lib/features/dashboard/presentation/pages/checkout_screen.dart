@@ -6,8 +6,8 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:tapto/app/theme/app_colors.dart';
 import 'package:tapto/core/providers/currency_provider.dart';
+import 'package:tapto/core/services/biometric_auth_service.dart';
 import 'package:tapto/core/utils/currency_formatter.dart';
-import 'package:tapto/core/widgets/cached_image.dart';
 import 'package:tapto/features/dashboard/presentation/viewmodel/cart_viewmodel.dart';
 import 'package:tapto/features/dashboard/data/models/cart_item_model.dart';
 import 'package:tapto/features/orders/presentation/pages/my_orders_screen.dart';
@@ -15,6 +15,14 @@ import 'package:tapto/features/orders/presentation/viewmodel/order_viewmodel.dar
 import 'package:tapto/core/services/storage/user_session_service.dart';
 import 'package:tapto/features/addresses/presentation/viewmodel/address_viewmodel.dart';
 import 'package:tapto/features/addresses/domain/entities/address_entity.dart';
+import 'package:tapto/core/services/khalti_payment_service.dart';
+import 'package:tapto/core/services/esewa_payment_service.dart';
+import 'package:tapto/features/dashboard/presentation/widgets/checkout_progress_indicator.dart';
+import 'package:tapto/features/dashboard/presentation/widgets/order_summary_card.dart';
+import 'package:tapto/features/dashboard/presentation/widgets/shipping_address_section.dart';
+import 'package:tapto/features/dashboard/presentation/widgets/payment_method_section.dart';
+import 'package:tapto/features/dashboard/presentation/widgets/order_details_card.dart';
+import 'package:tapto/features/dashboard/presentation/widgets/checkout_bottom_bar.dart';
 
 class CheckoutScreen extends ConsumerStatefulWidget {
   const CheckoutScreen({super.key});
@@ -26,11 +34,8 @@ class CheckoutScreen extends ConsumerStatefulWidget {
 class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
     with TickerProviderStateMixin {
   String _selectedPayment = 'COD';
-  String? _userCountry;
   bool _isPlacingOrder = false;
   Map<String, String>? _shippingAddress;
-  String? _userName;
-  String? _userPhone;
   AddressEntity? _selectedSavedAddress;
 
   late AnimationController _slideController;
@@ -79,11 +84,6 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
       final userSessionService = ref.read(userSessionServiceProvider);
       final user = await userSessionService.getCurrentUser();
       if (user != null) {
-        setState(() {
-          _userName = user.name;
-          _userPhone = user.phoneNumber;
-          _userCountry = user.country;
-        });
       }
 
       // Set default payment to first available method for user's country
@@ -109,7 +109,82 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
       }
     } catch (e) {
       // Handle error silently
-      debugPrint('Error loading user data: $e');
+    }
+  }
+
+  Future<void> _handlePaymentSelection(String paymentId) async {
+    // If not COD, Khalti, or eSewa, show mock payment dialog
+    if (paymentId.toLowerCase() != 'cod' &&
+        paymentId.toLowerCase() != 'khalti' &&
+        paymentId.toLowerCase() != 'esewa') {
+      
+      // Check for biometric authentication before showing payment dialog
+      final bool biometricAvailable = await BiometricAuthService.isBiometricAvailable();
+      
+      if (biometricAvailable) {
+        final bool authenticated = await BiometricAuthService.authenticate(
+          reason: 'Authenticate to proceed with payment',
+        );
+        
+        if (!authenticated) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Authentication cancelled. Payment not processed.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          setState(() => _selectedPayment = 'COD');
+          return;
+        }
+      }
+      
+      final paid = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text('Simulate $paymentId Payment'),
+          content: Text(
+            'This is a mock payment for $paymentId. ${biometricAvailable ? "Authenticated." : ""} Tap Pay to confirm.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              style: ButtonStyle(
+                foregroundColor: WidgetStateProperty.all(AppColors.surface),
+              ),
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Pay'),
+            ),
+          ],
+        ),
+      );
+      if (paid == true) {
+        // Show a success snackbar
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 12),
+                Expanded(child: Text('$paymentId payment successful!')),
+              ],
+            ),
+            backgroundColor: AppColors.success,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            margin: const EdgeInsets.all(16),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      } else {
+        // If cancelled, revert to COD
+        setState(() => _selectedPayment = 'COD');
+      }
     }
   }
 
@@ -180,6 +255,18 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
     setState(() => _isPlacingOrder = true);
 
     try {
+      // Handle Khalti payment
+      if (_selectedPayment.toLowerCase() == 'khalti') {
+        await _handleKhaltiPayment(cartItems, total);
+        return;
+      }
+
+      // Handle eSewa payment
+      if (_selectedPayment.toLowerCase() == 'esewa') {
+        await _handleESewaPayment(cartItems, total);
+        return;
+      }
+
       final paymentMethod = {
         'id': _selectedPayment.toLowerCase(),
         'type': _selectedPayment == 'COD'
@@ -316,6 +403,276 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
           margin: const EdgeInsets.all(16),
         ),
       );
+    }
+  }
+
+  Future<void> _handleKhaltiPayment(List<CartItemModel> cartItems, double total) async {
+    // Check for biometric authentication
+    final bool biometricAvailable = await BiometricAuthService.isBiometricAvailable();
+    
+    if (biometricAvailable) {
+      final bool authenticated = await BiometricAuthService.authenticate(
+        reason: 'Authenticate to proceed with Khalti payment',
+      );
+      
+      if (!authenticated) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Authentication cancelled. Payment not processed.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        setState(() => _isPlacingOrder = false);
+        return;
+      }
+    }
+    
+    try {
+      await KhaltiPaymentService.initiatePayment(
+        context: context,
+        amount: total,
+        productName: 'TapTo Order',
+        productId: 'order_${DateTime.now().millisecondsSinceEpoch}',
+        onSuccess: (String pidx) async {
+          // Payment successful, now place the order
+          await _placeOrderAfterPayment(cartItems, total, pidx);
+        },
+        onError: (String error) {
+          if (!mounted) return;
+          HapticFeedback.heavyImpact();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text('Payment failed: $error')),
+                ],
+              ),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              margin: const EdgeInsets.all(16),
+            ),
+          );
+          setState(() => _isPlacingOrder = false);
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      HapticFeedback.heavyImpact();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(child: Text('Payment initialization failed: $e')),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+      setState(() => _isPlacingOrder = false);
+    }
+  }
+
+  Future<void> _handleESewaPayment(List<CartItemModel> cartItems, double total) async {
+    // Check for biometric authentication
+    final bool biometricAvailable = await BiometricAuthService.isBiometricAvailable();
+    
+    if (biometricAvailable) {
+      final bool authenticated = await BiometricAuthService.authenticate(
+        reason: 'Authenticate to proceed with eSewa payment',
+      );
+      
+      if (!authenticated) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Authentication cancelled. Payment not processed.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        setState(() => _isPlacingOrder = false);
+        return;
+      }
+    }
+    
+    try {
+      await ESewaPaymentService.initiatePayment(
+        context: context,
+        amount: total,
+        productName: 'TapTo Order',
+        productId: 'order_${DateTime.now().millisecondsSinceEpoch}',
+        onSuccess: (String refId) async {
+          // Payment successful, now place the order
+          await _placeOrderAfterPayment(cartItems, total, refId);
+        },
+        onError: (String error) {
+          if (!mounted) return;
+          HapticFeedback.heavyImpact();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.white),
+                  const SizedBox(width: 12),
+                  Expanded(child: Text('Payment failed: $error')),
+                ],
+              ),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              margin: const EdgeInsets.all(16),
+            ),
+          );
+          setState(() => _isPlacingOrder = false);
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+      HapticFeedback.heavyImpact();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(child: Text('Payment initialization failed: $e')),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
+      setState(() => _isPlacingOrder = false);
+    }
+  }
+
+  Future<void> _placeOrderAfterPayment(List<CartItemModel> cartItems, double total, String pidx) async {
+    try {
+      final paymentMethod = {
+        'id': 'khalti',
+        'type': 'Khalti',
+        'pidx': pidx,
+      };
+
+      // Prepare address data (same as in _placeOrder)
+      Map<String, String> addressData;
+      if (_selectedSavedAddress != null) {
+        addressData = {
+          'id': _selectedSavedAddress!.id,
+          'fullName': _selectedSavedAddress!.fullName,
+          'phone': _selectedSavedAddress!.phone,
+          'street': _selectedSavedAddress!.street,
+          'city': _selectedSavedAddress!.city,
+          'state': _selectedSavedAddress!.state ?? '',
+          'zipCode': _selectedSavedAddress!.zipCode,
+          'country': _selectedSavedAddress!.country,
+        };
+      } else {
+        addressData = {
+          'id': 'manual-address',
+          'fullName': _shippingAddress!['fullName'] ?? '',
+          'phone': _shippingAddress!['phone'] ?? '',
+          'street': _shippingAddress!['street'] ?? '',
+          'city': _shippingAddress!['city'] ?? '',
+          'state': _shippingAddress!['state'] ?? '',
+          'zipCode': _shippingAddress!['zipCode'] ?? '',
+          'country': _shippingAddress!['country'] ?? '',
+        };
+      }
+
+      await ref
+          .read(orderViewModelProvider.notifier)
+          .createOrderFromCart(
+            cartItems
+                .map(
+                  (e) => CartItemModel(
+                    productId: e.productId,
+                    productName: e.productName,
+                    productImage: e.productImage,
+                    price: e.price,
+                    quantity: e.quantity,
+                    size: e.size,
+                    color: e.color,
+                  ),
+                )
+                .toList(),
+            address: addressData,
+            payment: paymentMethod,
+          );
+
+      ref.read(cartViewModelProvider.notifier).clearCart();
+
+      if (!mounted) return;
+      HapticFeedback.heavyImpact();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.white),
+              SizedBox(width: 12),
+              Expanded(child: Text('Order placed successfully!')),
+            ],
+          ),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.all(16),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+
+      await Future.delayed(const Duration(milliseconds: 300));
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              const MyOrdersScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+          transitionDuration: const Duration(milliseconds: 400),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      HapticFeedback.heavyImpact();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const Icon(Icons.error_outline, color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(child: Text('Failed to place order: $e')),
+            ],
+          ),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          margin: const EdgeInsets.all(16),
+        ),
+      );
     } finally {
       if (mounted) setState(() => _isPlacingOrder = false);
     }
@@ -324,12 +681,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
   @override
   Widget build(BuildContext context) {
     final cart = ref.watch(cartViewModelProvider);
-    final cartItems = cart.items;
+    final cartItems = cart.items.map((item) => CartItemModel.fromEntity(item)).toList();
     final total = cart.total;
+    final paymentMethods = ref.watch(paymentMethodsProvider);
     final screenSize = MediaQuery.of(context).size;
     final textScaler = MediaQuery.of(context).textScaler;
     final isTablet = screenSize.width > 600;
-    final padding = (screenSize.width * 0.04).toDouble(); // 4% of width
     final iconSize = min(
       80.0,
       screenSize.width * 0.15,
@@ -340,7 +697,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: const Text(
           'Checkout',
@@ -382,23 +739,36 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
                       children: [
                         // Progress Indicator
-                        _buildProgressIndicator(),
+                        const CheckoutProgressIndicator(),
                         const SizedBox(height: 24),
 
                         // Order Summary
-                        _buildOrderSummary(cartItems, total),
+                        OrderSummaryCard(cartItems: cartItems),
                         const SizedBox(height: 16),
 
                         // Shipping Address
-                        _buildShippingSection(),
+                        ShippingAddressSection(
+                          selectedSavedAddress: _selectedSavedAddress,
+                          shippingAddress: _shippingAddress,
+                          onAddEditAddress: () => _showAddressModal(context),
+                        ),
                         const SizedBox(height: 16),
 
                         // Payment Method
-                        _buildPaymentSection(),
+                        PaymentMethodSection(
+                          paymentMethods: paymentMethods,
+                          selectedPayment: _selectedPayment,
+                          onPaymentSelected: (paymentId) {
+                            HapticFeedback.selectionClick();
+                            setState(() => _selectedPayment = paymentId);
+                            // Handle mock payments if needed
+                            _handlePaymentSelection(paymentId);
+                          },
+                        ),
                         const SizedBox(height: 16),
 
                         // Order Details Summary
-                        _buildOrderDetails(cartItems),
+                        OrderDetailsCard(cartItems: cartItems),
                       ],
                     ),
 
@@ -407,7 +777,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
                       left: 0,
                       right: 0,
                       bottom: 0,
-                      child: _buildBottomBar(cartItems, total),
+                      child: CheckoutBottomBar(
+                        cartItems: cartItems,
+                        cartTotal: total,
+                        isPlacingOrder: _isPlacingOrder,
+                        onPlaceOrder: () => _placeOrder(cartItems, total),
+                      ),
                     ),
                   ],
                 ),
@@ -416,782 +791,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
     );
   }
 
-  Widget _buildProgressIndicator() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          _buildStep(1, 'Cart', true, true),
-          _buildStepConnector(true),
-          _buildStep(2, 'Checkout', true, false),
-          _buildStepConnector(false),
-          _buildStep(3, 'Complete', false, false),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStep(int number, String label, bool isActive, bool isCompleted) {
-    return Expanded(
-      child: Column(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: isCompleted
-                  ? AppColors.success
-                  : (isActive ? AppColors.primary : Colors.grey[200]),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: isCompleted
-                  ? const Icon(Icons.check, color: Colors.white, size: 18)
-                  : Text(
-                      '$number',
-                      style: TextStyle(
-                        color: isActive ? Colors.white : Colors.grey[400],
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-              color: isActive ? Colors.black87 : Colors.grey[500],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStepConnector(bool isActive) {
-    return Expanded(
-      child: Container(
-        height: 2,
-        margin: const EdgeInsets.only(bottom: 28),
-        color: isActive ? AppColors.primary : Colors.grey[200],
-      ),
-    );
-  }
-
-  Widget _buildOrderSummary(List<CartItemModel> cartItems, double total) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.shopping_bag_outlined,
-                    color: AppColors.primary,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Order Items (${cartItems.length})',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 16,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
-            itemCount: cartItems.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final item = cartItems[index];
-              return _buildCartItem(item);
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCartItem(CartItemModel item) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.grey[50],
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: AppCachedImage(
-              imageUrl: item.productImage,
-              width: 60,
-              height: 60,
-              fit: BoxFit.cover,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.productName,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 14,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    _buildItemDetail(Icons.straighten, item.size ?? ''),
-                    const SizedBox(width: 12),
-                    _buildItemDetail(Icons.palette_outlined, item.color ?? ''),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                ref.watch(currencyFormatterProvider)(item.price),
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  'Qty: ${item.quantity}',
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: AppColors.primary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildItemDetail(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 14, color: Colors.grey[600]),
-        const SizedBox(width: 4),
-        Text(text, style: TextStyle(fontSize: 12, color: Colors.grey[600])),
-      ],
-    );
-  }
-
-  Widget _buildShippingSection() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.local_shipping_outlined,
-                    color: AppColors.primary,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Text(
-                  'Shipping Address',
-                  style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                ),
-                const Spacer(),
-                if (_selectedSavedAddress != null || _shippingAddress != null)
-                  IconButton(
-                    icon: const Icon(Icons.edit_outlined, size: 20),
-                    onPressed: () => _showAddressModal(context),
-                    style: IconButton.styleFrom(
-                      foregroundColor: AppColors.primary,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: (_selectedSavedAddress == null && _shippingAddress == null)
-                ? InkWell(
-                    onTap: () => _showAddressModal(context),
-                    borderRadius: BorderRadius.circular(12),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 24),
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: AppColors.primary.withOpacity(0.3),
-                          width: 1.5,
-                        ),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.add_location_alt_outlined,
-                            color: AppColors.primary,
-                            size: 22,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text(
-                            'Add Shipping Address',
-                            style: TextStyle(
-                              color: AppColors.primary,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 15,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                : Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withOpacity(0.05),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.green.withOpacity(0.2)),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.person_outline,
-                              size: 16,
-                              color: Colors.green,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                _selectedSavedAddress?.fullName ??
-                                    _shippingAddress!['fullName']!,
-                                style: const TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  fontSize: 15,
-                                ),
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.green,
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                _selectedSavedAddress != null
-                                    ? 'Saved Address'
-                                    : 'Manual Entry',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.phone_outlined,
-                              size: 14,
-                              color: Colors.grey,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              _selectedSavedAddress?.phone ??
-                                  _shippingAddress!['phone']!,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: Colors.grey[700],
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Icon(
-                              Icons.location_on_outlined,
-                              size: 14,
-                              color: Colors.grey,
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                _selectedSavedAddress != null
-                                    ? _selectedSavedAddress!.toString()
-                                    : '${_shippingAddress!['street']}, ${_shippingAddress!['city']}, ${_shippingAddress!['state']}, ${_shippingAddress!['zipCode']}, ${_shippingAddress!['country']}',
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Colors.grey[700],
-                                  height: 1.4,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        if (_selectedSavedAddress != null &&
-                            _selectedSavedAddress!.isDefault)
-                          Padding(
-                            padding: const EdgeInsets.only(top: 8),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text(
-                                'Default Address',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w500,
-                                  color: AppColors.primary,
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPaymentSection() {
-    // Get payment methods from provider based on user's country
-    final paymentMethods = ref.watch(paymentMethodsProvider);
-    final currency = ref.watch(currencyProvider);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: const Icon(
-                    Icons.payment_outlined,
-                    color: AppColors.primary,
-                    size: 20,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                const Expanded(
-                  child: Text(
-                    'Payment Method',
-                    style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
-                  ),
-                ),
-                Text(
-                  '${currency.flag} ${currency.code}',
-                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                ),
-              ],
-            ),
-          ),
-          ...paymentMethods.map(
-            (method) =>
-                _buildPaymentOption(method.id, method.label, method.icon),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPaymentOption(String value, String label, IconData icon) {
-    final isSelected = _selectedPayment == value;
-    return InkWell(
-      onTap: () async {
-        HapticFeedback.selectionClick();
-        setState(() => _selectedPayment = value);
-        // If not COD, show mock payment dialog
-        if (value != 'COD') {
-          final paid = await showDialog<bool>(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Text('Simulate $label Payment'),
-              content: Text(
-                'This is a mock payment for $label. Press Pay to simulate a successful payment.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  style: ButtonStyle(
-                    foregroundColor: WidgetStateProperty.all(AppColors.surface),
-                  ),
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text('Pay'),
-                ),
-              ],
-            ),
-          );
-          if (paid == true) {
-            // Show a success snackbar
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Row(
-                  children: [
-                    const Icon(Icons.check_circle, color: Colors.white),
-                    const SizedBox(width: 12),
-                    Expanded(child: Text('$label payment successful!')),
-                  ],
-                ),
-                backgroundColor: AppColors.success,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                margin: const EdgeInsets.all(16),
-                duration: const Duration(seconds: 2),
-              ),
-            );
-          } else {
-            // If cancelled, revert to COD
-            setState(() => _selectedPayment = 'COD');
-          }
-        }
-      },
-      child: Container(
-        margin: const EdgeInsets.all(16),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppColors.primary.withOpacity(0.05)
-              : Colors.grey[50],
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: isSelected ? AppColors.primary : Colors.grey[200]!,
-            width: isSelected ? 2 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: isSelected
-                    ? AppColors.primary.withOpacity(0.1)
-                    : Colors.grey[200],
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(
-                icon,
-                color: isSelected ? AppColors.primary : Colors.grey[600],
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
-                  fontSize: 15,
-                  color: isSelected ? Colors.black87 : Colors.grey[700],
-                ),
-              ),
-            ),
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: isSelected ? AppColors.primary : Colors.grey[400]!,
-                  width: 2,
-                ),
-                color: isSelected ? AppColors.primary : Colors.transparent,
-              ),
-              child: isSelected
-                  ? const Icon(Icons.check, color: Colors.white, size: 16)
-                  : null,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildOrderDetails(List<CartItemModel> cartItems) {
-    final subtotal = cartItems.fold<double>(
-      0,
-      (sum, item) => sum + item.price * item.quantity,
-    );
-    final shipping = cartItems.isEmpty ? 0.0 : 10.0;
-    final taxRate = ref.watch(taxRateProvider);
-    final tax = subtotal * taxRate;
-    final total = subtotal + shipping + tax;
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          _buildPriceRow('Subtotal', subtotal),
-          const SizedBox(height: 12),
-          _buildPriceRow('Shipping', shipping, isFree: shipping == 0),
-          const SizedBox(height: 12),
-          _buildPriceRow('Tax', tax),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                'Total Amount',
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 17),
-              ),
-              Text(
-                ref.watch(currencyFormatterProvider)(total),
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 20,
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildPriceRow(String label, double amount, {bool isFree = false}) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: TextStyle(fontSize: 14, color: Colors.grey[700])),
-        isFree
-            ? Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: const Text(
-                  'FREE',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.green,
-                  ),
-                ),
-              )
-            : Text(
-                currencyFormatter(amount),
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.grey[800],
-                ),
-              ),
-      ],
-    );
-  }
-
-  Widget _buildBottomBar(List<CartItemModel> cartItems, double cartTotal) {
-    final subtotal = cartItems.fold<double>(
-      0,
-      (sum, item) => sum + item.price * item.quantity,
-    );
-    final shipping = cartItems.isEmpty ? 0.0 : 10.0;
-    final taxRate = ref.watch(taxRateProvider);
-    final tax = subtotal * taxRate;
-    final total = subtotal + shipping + tax;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 20,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          width: double.infinity,
-          height: 56,
-          child: ElevatedButton(
-            onPressed: _isPlacingOrder
-                ? null
-                : () => _placeOrder(cartItems, total),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primary,
-              foregroundColor: Colors.white,
-              disabledBackgroundColor: Colors.grey[300],
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              elevation: 0,
-            ),
-            child: _isPlacingOrder
-                ? const SizedBox(
-                    height: 24,
-                    width: 24,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    ),
-                  )
-                : Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.lock_outline, size: 20),
-                      const SizedBox(width: 8),
-                      const Text(
-                        'Place Order',
-                        style: TextStyle(
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '• ${currencyFormatter(total)}',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ],
-                  ),
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 // Removed duplicate _AddressModal class - using the updated version below
 
 // --- Address Modal Widget ---
 class _AddressModal extends StatefulWidget {
-  final String? initialName;
-  final String? initialPhone;
-
-  const _AddressModal({this.initialName, this.initialPhone});
+  const _AddressModal();
 
   @override
   State<_AddressModal> createState() => _AddressModalState();
@@ -1225,8 +831,7 @@ class _AddressModalState extends State<_AddressModal>
     _scaleController.forward();
 
     // Pre-fill name and phone from user data
-    _fullNameController.text = widget.initialName ?? '';
-    _phoneController.text = widget.initialPhone ?? '';
+    _phoneController.text = '';
   }
 
   @override
@@ -1670,7 +1275,6 @@ class _AddressSelectionModalState extends ConsumerState<_AddressSelectionModal>
   final _zipCodeController = TextEditingController();
   final _countryController = TextEditingController();
   bool _isLoadingLocation = false;
-  final int _currentStep = 0; // 0 = contact, 1 = address
 
   @override
   void initState() {

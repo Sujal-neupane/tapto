@@ -9,7 +9,7 @@ class AppColors {
   static const textPrimary = Color(0xFF111827);
   static const textSecondary = Color(0xFF6B7280);
 
-  static const border = Color.fromARGB(255, 89, 91, 93);
+  static const border = Color(0xFFE5E7EB);
 
   static const success = Color(0xFF22C55E);
   static const error = Color(0xFFEF4444);
@@ -26,7 +26,7 @@ class AppDarkColors {
   static const darkTextPrimary = Color(0xFFFFFFFF);
   static const darkTextSecondary = Color(0xFF9CA3AF);
 
-  static const darkBorder = Color(0xFF374151);
+  static const darkBorder = Color(0xFFFFFFFF);
 
   static const darkSuccess = Color(0xFF22C55E);
   static const darkError = Color(0xFFEF4444);

@@ -1,8 +1,21 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/features/products/data/datasource/local/product_local_datasource.dart';
 
 import '../../domain/entities/product_entity.dart';
 import '../../domain/repository/product_repository.dart';
 import '../models/product_model.dart';
+
+final productLocalDataSourceProvider = Provider<ProductLocalDataSource>((ref) {
+  // This would need to be properly initialized with Hive box
+  // For now, returning null - this should be set up properly
+  throw UnimplementedError('ProductLocalDataSource provider not implemented');
+});
+
+final productRepositoryProvider = Provider<ProductRepository>((ref) {
+  return ProductRepositoryImpl(
+    localDataSource: ref.watch(productLocalDataSourceProvider),
+  );
+});
 
 class ProductRepositoryImpl implements ProductRepository {
   final ProductLocalDataSource localDataSource;
@@ -12,7 +25,7 @@ class ProductRepositoryImpl implements ProductRepository {
   @override
   Future<List<ProductEntity>> getProducts({String? category, bool? isActive}) async {
     final models = await localDataSource.getProducts(category: category, isActive: isActive);
-    return models;
+    return models.map((model) => model.toEntity()).toList();
   }
 
   @override
@@ -34,7 +47,7 @@ class ProductRepositoryImpl implements ProductRepository {
       updatedAt: product.updatedAt,
     );
     await localDataSource.addProduct(model);
-    return model;
+    return model.toEntity();
   }
 
   @override
@@ -56,7 +69,7 @@ class ProductRepositoryImpl implements ProductRepository {
       updatedAt: product.updatedAt,
     );
     await localDataSource.updateProduct(model);
-    return model;
+    return model.toEntity();
   }
 
   @override

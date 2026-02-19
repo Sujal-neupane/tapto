@@ -1,25 +1,20 @@
 import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 
 class ApiEndpoints {
   ApiEndpoints._();
 
   static const bool isPhysicalDevice = false;
-  static const String compIpAddress =
-      "http://localhost4000"; 
+  static const String compIpAddress = "localhost"; 
 
   static String get baseUrl {
-    if (isPhysicalDevice) {
-      return 'http://$compIpAddress:4000';
-    }
+    // Prioritize platform-specific configurations
     if (kIsWeb) {
       return 'http://$compIpAddress:4000';
     } else if (Platform.isAndroid) {
-   
-      return 'http://10.0.2.2:4000';
+      // Use 10.0.2.2 for Android emulator to access host machine
+      return 'http://172.25.0.41:4000';
     } else if (Platform.isIOS) {
- 
       return 'http://localhost:4000';
     } else {
       // macOS, Linux, Windows desktop

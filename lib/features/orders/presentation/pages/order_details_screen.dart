@@ -123,7 +123,7 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: Text(
           context.translate(
@@ -271,9 +271,10 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
   }
 
   Widget _buildTimelineCard() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -354,6 +355,7 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
   }
 
   Widget _buildTimelineItem(dynamic track, bool isLast) {
+    final colorScheme = Theme.of(context).colorScheme;
     final isCancelled = widget.order.status == OrderStatus.cancelled;
     final isCancelledEvent = track.status.toLowerCase().contains('cancel');
 
@@ -431,12 +433,18 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
                 const SizedBox(height: 4),
                 Text(
                   track.description,
-                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: colorScheme.onSurface.withValues(alpha: 0.7),
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   DateFormat('MMM dd, yyyy • hh:mm a').format(track.timestamp),
-                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colorScheme.onSurface.withValues(alpha: 0.55),
+                  ),
                 ),
               ],
             ),
@@ -447,9 +455,10 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
   }
 
   Widget _buildItemsCard() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -501,9 +510,11 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
               return Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.grey[50],
+                  color: colorScheme.surface,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[200]!),
+                  border: Border.all(
+                    color: colorScheme.outline.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -512,7 +523,7 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
                       child: Container(
                         width: 60,
                         height: 60,
-                        color: Colors.grey[200],
+                        color: colorScheme.surfaceContainer,
                         child: AppCachedImage(
                           imageUrl: item.productImage,
                           fit: BoxFit.cover,
@@ -542,7 +553,9 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
                             'Qty: ${item.quantity}',
                             style: TextStyle(
                               fontSize: 12,
-                              color: Colors.grey[600],
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.7,
+                              ),
                             ),
                           ),
                         ],
@@ -566,9 +579,10 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
   }
 
   Widget _buildAddressCard() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -645,7 +659,10 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
                       const SizedBox(width: 8),
                       Text(
                         widget.order.shippingAddress.phone,
-                        style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: colorScheme.onSurface.withValues(alpha: 0.8),
+                        ),
                       ),
                     ],
                   ),
@@ -664,7 +681,7 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
                           '${widget.order.shippingAddress.street}, ${widget.order.shippingAddress.city}, ${widget.order.shippingAddress.state}, ${widget.order.shippingAddress.zipCode}, ${widget.order.shippingAddress.country}',
                           style: TextStyle(
                             fontSize: 13,
-                            color: Colors.grey[700],
+                            color: colorScheme.onSurface.withValues(alpha: 0.8),
                             height: 1.4,
                           ),
                         ),
@@ -681,9 +698,10 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
   }
 
   Widget _buildPaymentCard() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -760,7 +778,7 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
                           'ID: ${widget.order.paymentMethod.id}',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[600],
+                            color: colorScheme.onSurface.withValues(alpha: 0.7),
                           ),
                         ),
                       ],
@@ -776,10 +794,11 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
   }
 
   Widget _buildSummaryCard() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -847,10 +866,17 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
   }
 
   Widget _buildSummaryRow(String label, double amount, {bool isFree = false}) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(label, style: TextStyle(fontSize: 14, color: Colors.grey[700])),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 14,
+            color: colorScheme.onSurface.withValues(alpha: 0.8),
+          ),
+        ),
         isFree
             ? Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -872,7 +898,7 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey[800],
+                  color: colorScheme.onSurface,
                 ),
               ),
       ],
@@ -880,10 +906,11 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
   }
 
   Widget _buildBottomActions() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.1),

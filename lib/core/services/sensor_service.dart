@@ -46,7 +46,6 @@ class SensorService {
   bool _isListening = false;
   bool _isNearFace = false; // Track proximity state
   DeviceOrientation _currentOrientation = DeviceOrientation.portrait;
-  final LightLevel _currentLightLevel = LightLevel.normal;
 
   /// Stream of shake directions
   Stream<ShakeDirection> get shakeStream => _shakeController.stream;
@@ -66,7 +65,6 @@ class SensorService {
     if (_isListening) return;
 
     _isListening = true;
-    debugPrint('🎯 SensorService: Starting sensor listening');
 
     // Listen to accelerometer for shake detection
     _accelerometerSubscription = accelerometerEventStream().listen(
@@ -92,7 +90,6 @@ class SensorService {
     if (!_isListening) return;
 
     _isListening = false;
-    debugPrint('🎯 SensorService: Stopping sensor listening');
 
     _accelerometerSubscription?.cancel();
     _userAccelerometerSubscription?.cancel();
@@ -125,18 +122,10 @@ class SensorService {
     final isNearFace = isVeryStable && isFaceUp && hasLowMovement;
 
     // Debug: print values
-    if (isNearFace != _isNearFace) {
-      debugPrint(
-        '📱 Proximity change: stable=$isVeryStable, faceUp=$isFaceUp, lowMove=$hasLowMovement, z=${event.z}, mag=$magnitude',
-      );
-    }
 
     if (isNearFace != _isNearFace) {
       _isNearFace = isNearFace;
       _proximityController.add(_isNearFace);
-      debugPrint(
-        '📱 Proximity: ${_isNearFace ? "NEAR FACE (Call detected)" : "FAR FROM FACE"}',
-      );
     }
 
     // Shake detection with cooldown
@@ -152,13 +141,10 @@ class SensorService {
       ShakeDirection direction;
       if (event.x > DIRECTION_THRESHOLD) {
         direction = ShakeDirection.right;
-        debugPrint('🎯 Shake detected: RIGHT (x: ${event.x})');
       } else if (event.x < -DIRECTION_THRESHOLD) {
         direction = ShakeDirection.left;
-        debugPrint('🎯 Shake detected: LEFT (x: ${event.x})');
       } else {
         direction = ShakeDirection.none;
-        debugPrint('🎯 Shake detected: NONE (x: ${event.x})');
       }
 
       _shakeController.add(direction);
@@ -182,8 +168,8 @@ class SensorService {
   void _onMagnetometerEvent(MagnetometerEvent event) {
     // Calculate compass heading for potential location-based features
     // This could be used for AR product visualization or store direction features
-    final heading = atan2(event.y, event.x) * (180 / pi);
-    final normalizedHeading = (heading + 360) % 360;
+
+
 
     // Store heading for potential use in location-based features
     // For now, we don't emit this as a stream since we don't have UI for it yet

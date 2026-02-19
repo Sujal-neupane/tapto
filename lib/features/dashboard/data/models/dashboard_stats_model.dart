@@ -37,4 +37,17 @@ class DashboardStatsModel extends DashboardStats {
       'totalProducts': totalProducts,
     };
   }
+
+  DashboardStats toEntity() {
+    return DashboardStats(
+      totalOrders: totalOrders,
+      pendingOrders: pendingOrders,
+      completedOrders: completedOrders,
+      cancelledOrders: cancelledOrders,
+      totalRevenue: totalRevenue,
+      todayRevenue: todayRevenue,
+      totalUsers: totalUsers,
+      totalProducts: totalProducts,
+    );
+  }
 }

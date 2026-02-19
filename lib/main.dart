@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
   await EasyLocalization.ensureInitialized();
 
   SystemChrome.setSystemUIOverlayStyle(
@@ -32,21 +33,28 @@ void main() async {
 
   final sharedPreferences = await SharedPreferences.getInstance();
   final tokenStorageService = TokenStorageService(sharedPreferences);
-  
+
   // Get saved language preference
   final savedLanguageCode = sharedPreferences.getString('languageCode') ?? 'en';
   final savedLocale = Locale(savedLanguageCode);
-  
-  
+
   runApp(
     EasyLocalization(
-      supportedLocales: const [Locale('en'), Locale('es'), Locale('fr'), Locale('de'), Locale('ne')],
+      supportedLocales: const [
+        Locale('en'),
+        Locale('es'),
+        Locale('fr'),
+        Locale('de'),
+        Locale('ne'),
+      ],
       path: 'assets/translations',
       fallbackLocale: const Locale('en'),
       startLocale: savedLocale,
+      useFallbackTranslations: true,
+      useFallbackTranslationsForEmptyResources: true,
       child: ProviderScope(
         overrides: [
-          sharedPreferencesProvider.overrideWithValue(sharedPreferences ),
+          sharedPreferencesProvider.overrideWithValue(sharedPreferences),
           tokenStorageServiceProvider.overrideWithValue(tokenStorageService),
         ],
         child: const MyApp(),

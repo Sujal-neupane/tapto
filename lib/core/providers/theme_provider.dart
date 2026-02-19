@@ -1,45 +1,62 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tapto/core/services/storage/user_session_service.dart';
 
 // Theme notifier that manages ThemeMode with persistence
 class ThemeNotifier extends StateNotifier<ThemeMode> {
-  ThemeNotifier() : super(ThemeMode.system) {
+  ThemeNotifier(this._prefs) : super(ThemeMode.system) {
     _loadTheme();
   }
+  final SharedPreferences _prefs;
 
   void _loadTheme() {
-    SharedPreferences.getInstance().then((prefs) {
-      final isDarkMode = prefs.getBool('isDarkMode') ?? false;
+    final savedThemeMode = _prefs.getString('themeMode');
+    if (savedThemeMode != null) {
+      state = ThemeMode.values.firstWhere(
+        (mode) => mode.name == savedThemeMode,
+        orElse: () => ThemeMode.system,
+      );
+      return;
+    }
+
+    // Backward compatibility with older isDarkMode boolean.
+    final isDarkMode = _prefs.getBool('isDarkMode');
+    if (isDarkMode != null) {
       state = isDarkMode ? ThemeMode.dark : ThemeMode.light;
-      print('🌙 Dark Mode Loaded: ${state == ThemeMode.dark}');
-    });
+      return;
+    }
+
+    state = ThemeMode.system;
+  }
+
+  void _persistThemeMode(ThemeMode mode) {
+    _prefs.setString('themeMode', mode.name);
+    _prefs.setBool('isDarkMode', mode == ThemeMode.dark);
   }
 
   void toggle() {
     final newMode = state == ThemeMode.dark ? ThemeMode.light : ThemeMode.dark;
     state = newMode;
-    final isDarkMode = newMode == ThemeMode.dark;
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.setBool('isDarkMode', isDarkMode);
-    });
+    _persistThemeMode(newMode);
   }
 
   void setLight() {
     state = ThemeMode.light;
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.setBool('isDarkMode', false);
-    });
+    _persistThemeMode(ThemeMode.light);
   }
 
   void setDark() {
     state = ThemeMode.dark;
-    SharedPreferences.getInstance().then((prefs) {
-      prefs.setBool('isDarkMode', true);
-    });
+    _persistThemeMode(ThemeMode.dark);
+  }
+
+  void setSystem() {
+    state = ThemeMode.system;
+    _persistThemeMode(ThemeMode.system);
   }
 }
 
 final themeProvider = StateNotifierProvider<ThemeNotifier, ThemeMode>(
-  (_) => ThemeNotifier(),
+  (ref) => ThemeNotifier(ref.watch(sharedPreferencesProvider)),
 );

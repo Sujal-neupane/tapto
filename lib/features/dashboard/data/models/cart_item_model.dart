@@ -47,6 +47,18 @@ class CartItemModel extends CartItem {
     );
   }
 
+  CartItem toEntity() {
+    return CartItem(
+      productId: productId,
+      productName: productName,
+      productImage: productImage,
+      price: price,
+      quantity: quantity,
+      size: size,
+      color: color,
+    );
+  }
+
   @override
   CartItemModel copyWith({
     String? productId,

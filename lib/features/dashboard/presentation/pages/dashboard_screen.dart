@@ -41,18 +41,25 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final cartState = ref.watch(cartViewModelProvider);
     final cartItemCount = cartState.itemCount;
     final screenSize = MediaQuery.of(context).size;
     final textScaler = MediaQuery.of(context).textScaler;
     final isTablet = screenSize.width > 600;
-    final logoSize = min(40.0, screenSize.width * 0.08); // Max 40, or 8% of width
-    final titleFontSize = min(20.0, 18 * textScaler.scale(1.0) * (isTablet ? 1.1 : 1.0));
+    final logoSize = min(
+      40.0,
+      screenSize.width * 0.08,
+    ); // Max 40, or 8% of width
+    final titleFontSize = min(
+      20.0,
+      18 * textScaler.scale(1.0) * (isTablet ? 1.1 : 1.0),
+    );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        backgroundColor: Colors.white,
+        backgroundColor: colorScheme.surface,
         elevation: 0.5,
         automaticallyImplyLeading: false,
         titleSpacing: AppSpacing.lg,
@@ -64,7 +71,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 width: logoSize,
                 height: logoSize,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Image.asset(
@@ -86,7 +93,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 style: TextStyle(
                   fontSize: titleFontSize,
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: colorScheme.onSurface,
                 ),
               ),
             ),
@@ -95,7 +102,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
         actions: [
           if (_currentIndex == 0) ...[
             IconButton(
-              icon: const Icon(Icons.search_rounded, color: Colors.black87),
+              icon: Icon(Icons.search_rounded, color: colorScheme.onSurface),
               tooltip: 'search'.tr(),
               onPressed: () {
                 Navigator.push(
@@ -105,12 +112,14 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
               },
             ),
             IconButton(
-              icon: const Icon(Icons.tune_rounded, color: Colors.black87),
+              icon: Icon(Icons.tune_rounded, color: colorScheme.onSurface),
               tooltip: 'filter'.tr(),
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const ProductFilterScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => const ProductFilterScreen(),
+                  ),
                 );
               },
             ),
@@ -118,9 +127,9 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
           Stack(
             children: [
               IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.shopping_cart_outlined,
-                  color: Colors.black87,
+                  color: colorScheme.onSurface,
                 ),
                 tooltip: 'cart'.tr(),
                 onPressed: () {
@@ -163,10 +172,10 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
       body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: colorScheme.surface,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, -2),
             ),
@@ -182,6 +191,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 icon: Icons.explore_rounded,
                 label: 'discover'.tr(),
                 isSelected: _currentIndex == 0,
+                onSurfaceColor: colorScheme.onSurface,
                 onTap: () {
                   if (_currentIndex != 0) {
                     setState(() => _currentIndex = 0);
@@ -193,6 +203,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 label: 'wishlist'.tr(),
                 isSelected: _currentIndex == 1,
                 badge: 0,
+                onSurfaceColor: colorScheme.onSurface,
                 onTap: () {
                   if (_currentIndex != 1) {
                     setState(() => _currentIndex = 1);
@@ -203,6 +214,7 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
                 icon: Icons.person_rounded,
                 label: 'profile'.tr(),
                 isSelected: _currentIndex == 2,
+                onSurfaceColor: colorScheme.onSurface,
                 onTap: () {
                   if (_currentIndex != 2) {
                     setState(() => _currentIndex = 2);
@@ -223,12 +235,14 @@ class _NavItem extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
   final int? badge;
+  final Color onSurfaceColor;
 
   const _NavItem({
     required this.icon,
     required this.label,
     required this.isSelected,
     required this.onTap,
+    required this.onSurfaceColor,
     this.badge,
   });
 
@@ -238,9 +252,18 @@ class _NavItem extends StatelessWidget {
     final textScaler = MediaQuery.of(context).textScaler;
     final isTablet = screenSize.width > 600;
     final iconSize = min(30.0, 26 * (isTablet ? 1.2 : 1.0));
-    final textSize = min(14.0, 12 * textScaler.scale(1.0) * (isTablet ? 1.1 : 1.0));
-    final paddingVertical = max(8.0, screenSize.height * 0.012); // Min 8, or 1.2% of height
-    final paddingHorizontal = max(10.0, screenSize.width * 0.03); // Min 10, or 3% of width
+    final textSize = min(
+      14.0,
+      12 * textScaler.scale(1.0) * (isTablet ? 1.1 : 1.0),
+    );
+    final paddingVertical = max(
+      8.0,
+      screenSize.height * 0.012,
+    ); // Min 8, or 1.2% of height
+    final paddingHorizontal = max(
+      10.0,
+      screenSize.width * 0.03,
+    ); // Min 10, or 3% of width
 
     return Expanded(
       child: GestureDetector(
@@ -248,7 +271,10 @@ class _NavItem extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
-          padding: EdgeInsets.symmetric(horizontal: paddingHorizontal, vertical: paddingVertical),
+          padding: EdgeInsets.symmetric(
+            horizontal: paddingHorizontal,
+            vertical: paddingVertical,
+          ),
           decoration: BoxDecoration(
             color: isSelected ? AppColors.primary : Colors.transparent,
             borderRadius: BorderRadius.circular(16),
@@ -261,7 +287,9 @@ class _NavItem extends StatelessWidget {
                 children: [
                   Icon(
                     icon,
-                    color: isSelected ? Colors.white : Colors.grey[400],
+                    color: isSelected
+                        ? Colors.white
+                        : onSurfaceColor.withValues(alpha: 0.55),
                     size: iconSize,
                   ),
                   if (badge != null && badge! > 0)
@@ -273,7 +301,10 @@ class _NavItem extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: AppColors.error,
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
+                          border: Border.all(
+                            color: Theme.of(context).colorScheme.surface,
+                            width: 2,
+                          ),
                         ),
                         constraints: const BoxConstraints(
                           minWidth: 18,
@@ -298,7 +329,9 @@ class _NavItem extends StatelessWidget {
                 style: TextStyle(
                   fontSize: textSize,
                   fontWeight: FontWeight.w600,
-                  color: isSelected ? Colors.white : Colors.grey[400],
+                  color: isSelected
+                      ? Colors.white
+                      : onSurfaceColor.withValues(alpha: 0.55),
                 ),
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,

@@ -79,7 +79,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     });
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: FadeTransition(
           opacity: _controller,

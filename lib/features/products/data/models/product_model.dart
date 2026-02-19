@@ -58,4 +58,46 @@ class ProductModel extends ProductEntity {
       'createdBy': createdBy,
     };
   }
+
+  factory ProductModel.fromEntity(ProductEntity entity) {
+    return ProductModel(
+      id: entity.id,
+      name: entity.name,
+      description: entity.description,
+      price: entity.price,
+      images: entity.images,
+      category: entity.category,
+      subcategory: entity.subcategory,
+      stock: entity.stock,
+      isActive: entity.isActive,
+      discount: entity.discount,
+      sizes: entity.sizes,
+      colors: entity.colors,
+      tags: entity.tags,
+      createdBy: entity.createdBy,
+      createdAt: entity.createdAt,
+      updatedAt: entity.updatedAt,
+    );
+  }
+
+  ProductEntity toEntity() {
+    return ProductEntity(
+      id: id,
+      name: name,
+      description: description,
+      price: price,
+      images: images,
+      category: category,
+      subcategory: subcategory,
+      stock: stock,
+      isActive: isActive,
+      discount: discount,
+      sizes: sizes,
+      colors: colors,
+      tags: tags,
+      createdBy: createdBy,
+      createdAt: createdAt,
+      updatedAt: updatedAt,
+    );
+  }
 }

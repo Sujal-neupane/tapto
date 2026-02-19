@@ -248,6 +248,10 @@
   "clearAll": "Clear All",
   "products": "Products",
   "inStock": "In Stock",
-  "outOfStock": "Out of Stock"
+  "outOfStock": "Out of Stock",
+  "routeNotFound": "Route not found",
+  "criticalErrorInMyApp": "Critical Error in MyApp",
+  "completeShoppingSolution": "A complete solution for your shopping needs.",
+  "privacyComingSoon": "Privacy settings coming soon",
+  "close": "Close"
 }
-
