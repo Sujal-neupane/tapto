@@ -7,13 +7,12 @@ import '../../../../app/theme/app_text_styles.dart';
 class QuickActionsSection extends ConsumerWidget {
   final VoidCallback onTrackOrderTap;
 
-  const QuickActionsSection({
-    super.key,
-    required this.onTrackOrderTap,
-  });
+  const QuickActionsSection({super.key, required this.onTrackOrderTap});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Column(
       children: [
         // Quick Actions Section
@@ -23,6 +22,7 @@ class QuickActionsSection extends ConsumerWidget {
             'Quick Actions',
             style: AppTextStyles.body.copyWith(
               fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface,
             ),
           ),
         ),
@@ -75,9 +75,7 @@ class QuickActionsSection extends ConsumerWidget {
                   Navigator.pushNamed(context, AppRoutes.myOrders);
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text(
-                        'Tap on an order to download its invoice',
-                      ),
+                      content: Text('Tap on an order to download its invoice'),
                       behavior: SnackBarBehavior.floating,
                     ),
                   );
@@ -106,6 +104,8 @@ class _QuickActionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -114,16 +114,26 @@ class _QuickActionCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(
+              alpha: colorScheme.brightness == Brightness.dark ? 0.2 : 0.1,
+            ),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withOpacity(0.3)),
+            border: Border.all(
+              color: color.withValues(
+                alpha: colorScheme.brightness == Brightness.dark ? 0.45 : 0.3,
+              ),
+            ),
           ),
           child: Column(
             children: [
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.2),
+                  color: color.withValues(
+                    alpha: colorScheme.brightness == Brightness.dark
+                        ? 0.28
+                        : 0.2,
+                  ),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(icon, color: color, size: 28),
@@ -132,9 +142,10 @@ class _QuickActionCard extends StatelessWidget {
               Text(
                 title,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
+                  color: colorScheme.onSurface,
                 ),
               ),
             ],

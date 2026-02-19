@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../../../app/theme/app_colors.dart';
 
 class SummaryRow extends StatelessWidget {
   final String label;
@@ -14,6 +13,7 @@ class SummaryRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isFree = value == 0;
+    final colorScheme = Theme.of(context).colorScheme;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -21,7 +21,7 @@ class SummaryRow extends StatelessWidget {
           label,
           style: TextStyle(
             fontSize: 14,
-            color: AppColors.textSecondary,
+            color: colorScheme.onSurface.withValues(alpha: 0.7),
             fontWeight: FontWeight.w400,
           ),
         ),
@@ -29,7 +29,7 @@ class SummaryRow extends StatelessWidget {
           isFree ? 'Free' : 'Rs. ${value.toStringAsFixed(0)}',
           style: TextStyle(
             fontSize: 14,
-            color: isFree ? AppColors.success : AppColors.textPrimary,
+            color: isFree ? Colors.green : colorScheme.onSurface,
             fontWeight: isFree ? FontWeight.w600 : FontWeight.w500,
           ),
         ),

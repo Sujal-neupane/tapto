@@ -15,10 +15,12 @@ class OrderSummaryCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.outlineVariant),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -65,7 +67,7 @@ class OrderSummaryCard extends ConsumerWidget {
             separatorBuilder: (_, __) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final item = cartItems[index];
-              return _buildCartItem(item, ref);
+              return _buildCartItem(item, context, ref);
             },
           ),
         ],
@@ -73,13 +75,14 @@ class OrderSummaryCard extends ConsumerWidget {
     );
   }
 
-  Widget _buildCartItem(CartItemModel item, WidgetRef ref) {
+  Widget _buildCartItem(CartItemModel item, BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: colorScheme.surfaceContainerLow,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
+        border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: Row(
         children: [

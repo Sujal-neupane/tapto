@@ -18,7 +18,8 @@ class MyOrdersScreen extends ConsumerStatefulWidget {
   ConsumerState<MyOrdersScreen> createState() => _MyOrdersScreenState();
 }
 
-class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> with SingleTickerProviderStateMixin {
+class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen>
+    with SingleTickerProviderStateMixin {
   String _selectedFilter = 'All';
   late AnimationController _animController;
 
@@ -41,7 +42,8 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> with SingleTick
     super.dispose();
   }
 
-  String Function(double) get currencyFormatter => ref.watch(currencyFormatterProvider);
+  String Function(double) get currencyFormatter =>
+      ref.watch(currencyFormatterProvider);
 
   List<OrderEntity> _getFilteredOrders(List<OrderEntity> orders) {
     if (_selectedFilter == 'All') return orders;
@@ -49,14 +51,15 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> with SingleTick
       switch (_selectedFilter) {
         case 'Active':
           return order.status == OrderStatus.pending ||
-                 order.status == OrderStatus.confirmed ||
-                 order.status == OrderStatus.processing ||
-                 order.status == OrderStatus.shipped ||
-                 order.status == OrderStatus.outForDelivery;
+              order.status == OrderStatus.confirmed ||
+              order.status == OrderStatus.processing ||
+              order.status == OrderStatus.shipped ||
+              order.status == OrderStatus.outForDelivery;
         case 'Delivered':
           return order.status == OrderStatus.delivered;
         case 'Cancelled':
-          return order.status == OrderStatus.cancelled || order.status == OrderStatus.refunded;
+          return order.status == OrderStatus.cancelled ||
+              order.status == OrderStatus.refunded;
         default:
           return true;
       }
@@ -69,7 +72,7 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> with SingleTick
     final filteredOrders = _getFilteredOrders(orderState.orders);
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: CustomAppBar(
         title: 'My Orders',
         subtitle: '${orderState.orders.length} total orders',
@@ -78,46 +81,54 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> with SingleTick
       body: orderState.isLoading
           ? const Center(child: CircularProgressIndicator())
           : orderState.error != null
-              ? _buildErrorState(orderState.error!)
-              : Column(
-                  children: [
-                    _buildFilterChips(),
-                    Expanded(
-                      child: filteredOrders.isEmpty
-                          ? _buildEmptyState()
-                          : RefreshIndicator(
-                              onRefresh: () async {
-                                HapticFeedback.mediumImpact();
-                                await ref.read(orderViewModelProvider.notifier).fetchMyOrders();
-                              },
-                              child: ListView.separated(
-                                padding: const EdgeInsets.all(16),
-                                itemCount: filteredOrders.length,
-                                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                                itemBuilder: (context, index) {
-                                  return FadeTransition(
-                                    opacity: _animController,
-                                    child: SlideTransition(
-                                      position: Tween<Offset>(
+          ? _buildErrorState(orderState.error!)
+          : Column(
+              children: [
+                _buildFilterChips(),
+                Expanded(
+                  child: filteredOrders.isEmpty
+                      ? _buildEmptyState()
+                      : RefreshIndicator(
+                          onRefresh: () async {
+                            HapticFeedback.mediumImpact();
+                            await ref
+                                .read(orderViewModelProvider.notifier)
+                                .fetchMyOrders();
+                          },
+                          child: ListView.separated(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: filteredOrders.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 12),
+                            itemBuilder: (context, index) {
+                              return FadeTransition(
+                                opacity: _animController,
+                                child: SlideTransition(
+                                  position:
+                                      Tween<Offset>(
                                         begin: const Offset(0, 0.1),
                                         end: Offset.zero,
-                                      ).animate(CurvedAnimation(
-                                        parent: _animController,
-                                        curve: Interval(
-                                          index * 0.1,
-                                          (index * 0.1) + 0.3,
-                                          curve: Curves.easeOut,
+                                      ).animate(
+                                        CurvedAnimation(
+                                          parent: _animController,
+                                          curve: Interval(
+                                            index * 0.1,
+                                            (index * 0.1) + 0.3,
+                                            curve: Curves.easeOut,
+                                          ),
                                         ),
-                                      )),
-                                      child: _OrderCard(order: filteredOrders[index]),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                    ),
-                  ],
+                                      ),
+                                  child: _OrderCard(
+                                    order: filteredOrders[index],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
                 ),
+              ],
+            ),
     );
   }
 
@@ -140,16 +151,24 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> with SingleTick
               HapticFeedback.selectionClick();
               setState(() => _selectedFilter = filter);
             },
-            backgroundColor: Colors.white,
+            backgroundColor: Theme.of(context).colorScheme.surface,
             selectedColor: AppColors.primary,
             labelStyle: TextStyle(
-              color: isSelected ? Colors.white : Colors.grey[700],
+              color: isSelected
+                  ? Colors.white
+                  : Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.8),
               fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
               side: BorderSide(
-                color: isSelected ? AppColors.primary : Colors.grey[300]!,
+                color: isSelected
+                    ? AppColors.primary
+                    : Theme.of(
+                        context,
+                      ).colorScheme.outline.withValues(alpha: 0.4),
               ),
             ),
           );
@@ -159,6 +178,7 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> with SingleTick
   }
 
   Widget _buildEmptyState() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -166,20 +186,30 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> with SingleTick
           Container(
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: Colors.grey[100],
+              color: colorScheme.surfaceContainerHighest,
               shape: BoxShape.circle,
             ),
-            child: Icon(Icons.shopping_bag_outlined, size: 80, color: Colors.grey[400]),
+            child: Icon(
+              Icons.shopping_bag_outlined,
+              size: 80,
+              color: colorScheme.onSurface.withValues(alpha: 0.45),
+            ),
           ),
           const SizedBox(height: 24),
           Text(
             context.translate('No orders yet'),
-            style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.grey[800]),
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurface,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
             context.translate('Start shopping to see your orders here'),
-            style: TextStyle(color: Colors.grey[600]),
+            style: TextStyle(
+              color: colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
           ),
         ],
       ),
@@ -199,7 +229,11 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> with SingleTick
                 color: Colors.red.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              child: const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.red,
+              ),
             ),
             const SizedBox(height: 20),
             Text(
@@ -209,7 +243,11 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> with SingleTick
             const SizedBox(height: 12),
             Text(
               error,
-              style: TextStyle(color: Colors.grey[600]),
+              style: TextStyle(
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -223,8 +261,13 @@ class _MyOrdersScreenState extends ConsumerState<MyOrdersScreen> with SingleTick
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ],
@@ -241,6 +284,7 @@ class _OrderCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -248,16 +292,14 @@ class _OrderCard extends ConsumerWidget {
           HapticFeedback.lightImpact();
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (_) => OrderDetailsScreen(order: order),
-            ),
+            MaterialPageRoute(builder: (_) => OrderDetailsScreen(order: order)),
           );
         },
         borderRadius: BorderRadius.circular(16),
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
@@ -278,7 +320,11 @@ class _OrderCard extends ConsumerWidget {
                       color: AppColors.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.receipt_long, color: AppColors.primary, size: 20),
+                    child: const Icon(
+                      Icons.receipt_long,
+                      color: AppColors.primary,
+                      size: 20,
+                    ),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -286,15 +332,24 @@ class _OrderCard extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          context.translate('Order #${order.id.substring(order.id.length - 6)}'),
+                          context.translate(
+                            'Order #${order.id.substring(order.id.length - 6)}',
+                          ),
                           style: const TextStyle(
                             fontWeight: FontWeight.w600,
                             fontSize: 15,
                           ),
                         ),
                         Text(
-                          DateFormat('MMM dd, yyyy • hh:mm a').format(order.createdAt),
-                          style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                          DateFormat(
+                            'MMM dd, yyyy • hh:mm a',
+                          ).format(order.createdAt),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colorScheme.onSurface.withValues(
+                              alpha: 0.65,
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -306,50 +361,65 @@ class _OrderCard extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: Colors.grey[50],
+                  color: colorScheme.surface,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Column(
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.shopping_cart_outlined, size: 16, color: Colors.grey[600]),
+                        Icon(
+                          Icons.shopping_cart_outlined,
+                          size: 16,
+                          color: colorScheme.onSurface.withValues(alpha: 0.65),
+                        ),
                         const SizedBox(width: 8),
                         Text(
                           context.translate('${order.items.length} item(s)'),
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
-                            color: Colors.grey[700],
+                            color: colorScheme.onSurface.withValues(alpha: 0.8),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    ...order.items.take(2).map((item) => Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 4,
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[400],
-                              shape: BoxShape.circle,
+                    ...order.items
+                        .take(2)
+                        .map(
+                          (item) => Padding(
+                            padding: const EdgeInsets.only(bottom: 4),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 4,
+                                  height: 4,
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.onSurface.withValues(
+                                      alpha: 0.35,
+                                    ),
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    '${item.quantity}x ${item.productName}',
+                                    style: TextStyle(
+                                      fontSize: 13,
+                                      color: colorScheme.onSurface.withValues(
+                                        alpha: 0.8,
+                                      ),
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              '${item.quantity}x ${item.productName}',
-                              style: TextStyle(fontSize: 13, color: Colors.grey[700]),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        ],
-                      ),
-                    )),
+                        ),
                     if (order.items.length > 2)
                       Padding(
                         padding: const EdgeInsets.only(top: 4),
@@ -358,7 +428,11 @@ class _OrderCard extends ConsumerWidget {
                             const SizedBox(width: 12),
                             Text(
                               '+${order.items.length - 2} more items',
-                              style: const TextStyle(fontSize: 12, color: AppColors.primary, fontWeight: FontWeight.w500),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.w500,
+                              ),
                             ),
                           ],
                         ),
@@ -372,7 +446,10 @@ class _OrderCard extends ConsumerWidget {
                 children: [
                   Text(
                     'Total Amount',
-                    style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
+                    ),
                   ),
                   Text(
                     ref.watch(currencyFormatterProvider)(order.total),
@@ -400,13 +477,19 @@ class _OrderCard extends ConsumerWidget {
                       },
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: AppColors.primary),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
-                      child: const Text('View Details', style: TextStyle(fontWeight: FontWeight.w600)),
+                      child: const Text(
+                        'View Details',
+                        style: TextStyle(fontWeight: FontWeight.w600),
+                      ),
                     ),
                   ),
-                  if (order.status == OrderStatus.pending || order.status == OrderStatus.confirmed) ...[
+                  if (order.status == OrderStatus.pending ||
+                      order.status == OrderStatus.confirmed) ...[
                     const SizedBox(width: 8),
                     Expanded(
                       child: ElevatedButton(
@@ -414,11 +497,16 @@ class _OrderCard extends ConsumerWidget {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.red,
                           foregroundColor: Colors.white,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           elevation: 0,
                         ),
-                        child: const Text('Cancel', style: TextStyle(fontWeight: FontWeight.w600)),
+                        child: const Text(
+                          'Cancel',
+                          style: TextStyle(fontWeight: FontWeight.w600),
+                        ),
                       ),
                     ),
                   ],
@@ -433,7 +521,7 @@ class _OrderCard extends ConsumerWidget {
 
   void _showCancelDialog(BuildContext context, WidgetRef ref) {
     final reasonController = TextEditingController();
-    
+
     HapticFeedback.mediumImpact();
     showDialog(
       context: context,
@@ -450,7 +538,9 @@ class _OrderCard extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Are you sure you want to cancel this order? This action cannot be undone.'),
+            const Text(
+              'Are you sure you want to cancel this order? This action cannot be undone.',
+            ),
             const SizedBox(height: 16),
             TextField(
               controller: reasonController,
@@ -482,11 +572,13 @@ class _OrderCard extends ConsumerWidget {
                 );
                 return;
               }
-              
+
               Navigator.pop(dialogContext);
-              
+
               try {
-                await ref.read(orderViewModelProvider.notifier).cancelOrder(order.id, reason);
+                await ref
+                    .read(orderViewModelProvider.notifier)
+                    .cancelOrder(order.id, reason);
                 HapticFeedback.heavyImpact();
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -510,7 +602,9 @@ class _OrderCard extends ConsumerWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
               foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
             ),
             child: const Text('Yes, Cancel'),
           ),

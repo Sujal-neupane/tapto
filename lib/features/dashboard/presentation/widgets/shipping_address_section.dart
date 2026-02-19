@@ -16,10 +16,12 @@ class ShippingAddressSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.outlineVariant),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -73,7 +75,7 @@ class ShippingAddressSection extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(vertical: 24),
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color: AppColors.primary.withOpacity(0.3),
+                          color: colorScheme.outlineVariant,
                           width: 1.5,
                         ),
                         borderRadius: BorderRadius.circular(12),

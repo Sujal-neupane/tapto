@@ -13,7 +13,8 @@ class AddressesScreen extends ConsumerStatefulWidget {
   ConsumerState<AddressesScreen> createState() => _AddressesScreenState();
 }
 
-class _AddressesScreenState extends ConsumerState<AddressesScreen> with TickerProviderStateMixin {
+class _AddressesScreenState extends ConsumerState<AddressesScreen>
+    with TickerProviderStateMixin {
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
 
@@ -27,10 +28,7 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> with TickerPr
     _fadeAnimation = Tween<double>(
       begin: 0.0,
       end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _fadeController,
-      curve: Curves.easeIn,
-    ));
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
 
     _fadeController.forward();
   }
@@ -48,8 +46,14 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> with TickerPr
     final textScaler = MediaQuery.of(context).textScaler;
     final isTablet = screenSize.width > 600;
     final padding = (screenSize.width * 0.04).toDouble(); // 4% of width
-    final iconSize = min(56.0, screenSize.width * 0.12); // Max 56, or 12% of width
-    final titleFontSize = min(20.0, 16 * textScaler.scale(1.0) * (isTablet ? 1.1 : 1.0));
+    final iconSize = min(
+      56.0,
+      screenSize.width * 0.12,
+    ); // Max 56, or 12% of width
+    final titleFontSize = min(
+      20.0,
+      16 * textScaler.scale(1.0) * (isTablet ? 1.1 : 1.0),
+    );
 
     // Load addresses if not loaded yet
     if (addressState.addresses.isEmpty && !addressState.isLoading) {
@@ -59,7 +63,7 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> with TickerPr
     }
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: const Text('My Addresses'),
         backgroundColor: AppColors.primary,
@@ -83,13 +87,17 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> with TickerPr
                 ),
               )
             : addressState.addresses.isEmpty
-                ? _buildEmptyState(iconSize, titleFontSize, padding)
-                : _buildAddressesList(addressState),
+            ? _buildEmptyState(iconSize, titleFontSize, padding)
+            : _buildAddressesList(addressState),
       ),
     );
   }
 
-  Widget _buildEmptyState(double iconSize, double titleFontSize, double padding) {
+  Widget _buildEmptyState(
+    double iconSize,
+    double titleFontSize,
+    double padding,
+  ) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -112,7 +120,7 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> with TickerPr
             style: TextStyle(
               fontSize: titleFontSize,
               fontWeight: FontWeight.w600,
-              color: Colors.black87,
+              color: Theme.of(context).colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 8),
@@ -120,7 +128,9 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> with TickerPr
             'Add your first shipping address to get started',
             style: TextStyle(
               fontSize: 16,
-              color: Colors.grey[600],
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.7),
             ),
             textAlign: TextAlign.center,
           ),
@@ -132,7 +142,10 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> with TickerPr
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
-              padding: EdgeInsets.symmetric(horizontal: padding * 1.5, vertical: padding * 0.5),
+              padding: EdgeInsets.symmetric(
+                horizontal: padding * 1.5,
+                vertical: padding * 0.5,
+              ),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
@@ -150,7 +163,8 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> with TickerPr
       },
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
-        itemCount: addressState.addresses.length + (addressState.isLoading ? 1 : 0),
+        itemCount:
+            addressState.addresses.length + (addressState.isLoading ? 1 : 0),
         itemBuilder: (context, index) {
           if (index == addressState.addresses.length) {
             return const Center(
@@ -168,7 +182,9 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> with TickerPr
             address: address,
             onEdit: () => _showEditAddressModal(context, address),
             onDelete: () => _showDeleteConfirmation(context, address),
-            onSetDefault: address.isDefault ? null : () => _setDefaultAddress(address.id),
+            onSetDefault: address.isDefault
+                ? null
+                : () => _setDefaultAddress(address.id),
           );
         },
       ),
@@ -208,7 +224,9 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> with TickerPr
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Delete Address'),
-        content: Text('Are you sure you want to delete the address "${address.shortAddress}"?'),
+        content: Text(
+          'Are you sure you want to delete the address "${address.shortAddress}"?',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -217,7 +235,9 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> with TickerPr
           TextButton(
             onPressed: () async {
               Navigator.pop(context);
-              await ref.read(addressViewModelProvider.notifier).deleteAddress(address.id);
+              await ref
+                  .read(addressViewModelProvider.notifier)
+                  .deleteAddress(address.id);
             },
             style: TextButton.styleFrom(foregroundColor: Colors.red),
             child: const Text('Delete'),
@@ -229,7 +249,9 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen> with TickerPr
 
   void _setDefaultAddress(String addressId) async {
     HapticFeedback.mediumImpact();
-    await ref.read(addressViewModelProvider.notifier).setDefaultAddress(addressId);
+    await ref
+        .read(addressViewModelProvider.notifier)
+        .setDefaultAddress(addressId);
   }
 }
 
@@ -251,9 +273,12 @@ class _AddressCard extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 0,
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey[200]!),
+        side: BorderSide(
+          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.35),
+        ),
       ),
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -265,16 +290,19 @@ class _AddressCard extends StatelessWidget {
                 Expanded(
                   child: Text(
                     address.fullName,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                   ),
                 ),
                 if (address.isDefault)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: AppColors.primary.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(12),
@@ -295,7 +323,9 @@ class _AddressCard extends StatelessWidget {
               address.toString(),
               style: TextStyle(
                 fontSize: 14,
-                color: Colors.grey[600],
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.7),
                 height: 1.4,
               ),
             ),
@@ -316,7 +346,9 @@ class _AddressCard extends StatelessWidget {
                 IconButton(
                   onPressed: onEdit,
                   icon: const Icon(Icons.edit_outlined, size: 20),
-                  color: Colors.grey[600],
+                  color: Theme.of(
+                    context,
+                  ).colorScheme.onSurface.withValues(alpha: 0.7),
                   tooltip: 'Edit address',
                 ),
                 IconButton(
@@ -338,13 +370,14 @@ class _AddressModal extends StatefulWidget {
   final AddressEntity? address;
   final WidgetRef ref;
 
-  const _AddressModal({ this.address, required this.ref});
+  const _AddressModal({this.address, required this.ref});
 
   @override
   State<_AddressModal> createState() => _AddressModalState();
 }
 
-class _AddressModalState extends State<_AddressModal> with TickerProviderStateMixin {
+class _AddressModalState extends State<_AddressModal>
+    with TickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
   final _phoneController = TextEditingController();
@@ -366,13 +399,9 @@ class _AddressModalState extends State<_AddressModal> with TickerProviderStateMi
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-    _scaleAnimation = Tween<double>(
-      begin: 0.8,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _scaleController,
-      curve: Curves.easeOutBack,
-    ));
+    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
+      CurvedAnimation(parent: _scaleController, curve: Curves.easeOutBack),
+    );
     _scaleController.forward();
 
     // Pre-fill form if editing
@@ -463,7 +492,7 @@ class _AddressModalState extends State<_AddressModal> with TickerProviderStateMi
         maxChildSize: 0.95,
         builder: (_, controller) => Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.surfaceContainerHighest,
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
             boxShadow: [
               BoxShadow(
@@ -483,14 +512,21 @@ class _AddressModalState extends State<_AddressModal> with TickerProviderStateMi
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: Colors.grey[300],
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.outline.withValues(alpha: 0.35),
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      widget.address != null ? 'Edit Address' : 'Add New Address',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
+                      widget.address != null
+                          ? 'Edit Address'
+                          : 'Add New Address',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 20,
+                      ),
                     ),
                   ],
                 ),
@@ -573,7 +609,8 @@ class _AddressModalState extends State<_AddressModal> with TickerProviderStateMi
                         const SizedBox(height: 16),
                         CheckboxListTile(
                           value: _isDefault,
-                          onChanged: (value) => setState(() => _isDefault = value ?? false),
+                          onChanged: (value) =>
+                              setState(() => _isDefault = value ?? false),
                           title: const Text('Set as default address'),
                           controlAffinity: ListTileControlAffinity.leading,
                           contentPadding: EdgeInsets.zero,
@@ -587,19 +624,33 @@ class _AddressModalState extends State<_AddressModal> with TickerProviderStateMi
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppColors.primary,
                               foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
                               elevation: 0,
                             ),
                             child: _isLoading
-                                ? const CircularProgressIndicator(color: Colors.white)
+                                ? const CircularProgressIndicator(
+                                    color: Colors.white,
+                                  )
                                 : Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Icon(widget.address != null ? Icons.save : Icons.check_circle_outline, size: 22),
+                                      Icon(
+                                        widget.address != null
+                                            ? Icons.save
+                                            : Icons.check_circle_outline,
+                                        size: 22,
+                                      ),
                                       const SizedBox(width: 8),
                                       Text(
-                                        widget.address != null ? 'Update Address' : 'Save Address',
-                                        style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+                                        widget.address != null
+                                            ? 'Update Address'
+                                            : 'Save Address',
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.w600,
+                                          fontSize: 16,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -638,19 +689,28 @@ class _AddressField extends StatelessWidget {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
-      validator: (v) => v == null || v.trim().isEmpty ? 'This field is required' : null,
+      validator: (v) =>
+          v == null || v.trim().isEmpty ? 'This field is required' : null,
       decoration: InputDecoration(
         prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
         labelText: label,
         hintText: hint,
-        hintStyle: TextStyle(color: Colors.grey[400]),
+        hintStyle: TextStyle(
+          color: Theme.of(
+            context,
+          ).colorScheme.onSurface.withValues(alpha: 0.45),
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.4),
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: Colors.grey[300]!),
+          borderSide: BorderSide(
+            color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.4),
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -661,8 +721,11 @@ class _AddressField extends StatelessWidget {
           borderSide: const BorderSide(color: Colors.red),
         ),
         filled: true,
-        fillColor: Colors.grey[50],
-        contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+        fillColor: Theme.of(context).colorScheme.surface,
+        contentPadding: const EdgeInsets.symmetric(
+          vertical: 16,
+          horizontal: 16,
+        ),
       ),
     );
   }

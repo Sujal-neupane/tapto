@@ -7,9 +7,14 @@ class BiometricAuthService {
 
   static Future<bool> isBiometricAvailable() async {
     try {
+      // Only return true if biometrics are actually available and enrolled
+      // On simulators, this will return false
       final bool canAuthenticateWithBiometrics = await _localAuth.canCheckBiometrics;
-      final bool canAuthenticate = canAuthenticateWithBiometrics || await _localAuth.isDeviceSupported();
-      return canAuthenticate;
+      if (!canAuthenticateWithBiometrics) return false;
+      
+      // Check if there are any enrolled biometrics
+      final availableBiometrics = await _localAuth.getAvailableBiometrics();
+      return availableBiometrics.isNotEmpty;
     } on PlatformException {
       return false;
     }

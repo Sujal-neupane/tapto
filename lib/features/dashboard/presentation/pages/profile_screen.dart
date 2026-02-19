@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:tapto/core/providers/currency_provider.dart';
 import 'package:tapto/core/utils/localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -35,23 +36,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   // Show bottom sheet for image source selection
   Future<void> _showPickOptions() async {
+    final colorScheme = Theme.of(context).colorScheme;
+
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: colorScheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => SafeArea(
         child: Wrap(
           children: [
-            const Padding(
+            Padding(
               padding: EdgeInsets.all(16.0),
               child: Text(
                 'Profile Photo',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
-                  color: AppColors.surface,
+                  color: colorScheme.onSurface,
                 ),
               ),
             ),
@@ -102,8 +105,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           await ref
               .read(authViewModelProvider.notifier)
               .uploadProfilePicture(File(pickedFile.path));
-        } else {
-        }
+        } else {}
         return;
       }
 
@@ -171,8 +173,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             ),
           );
         }
-      } else {
-      }
+      } else {}
     } catch (e) {
       // If image picking fails, check if it's due to permissions
       if (e.toString().contains('permission') ||
@@ -261,7 +262,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               : ListView.separated(
                   shrinkWrap: true,
                   itemCount: orders.length,
-                  separatorBuilder: (_, __) => const Divider(),
+                  separatorBuilder: (_, index) => const Divider(),
                   itemBuilder: (context, index) {
                     final order = orders[index];
                     return ListTile(
@@ -274,7 +275,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ),
                       subtitle: Text(
                         'Status: ${order.status.name[0].toUpperCase()}${order.status.name.substring(1)}',
-                        style: const TextStyle(fontSize: 13),
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withValues(alpha: 0.7),
+                        ),
                       ),
                       trailing: ElevatedButton.icon(
                         icon: const Icon(Icons.location_on, size: 18),
@@ -311,11 +317,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final screenSize = MediaQuery.of(context).size;
     final padding = (screenSize.width * 0.05).toDouble(); // 5% of width
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: colorScheme.surface,
       body: SingleChildScrollView(
         child: Padding(
           padding: EdgeInsets.all(padding),
@@ -329,12 +336,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               const SizedBox(height: AppSpacing.xl),
 
               // Quick Actions Section
-              QuickActionsSection(onTrackOrderTap: () => _showTrackOrderSheet(context, ref)),
+              QuickActionsSection(
+                onTrackOrderTap: () => _showTrackOrderSheet(context, ref),
+              ),
 
               const SizedBox(height: AppSpacing.xl),
 
               // Account Section
-              AccountSection(onPaymentMethodsTap: () => _showPaymentMethodsDialog(context, ref)),
+              AccountSection(
+                onPaymentMethodsTap: () =>
+                    _showPaymentMethodsDialog(context, ref),
+              ),
 
               const SizedBox(height: AppSpacing.lg),
             ],
@@ -355,7 +367,7 @@ void _showPaymentMethodsDialog(BuildContext context, WidgetRef ref) {
   showDialog(
     context: context,
     builder: (context) => AlertDialog(
-      title: Text('Payment Methods'),
+      title: Text('paymentMethod'.tr()),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -381,7 +393,7 @@ void _showPaymentMethodsDialog(BuildContext context, WidgetRef ref) {
       actions: [
         TextButton(
           onPressed: () => Navigator.pop(context),
-          child: Text('Close'),
+          child: Text('close'.tr()),
         ),
       ],
     ),

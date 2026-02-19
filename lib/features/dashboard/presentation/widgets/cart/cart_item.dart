@@ -13,19 +13,16 @@ class CartItemWidget extends ConsumerWidget {
   final CartItem item;
   final VoidCallback? onTap;
 
-  const CartItemWidget({
-    super.key,
-    required this.item,
-    this.onTap,
-  });
+  const CartItemWidget({super.key, required this.item, this.onTap});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -46,7 +43,7 @@ class CartItemWidget extends ConsumerWidget {
                 height: 80,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(12),
-                  color: AppColors.surface,
+                  color: colorScheme.surfaceContainerHighest,
                 ),
                 child: item.productImage.isNotEmpty
                     ? ClipRRect(
@@ -68,10 +65,10 @@ class CartItemWidget extends ConsumerWidget {
                     // Product Name
                     Text(
                       item.productName,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.textPrimary,
+                        color: colorScheme.onSurface,
                         height: 1.3,
                       ),
                       maxLines: 2,
@@ -110,7 +107,7 @@ class CartItemWidget extends ConsumerWidget {
                         // Quantity controls
                         Container(
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF5F6F8),
+                            color: colorScheme.surfaceContainerHighest,
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Row(
@@ -119,8 +116,14 @@ class CartItemWidget extends ConsumerWidget {
                                 icon: Icons.remove_rounded,
                                 onTap: () {
                                   if (item.quantity > 1) {
-                                    ref.read(cartViewModelProvider.notifier)
-                                        .updateQuantity(item.productId, item.quantity - 1);
+                                    ref
+                                        .read(cartViewModelProvider.notifier)
+                                        .updateQuantity(
+                                          item.productId,
+                                          item.quantity - 1,
+                                          size: item.size,
+                                          color: item.color,
+                                        );
                                   }
                                 },
                               ),
@@ -129,18 +132,24 @@ class CartItemWidget extends ConsumerWidget {
                                 alignment: Alignment.center,
                                 child: Text(
                                   '${item.quantity}',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w700,
-                                    color: AppColors.textPrimary,
+                                    color: colorScheme.onSurface,
                                   ),
                                 ),
                               ),
                               QuantityButton(
                                 icon: Icons.add_rounded,
                                 onTap: () {
-                                  ref.read(cartViewModelProvider.notifier)
-                                      .updateQuantity(item.productId, item.quantity + 1);
+                                  ref
+                                      .read(cartViewModelProvider.notifier)
+                                      .updateQuantity(
+                                        item.productId,
+                                        item.quantity + 1,
+                                        size: item.size,
+                                        color: item.color,
+                                      );
                                 },
                               ),
                             ],
@@ -160,8 +169,13 @@ class CartItemWidget extends ConsumerWidget {
             alignment: Alignment.centerRight,
             child: TextButton.icon(
               onPressed: () {
-                ref.read(cartViewModelProvider.notifier)
-                    .removeItem(item.productId);
+                ref
+                    .read(cartViewModelProvider.notifier)
+                    .removeItem(
+                      item.productId,
+                      size: item.size,
+                      color: item.color,
+                    );
               },
               icon: Icon(
                 Icons.delete_outline,

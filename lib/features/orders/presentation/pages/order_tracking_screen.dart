@@ -15,10 +15,12 @@ class OrderTrackingScreen extends ConsumerStatefulWidget {
   const OrderTrackingScreen({super.key, required this.orderId});
 
   @override
-  ConsumerState<OrderTrackingScreen> createState() => _OrderTrackingScreenState();
+  ConsumerState<OrderTrackingScreen> createState() =>
+      _OrderTrackingScreenState();
 }
 
-class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with TickerProviderStateMixin {
+class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen>
+    with TickerProviderStateMixin {
   LiveTrackingEntity? trackingData;
   LatLng? _destinationCoords;
   bool isLoading = true;
@@ -110,7 +112,8 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
     if (trackingData == null) return;
 
     // Check if destination coordinates are already provided
-    if (trackingData!.destinationLat != null && trackingData!.destinationLng != null) {
+    if (trackingData!.destinationLat != null &&
+        trackingData!.destinationLng != null) {
       setState(() {
         _destinationCoords = LatLng(
           trackingData!.destinationLat!,
@@ -131,11 +134,14 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
-    final iconSize = min(60.0, screenSize.width * 0.12); // Max 60, or 12% of width
+    final iconSize = min(
+      60.0,
+      screenSize.width * 0.12,
+    ); // Max 60, or 12% of width
 
     if (isLoading) {
       return Scaffold(
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         appBar: AppBar(
           title: const Text('Order Tracking'),
           backgroundColor: AppColors.primary,
@@ -200,7 +206,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
     final isDelivered = orderStatus.contains('deliver');
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: const Text('Order Tracking'),
         backgroundColor: isCancelled ? Colors.red : AppColors.primary,
@@ -230,7 +236,10 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
                 _buildLiveTrackingCard(),
               const SizedBox(height: 16),
               // Only show map for active orders (not cancelled/delivered)
-              if (!isCancelled && !isDelivered && trackingData!.currentLat != null && trackingData!.currentLng != null) ...[
+              if (!isCancelled &&
+                  !isDelivered &&
+                  trackingData!.currentLat != null &&
+                  trackingData!.currentLng != null) ...[
                 _buildMapCard(),
                 const SizedBox(height: 16),
               ],
@@ -238,8 +247,9 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
                 _buildDeliveryPersonCard(),
                 const SizedBox(height: 16),
               ],
-              if (!isCancelled && (trackingData!.currentLat != null || 
-                  trackingData!.estimatedTime != null)) ...[
+              if (!isCancelled &&
+                  (trackingData!.currentLat != null ||
+                      trackingData!.estimatedTime != null)) ...[
                 _buildEstimateCard(),
                 const SizedBox(height: 16),
               ],
@@ -308,9 +318,9 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
   }
 
   Widget _buildMapCard() {
-    final lat = trackingData!.currentLat ?? 27.7172;  // Default: Kathmandu
+    final lat = trackingData!.currentLat ?? 27.7172; // Default: Kathmandu
     final lng = trackingData!.currentLng ?? 85.3240;
-    
+
     // Get destination name - for now using a placeholder
     final destinationName = 'Delivery Address';
 
@@ -382,7 +392,10 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
                       child: Column(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(4),
@@ -482,7 +495,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
             right: 12,
             child: FloatingActionButton.small(
               heroTag: 'centerMap',
-              backgroundColor: Colors.white,
+              backgroundColor: Theme.of(context).colorScheme.surface,
               onPressed: () {
                 _mapController.move(LatLng(lat, lng), 14.0);
               },
@@ -556,14 +569,12 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
                     children: [
                       const Text(
                         'Current Location',
-                        style: TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
+                        style: TextStyle(color: Colors.white70, fontSize: 12),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        trackingData!.currentLocationAddress ?? 'Updating location...',
+                        trackingData!.currentLocationAddress ??
+                            'Updating location...',
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 15,
@@ -582,9 +593,10 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
   }
 
   Widget _buildDeliveryPersonCard() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -606,7 +618,11 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
                     color: AppColors.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.person_outline, color: AppColors.primary, size: 20),
+                  child: const Icon(
+                    Icons.person_outline,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 const Text(
@@ -629,7 +645,10 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
                   ),
                   child: Center(
                     child: Text(
-                      trackingData!.deliveryPersonName?.substring(0, 1).toUpperCase() ?? 'D',
+                      trackingData!.deliveryPersonName
+                              ?.substring(0, 1)
+                              .toUpperCase() ??
+                          'D',
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -654,11 +673,22 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
                       if (trackingData!.deliveryPersonPhone != null) ...[
                         Row(
                           children: [
-                            Icon(Icons.phone_outlined, size: 14, color: Colors.grey[600]),
+                            Icon(
+                              Icons.phone_outlined,
+                              size: 14,
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.7,
+                              ),
+                            ),
                             const SizedBox(width: 6),
                             Text(
                               trackingData!.deliveryPersonPhone!,
-                              style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.8,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -666,11 +696,20 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
                       ],
                       Row(
                         children: [
-                          Icon(Icons.motorcycle, size: 14, color: Colors.grey[600]),
+                          Icon(
+                            Icons.motorcycle,
+                            size: 14,
+                            color: colorScheme.onSurface.withValues(alpha: 0.7),
+                          ),
                           const SizedBox(width: 6),
                           Text(
                             'Bike', // Default vehicle type
-                            style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.8,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -722,13 +761,14 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
   }
 
   Widget _buildEstimateCard() {
+    final colorScheme = Theme.of(context).colorScheme;
     final estimatedTime = trackingData!.estimatedTime;
     final distanceRemaining = trackingData!.distanceRemaining;
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -751,7 +791,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
           Container(
             width: 1,
             height: 50,
-            color: Colors.grey[300],
+            color: colorScheme.outline.withValues(alpha: 0.35),
           ),
           Expanded(
             child: _buildEstimateItem(
@@ -766,7 +806,13 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
     );
   }
 
-  Widget _buildEstimateItem(IconData icon, String label, String value, Color color) {
+  Widget _buildEstimateItem(
+    IconData icon,
+    String label,
+    String value,
+    Color color,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Column(
       children: [
         Container(
@@ -782,29 +828,25 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
           label,
           style: TextStyle(
             fontSize: 12,
-            color: Colors.grey[600],
+            color: colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
         const SizedBox(height: 4),
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
         ),
       ],
     );
   }
 
-
-
   Widget _buildTimelineCard() {
+    final colorScheme = Theme.of(context).colorScheme;
     final timeline = trackingData!.timeline;
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -827,7 +869,11 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
                     color: AppColors.primary.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(Icons.timeline, color: AppColors.primary, size: 20),
+                  child: const Icon(
+                    Icons.timeline,
+                    color: AppColors.primary,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 const Text(
@@ -865,18 +911,19 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
   }
 
   Widget _buildTimelineItem(TrackingEntity event, bool isLast) {
+    final colorScheme = Theme.of(context).colorScheme;
     final orderStatus = trackingData!.timeline.isNotEmpty
         ? trackingData!.timeline.last.status.toLowerCase()
         : '';
     final isCancelled = orderStatus.contains('cancel');
     final eventStatus = event.status.toLowerCase();
     final isCancelledEvent = eventStatus.contains('cancel');
-    
+
     // Determine colors based on order status
     Color circleColor;
     Color lineColor;
     IconData iconData;
-    
+
     if (isCancelledEvent) {
       circleColor = Colors.red;
       lineColor = Colors.red.withOpacity(0.3);
@@ -891,7 +938,7 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
       lineColor = AppColors.primary;
       iconData = Icons.check;
     }
-    
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -946,12 +993,18 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
                 const SizedBox(height: 4),
                 Text(
                   event.description,
-                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: colorScheme.onSurface.withValues(alpha: 0.7),
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   DateFormat('MMM dd, yyyy • hh:mm a').format(event.timestamp),
-                  style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: colorScheme.onSurface.withValues(alpha: 0.55),
+                  ),
                 ),
               ],
             ),
@@ -974,7 +1027,11 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
                 color: Colors.red.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.error_outline, size: 64, color: Colors.red),
+              child: const Icon(
+                Icons.error_outline,
+                size: 64,
+                color: Colors.red,
+              ),
             ),
             const SizedBox(height: 20),
             const Text(
@@ -984,7 +1041,11 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
             const SizedBox(height: 12),
             Text(
               error ?? 'Unknown error',
-              style: TextStyle(color: Colors.grey[600]),
+              style: TextStyle(
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.7),
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
@@ -998,8 +1059,13 @@ class _OrderTrackingScreenState extends ConsumerState<OrderTrackingScreen> with 
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
               ),
             ),
           ],

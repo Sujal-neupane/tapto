@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:tapto/features/dashboard/presentation/pages/help_center_screen.dart';
 import 'package:tapto/features/dashboard/presentation/pages/privacy_policy_screen.dart';
 import '../../../../app/routes/app_routes.dart';
@@ -13,8 +12,8 @@ import '../../../../app/widgets/logout_dialog.dart';
 import '../../../auth/presentation/viewmodel/auth_viewmodel.dart';
 import '../../../auth/presentation/state/auth_state.dart';
 import '../../../../core/providers/language_provider.dart';
-import '../../../../core/providers/theme_provider.dart';// <-- ADDED: Notification service
-import 'terms_of_service_screen.dart'; 
+import '../../../../core/providers/theme_provider.dart'; // <-- ADDED: Notification service
+import 'terms_of_service_screen.dart';
 
 class SettingScreen extends ConsumerStatefulWidget {
   const SettingScreen({super.key});
@@ -24,34 +23,34 @@ class SettingScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingScreenState extends ConsumerState<SettingScreen> {
-  String _selectedLanguage = 'english'.tr();
+  String _selectedLanguageCode = 'en';
+  bool _didInitLocale = false;
 
   @override
-  void initState() {
-    super.initState();
-    _loadSettings();
-  }
-
-  Future<void> _loadSettings() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedLanguage = prefs.getString('languageCode') ?? 'en';
-    setState(() {
-      _selectedLanguage = _getLanguageDisplayName(savedLanguage);
-    });
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_didInitLocale) {
+      _selectedLanguageCode = context.locale.languageCode;
+      _didInitLocale = true;
+    }
   }
 
   String _getLanguageDisplayName(String code) {
     switch (code) {
-      case 'en': return 'english'.tr();
-      case 'es': return 'spanish'.tr();
-      case 'fr': return 'french'.tr();
-      case 'de': return 'german'.tr();
-      case 'ne': return 'nepali'.tr();
-      default: return 'english'.tr();
+      case 'en':
+        return 'english'.tr();
+      case 'es':
+        return 'spanish'.tr();
+      case 'fr':
+        return 'french'.tr();
+      case 'de':
+        return 'german'.tr();
+      case 'ne':
+        return 'nepali'.tr();
+      default:
+        return 'english'.tr();
     }
   }
-
-  
 
   Future<void> _changeLanguage(String languageCode) async {
     final locale = Locale(languageCode);
@@ -61,11 +60,8 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
     final appLanguage = _getAppLanguageFromCode(languageCode);
     ref.read(languageProvider.notifier).setLanguage(appLanguage);
 
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('languageCode', languageCode);
-
     setState(() {
-      _selectedLanguage = _getLanguageDisplayName(languageCode);
+      _selectedLanguageCode = languageCode;
     });
 
     // Show success message
@@ -98,6 +94,7 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     final screenSize = MediaQuery.of(context).size;
     final padding = (screenSize.width * 0.05).toDouble(); // 5% of width
     final themeMode = ref.watch(themeProvider);
@@ -115,6 +112,7 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
     });
 
     return Scaffold(
+      backgroundColor: colorScheme.surface,
       appBar: CustomAppBar(
         title: 'settings'.tr(),
         subtitle: "managePreferences".tr(),
@@ -134,9 +132,7 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
               subtitle: 'updatePersonalInfo'.tr(),
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('editProfileComingSoon'.tr()),
-                  ),
+                  SnackBar(content: Text('editProfileComingSoon'.tr())),
                 );
               },
             ),
@@ -147,9 +143,7 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
               subtitle: 'managePrivacy'.tr(),
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('privacyComingSoon'.tr()),
-                  ),
+                  SnackBar(content: Text('privacyComingSoon'.tr())),
                 );
               },
             ),
@@ -160,9 +154,7 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
               subtitle: 'updatePassword'.tr(),
               onTap: () {
                 ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('changePasswordComingSoon'.tr()),
-                  ),
+                  SnackBar(content: Text('changePasswordComingSoon'.tr())),
                 );
               },
             ),
@@ -178,14 +170,18 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
               subtitle: 'enableDarkTheme'.tr(),
               value: themeMode == ThemeMode.dark,
               onChanged: (value) {
-                ref.read(themeProvider.notifier).toggle();
+                if (value) {
+                  ref.read(themeProvider.notifier).setDark();
+                  return;
+                }
+                ref.read(themeProvider.notifier).setLight();
               },
             ),
             const SizedBox(height: AppSpacing.xs),
             _buildSettingsTile(
               icon: Icons.language_outlined,
               title: 'language'.tr(),
-              subtitle: _selectedLanguage,
+              subtitle: _getLanguageDisplayName(_selectedLanguageCode),
               onTap: () {
                 _showLanguageDialog();
               },
@@ -224,11 +220,9 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
               title: 'rateApp'.tr(),
               subtitle: 'shareFeeling'.tr(),
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('thankYou'.tr()),
-                  ),
-                );
+                ScaffoldMessenger.of(
+                  context,
+                ).showSnackBar(SnackBar(content: Text('thankYou'.tr())));
               },
             ),
 
@@ -273,17 +267,18 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
               height: 50,
               child: OutlinedButton.icon(
                 onPressed: () => _handleLogout(context),
-                icon: const Icon(Icons.logout, color: Colors.red),
+                icon: Icon(Icons.logout, color: colorScheme.error),
                 label: Text(
                   'logout'.tr(),
-                  style: const TextStyle(
-                    color: Colors.red,
+                  style: TextStyle(
+                    color: colorScheme.error,
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(color: Colors.red, width: 1.5),
+                  side: BorderSide(color: colorScheme.error, width: 1.5),
+                  backgroundColor: colorScheme.surface,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -299,13 +294,11 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
   }
 
   Widget _buildSectionHeader(String title) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Text(
       title,
-      style: AppTextStyles.body.copyWith(
-        backgroundColor: AppColors.surface,
-        color: AppColors.textPrimary,
-        fontWeight: FontWeight.bold,
-      ),
+      style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
     );
   }
 
@@ -315,11 +308,15 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
     required String subtitle,
     required VoidCallback onTap,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.6),
+        ),
       ),
       child: ListTile(
         contentPadding: const EdgeInsets.symmetric(
@@ -333,28 +330,24 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
             color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(
-            icon,
-            color: AppColors.primary,
-            size: 24,
-          ),
+          child: Icon(icon, color: AppColors.primary, size: 24),
         ),
         title: Text(
           title,
           style: AppTextStyles.body.copyWith(
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: colorScheme.onSurface,
           ),
         ),
         subtitle: Text(
           subtitle,
-          style: AppTextStyles.caption?.copyWith(
-            color: AppColors.textSecondary,
+          style: AppTextStyles.caption.copyWith(
+            color: colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
-        trailing: const Icon(
+        trailing: Icon(
           Icons.chevron_right,
-          color: AppColors.textSecondary,
+          color: colorScheme.onSurface.withValues(alpha: 0.7),
         ),
         onTap: onTap,
       ),
@@ -368,11 +361,15 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
     required bool value,
     required ValueChanged<bool> onChanged,
   }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.6),
+        ),
       ),
       child: SwitchListTile(
         contentPadding: const EdgeInsets.symmetric(
@@ -386,23 +383,19 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
             color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
-          child: Icon(
-            icon,
-            color: AppColors.primary,
-            size: 24,
-          ),
+          child: Icon(icon, color: AppColors.primary, size: 24),
         ),
         title: Text(
           title,
           style: AppTextStyles.body.copyWith(
             fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
+            color: colorScheme.onSurface,
           ),
         ),
         subtitle: Text(
           subtitle,
-          style: AppTextStyles.caption?.copyWith(
-            color: AppColors.textSecondary,
+          style: AppTextStyles.caption.copyWith(
+            color: colorScheme.onSurface.withValues(alpha: 0.7),
           ),
         ),
         value: value,
@@ -417,15 +410,25 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('selectLanguage'.tr()),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildLanguageOption('english'.tr(), 'en'),
-            _buildLanguageOption('spanish'.tr(), 'es'),
-            _buildLanguageOption('french'.tr(), 'fr'),
-            _buildLanguageOption('german'.tr(), 'de'),
-            _buildLanguageOption('nepali'.tr(), 'ne'),
-          ],
+        content: RadioGroup<String>(
+          groupValue: _selectedLanguageCode,
+          onChanged: (value) {
+            if (value == null) {
+              return;
+            }
+            Navigator.pop(context);
+            _changeLanguage(value);
+          },
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildLanguageOption('english'.tr(), 'en'),
+              _buildLanguageOption('spanish'.tr(), 'es'),
+              _buildLanguageOption('french'.tr(), 'fr'),
+              _buildLanguageOption('german'.tr(), 'de'),
+              _buildLanguageOption('nepali'.tr(), 'ne'),
+            ],
+          ),
         ),
         actions: [
           TextButton(
@@ -440,12 +443,7 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
   Widget _buildLanguageOption(String language, String code) {
     return RadioListTile<String>(
       title: Text(language),
-      value: language,
-      groupValue: _selectedLanguage,
-      onChanged: (value) {
-        Navigator.pop(context);
-        _changeLanguage(code);
-      },
+      value: code,
       activeColor: AppColors.primary,
     );
   }
@@ -462,15 +460,9 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
           color: AppColors.primary,
           borderRadius: BorderRadius.circular(12),
         ),
-        child: const Icon(
-          Icons.shopping_bag,
-          color: Colors.white,
-          size: 30,
-        ),
+        child: const Icon(Icons.shopping_bag, color: Colors.white, size: 30),
       ),
-      children: [
-        const Text('A complete solution for your shopping needs.'),
-      ],
+      children: [Text('completeShoppingSolution'.tr())],
     );
   }
 

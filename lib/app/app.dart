@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:tapto/app/routes/app_routes.dart';
@@ -14,8 +13,6 @@ class MyApp extends ConsumerWidget {
     try {
       final themeMode = ref.watch(themeProvider);
 
-     
-
       return MaterialApp(
         title: 'Tapto',
         debugShowCheckedModeBanner: false,
@@ -24,18 +21,15 @@ class MyApp extends ConsumerWidget {
         themeMode: themeMode,
         locale: context.locale, // Use EasyLocalization's current locale
         supportedLocales: context.supportedLocales,
-        localizationsDelegates: [
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-          ...context.localizationDelegates,
-        ],
+        localizationsDelegates: context.localizationDelegates,
         routes: AppRoutes.routes,
         initialRoute: AppRoutes.splash,
         onUnknownRoute: (settings) {
           return MaterialPageRoute(
             builder: (context) => Scaffold(
-              body: Center(child: Text('Route not found: ${settings.name}')),
+              body: Center(
+                child: Text('${'routeNotFound'.tr()}: ${settings.name}'),
+              ),
             ),
           );
         },
@@ -47,7 +41,7 @@ class MyApp extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text('Critical Error in MyApp'),
+                Text('criticalErrorInMyApp'.tr()),
                 const SizedBox(height: 16),
                 Text(e.toString()),
               ],

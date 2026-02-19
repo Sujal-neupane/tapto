@@ -7,19 +7,17 @@ import 'summary_row.dart';
 class CheckoutPanel extends ConsumerWidget {
   final VoidCallback onCheckout;
 
-  const CheckoutPanel({
-    super.key,
-    required this.onCheckout,
-  });
+  const CheckoutPanel({super.key, required this.onCheckout});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final cartState = ref.watch(cartViewModelProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(24),
           topRight: Radius.circular(24),
@@ -40,43 +38,34 @@ class CheckoutPanel extends ConsumerWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.surface,
+              color: colorScheme.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
           const SizedBox(height: 20),
 
           // Summary
-          SummaryRow(
-            label: 'Subtotal',
-            value: cartState.subtotal,
-          ),
+          SummaryRow(label: 'Subtotal', value: cartState.subtotal),
           const SizedBox(height: 8),
-          SummaryRow(
-            label: 'Delivery Fee',
-            value: cartState.shippingFee,
-          ),
+          SummaryRow(label: 'Delivery Fee', value: cartState.shippingFee),
           const SizedBox(height: 8),
-          SummaryRow(
-            label: 'Tax',
-            value: cartState.tax,
-          ),
+          SummaryRow(label: 'Tax', value: cartState.tax),
           const SizedBox(height: 16),
 
           // Divider
-          const Divider(height: 1, color: AppColors.surface),
+          Divider(height: 1, color: colorScheme.outline.withValues(alpha: 0.3)),
           const SizedBox(height: 16),
 
           // Total
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 'Total',
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: colorScheme.onSurface,
                 ),
               ),
               Text(
@@ -104,11 +93,15 @@ class CheckoutPanel extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(16),
                 ),
                 elevation: 0,
-                disabledBackgroundColor: AppColors.surface,
-                disabledForegroundColor: AppColors.textSecondary,
+                disabledBackgroundColor: colorScheme.surfaceContainerHighest,
+                disabledForegroundColor: colorScheme.onSurface.withValues(
+                  alpha: 0.6,
+                ),
               ),
               child: Text(
-                cartState.items.isEmpty ? 'Cart is Empty' : 'Proceed to Checkout',
+                cartState.items.isEmpty
+                    ? 'Cart is Empty'
+                    : 'Proceed to Checkout',
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,

@@ -9,13 +9,12 @@ import '../../presentation/pages/edit_profile_screen.dart';
 class AccountSection extends StatelessWidget {
   final VoidCallback onPaymentMethodsTap;
 
-  const AccountSection({
-    super.key,
-    required this.onPaymentMethodsTap,
-  });
+  const AccountSection({super.key, required this.onPaymentMethodsTap});
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Column(
       children: [
         // Account Section
@@ -25,6 +24,7 @@ class AccountSection extends StatelessWidget {
             'Account',
             style: AppTextStyles.body.copyWith(
               fontWeight: FontWeight.bold,
+              color: colorScheme.onSurface,
             ),
           ),
         ),
@@ -37,9 +37,7 @@ class AccountSection extends StatelessWidget {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (_) => const EditProfileScreen(),
-              ),
+              MaterialPageRoute(builder: (_) => const EditProfileScreen()),
             );
           },
         ),
@@ -91,6 +89,8 @@ class _ProfileMenuItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -99,7 +99,10 @@ class _ProfileMenuItem extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(AppSpacing.md),
           decoration: BoxDecoration(
-            border: Border.all(color: Colors.grey[300]!),
+            color: colorScheme.surface,
+            border: Border.all(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.6),
+            ),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -107,7 +110,7 @@ class _ProfileMenuItem extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: AppColors.primary, size: 24),
@@ -119,20 +122,27 @@ class _ProfileMenuItem extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
+                        color: colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       subtitle,
-                      style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: colorScheme.onSurface.withValues(alpha: 0.7),
+                      ),
                     ),
                   ],
                 ),
               ),
-              Icon(Icons.chevron_right, color: Colors.grey[400]),
+              Icon(
+                Icons.chevron_right,
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
+              ),
             ],
           ),
         ),

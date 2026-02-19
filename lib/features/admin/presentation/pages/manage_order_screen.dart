@@ -39,7 +39,7 @@ class _ManageOrdersScreenState extends ConsumerState<ManageOrdersScreen> {
           'Manage Orders',
           style: TextStyle(color: Colors.black87, fontWeight: FontWeight.bold),
         ),
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).colorScheme.surface,
         elevation: 0,
         actions: [
           IconButton(

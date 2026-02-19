@@ -18,7 +18,7 @@ class OtpScreen extends StatelessWidget {
     final titleFontSize = min(24.0, 20 * textScaler.scale(1.0) * (isTablet ? 1.1 : 1.0));
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(),
       body: Padding(
         padding: EdgeInsets.all(padding),

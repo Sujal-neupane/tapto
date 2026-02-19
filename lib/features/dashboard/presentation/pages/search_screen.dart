@@ -37,7 +37,7 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final filters = ref.watch(searchFiltersProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.surface,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: const Text('searchProducts').tr(),
         backgroundColor: AppColors.primary,

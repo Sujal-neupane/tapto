@@ -37,7 +37,6 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
   bool _isPausedByProximity =
       false; // Track if browsing is paused due to proximity
 
-
   @override
   void initState() {
     super.initState();
@@ -316,10 +315,10 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        decoration: const BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
-          boxShadow: [
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          boxShadow: const [
             BoxShadow(
               color: Colors.black12,
               blurRadius: 24,
@@ -399,7 +398,7 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
     );
 
     return Container(
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surface,
       child: SafeArea(
         child: productsAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -425,7 +424,11 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
                 Text(
                   error.toString(),
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.textSecondary),
+                  style: TextStyle(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withValues(alpha: 0.7),
+                  ),
                 ),
                 const SizedBox(height: AppSpacing.lg),
                 ElevatedButton.icon(
@@ -484,7 +487,11 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
           const SizedBox(height: AppSpacing.sm),
           Text(
             'checkBackLaterForNewArrivals'.tr(),
-            style: TextStyle(color: AppColors.textSecondary),
+            style: TextStyle(
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
           ),
           const SizedBox(height: AppSpacing.xl),
           ElevatedButton.icon(
@@ -531,7 +538,11 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
           const SizedBox(height: AppSpacing.sm),
           Text(
             'applyFiltersOrRevisit'.tr(),
-            style: TextStyle(color: AppColors.textSecondary),
+            style: TextStyle(
+              color: Theme.of(
+                context,
+              ).colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
           ),
           const SizedBox(height: AppSpacing.xl),
           ElevatedButton.icon(
@@ -625,7 +636,7 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
                       Container(
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.surface,
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
@@ -649,7 +660,7 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                color: AppColors.textPrimary,
+                                color: Theme.of(context).colorScheme.onSurface,
                               ),
                             ),
                             const SizedBox(height: AppSpacing.sm),
@@ -657,7 +668,9 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
                               'Phone detected on table',
                               style: TextStyle(
                                 fontSize: 16,
-                                color: AppColors.textSecondary,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.7),
                               ),
                               textAlign: TextAlign.center,
                             ),
@@ -666,7 +679,9 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
                               'Move phone away to resume browsing',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: AppColors.textSecondary,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurface.withValues(alpha: 0.7),
                                 fontStyle: FontStyle.italic,
                               ),
                               textAlign: TextAlign.center,
@@ -793,7 +808,7 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
                       margin: const EdgeInsets.symmetric(horizontal: 32),
                       padding: const EdgeInsets.all(24),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).colorScheme.surface,
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
@@ -817,7 +832,7 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.textPrimary,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                           ),
                           const SizedBox(height: AppSpacing.sm),
@@ -825,7 +840,9 @@ class _HomeSwipeScreenState extends ConsumerState<HomeSwipeScreen>
                             'Phone detected on table',
                             style: TextStyle(
                               fontSize: 16,
-                              color: AppColors.textSecondary,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.7),
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -882,7 +899,7 @@ class _SwipeCard extends StatelessWidget {
     Widget cardContent = Card(
       margin: EdgeInsets.zero,
       elevation: isTop ? 16 : 6,
-      color: const Color(0xFFF3F4F6),
+      color: Theme.of(context).cardColor,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       shadowColor: Colors.black12,
       child: SizedBox(
@@ -904,9 +921,9 @@ class _SwipeCard extends StatelessWidget {
                             width: double.infinity,
                             height: 220,
                             fit: BoxFit.cover,
-                            errorWidget: _buildImagePlaceholder(),
+                            errorWidget: _buildImagePlaceholder(context),
                           )
-                        : _buildImagePlaceholder(),
+                        : _buildImagePlaceholder(context),
                   ),
                   const SizedBox(height: 18),
                   Container(
@@ -915,7 +932,7 @@ class _SwipeCard extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: Theme.of(context).colorScheme.surfaceContainer,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
@@ -931,10 +948,10 @@ class _SwipeCard extends StatelessWidget {
                   const SizedBox(height: 10),
                   Text(
                     product.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w900,
-                      color: Colors.black,
+                      color: Theme.of(context).colorScheme.onSurface,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -983,7 +1000,9 @@ class _SwipeCard extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      color: AppColors.textSecondary,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.7),
                       fontSize: 14,
                     ),
                   ),
@@ -1038,13 +1057,17 @@ class _SwipeCard extends StatelessWidget {
                   children: [
                     Icon(
                       Icons.keyboard_arrow_up,
-                      color: Colors.grey.shade500,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withValues(alpha: 0.55),
                       size: 28,
                     ),
                     Text(
                       'swipeUpForDetails'.tr(),
                       style: TextStyle(
-                        color: Colors.grey.shade600,
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withValues(alpha: 0.7),
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
@@ -1078,10 +1101,10 @@ class _SwipeCard extends StatelessWidget {
     );
   }
 
-  Widget _buildImagePlaceholder() {
+  Widget _buildImagePlaceholder(BuildContext context) {
     return Container(
       height: 220,
-      color: Colors.grey.shade200,
+      color: Theme.of(context).colorScheme.surfaceContainerHighest,
       child: Icon(
         Icons.shopping_bag_outlined,
         size: 80,
@@ -1125,7 +1148,7 @@ class _ActionButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: Theme.of(context).colorScheme.surface,
       borderRadius: BorderRadius.circular(14),
       elevation: 2,
       child: InkWell(

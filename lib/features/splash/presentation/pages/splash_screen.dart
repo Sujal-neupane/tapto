@@ -156,7 +156,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     final verticalSpacing = screenHeight < 700 ? 30.0 : 40.0;
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: Container(
         width: double.infinity,
         height: double.infinity,

@@ -31,8 +31,6 @@ void main() async {
   final userSessionService = UserSessionService();
   await userSessionService.initialize();
 
-
-
   final sharedPreferences = await SharedPreferences.getInstance();
   final tokenStorageService = TokenStorageService(sharedPreferences);
 
@@ -40,16 +38,23 @@ void main() async {
   final savedLanguageCode = sharedPreferences.getString('languageCode') ?? 'en';
   final savedLocale = Locale(savedLanguageCode);
 
-
   runApp(
     EasyLocalization(
-      supportedLocales: const [Locale('en'), Locale('es'), Locale('fr'), Locale('de'), Locale('ne')],
+      supportedLocales: const [
+        Locale('en'),
+        Locale('es'),
+        Locale('fr'),
+        Locale('de'),
+        Locale('ne'),
+      ],
       path: 'assets/translations',
       fallbackLocale: const Locale('en'),
       startLocale: savedLocale,
+      useFallbackTranslations: true,
+      useFallbackTranslationsForEmptyResources: true,
       child: ProviderScope(
         overrides: [
-          sharedPreferencesProvider.overrideWithValue(sharedPreferences ),
+          sharedPreferencesProvider.overrideWithValue(sharedPreferences),
           tokenStorageServiceProvider.overrideWithValue(tokenStorageService),
         ],
         child: const MyApp(),

@@ -101,7 +101,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen>
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: Stack(
         children: [
           // Main scrollable content
@@ -111,7 +111,7 @@ class _ProductDetailsScreenState extends ConsumerState<ProductDetailsScreen>
               // Compact App Bar
               SliverAppBar(
                 pinned: true,
-                backgroundColor: Colors.white,
+                backgroundColor: Theme.of(context).colorScheme.surface,
                 elevation: 0,
                 automaticallyImplyLeading: false,
                 toolbarHeight: 70,

@@ -28,7 +28,7 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     final cartState = ref.watch(cartViewModelProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F8FA),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: cartState.items.isEmpty
             ? Column(

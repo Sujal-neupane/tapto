@@ -6,6 +6,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:tapto/app/theme/app_colors.dart';
 import 'package:tapto/core/providers/currency_provider.dart';
+import 'package:tapto/core/services/biometric_auth_service.dart';
 import 'package:tapto/core/utils/currency_formatter.dart';
 import 'package:tapto/features/dashboard/presentation/viewmodel/cart_viewmodel.dart';
 import 'package:tapto/features/dashboard/data/models/cart_item_model.dart';
@@ -113,15 +114,37 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
 
   Future<void> _handlePaymentSelection(String paymentId) async {
     // If not COD, Khalti, or eSewa, show mock payment dialog
-    if (paymentId != 'COD' &&
+    if (paymentId.toLowerCase() != 'cod' &&
         paymentId.toLowerCase() != 'khalti' &&
         paymentId.toLowerCase() != 'esewa') {
+      
+      // Check for biometric authentication before showing payment dialog
+      final bool biometricAvailable = await BiometricAuthService.isBiometricAvailable();
+      
+      if (biometricAvailable) {
+        final bool authenticated = await BiometricAuthService.authenticate(
+          reason: 'Authenticate to proceed with payment',
+        );
+        
+        if (!authenticated) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Authentication cancelled. Payment not processed.'),
+              backgroundColor: Colors.orange,
+            ),
+          );
+          setState(() => _selectedPayment = 'COD');
+          return;
+        }
+      }
+      
       final paid = await showDialog<bool>(
         context: context,
         builder: (context) => AlertDialog(
           title: Text('Simulate $paymentId Payment'),
           content: Text(
-            'This is a mock payment for $paymentId. Press Pay to simulate a successful payment.',
+            'This is a mock payment for $paymentId. ${biometricAvailable ? "Authenticated." : ""} Tap Pay to confirm.',
           ),
           actions: [
             TextButton(
@@ -384,6 +407,27 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
   }
 
   Future<void> _handleKhaltiPayment(List<CartItemModel> cartItems, double total) async {
+    // Check for biometric authentication
+    final bool biometricAvailable = await BiometricAuthService.isBiometricAvailable();
+    
+    if (biometricAvailable) {
+      final bool authenticated = await BiometricAuthService.authenticate(
+        reason: 'Authenticate to proceed with Khalti payment',
+      );
+      
+      if (!authenticated) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Authentication cancelled. Payment not processed.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        setState(() => _isPlacingOrder = false);
+        return;
+      }
+    }
+    
     try {
       await KhaltiPaymentService.initiatePayment(
         context: context,
@@ -442,6 +486,27 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
   }
 
   Future<void> _handleESewaPayment(List<CartItemModel> cartItems, double total) async {
+    // Check for biometric authentication
+    final bool biometricAvailable = await BiometricAuthService.isBiometricAvailable();
+    
+    if (biometricAvailable) {
+      final bool authenticated = await BiometricAuthService.authenticate(
+        reason: 'Authenticate to proceed with eSewa payment',
+      );
+      
+      if (!authenticated) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Authentication cancelled. Payment not processed.'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        setState(() => _isPlacingOrder = false);
+        return;
+      }
+    }
+    
     try {
       await ESewaPaymentService.initiatePayment(
         context: context,
@@ -632,7 +697,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen>
     );
 
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       appBar: AppBar(
         title: const Text(
           'Checkout',

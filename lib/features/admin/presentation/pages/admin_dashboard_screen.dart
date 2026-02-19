@@ -77,7 +77,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
     final userName = user?.name ?? 'Admin';
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: Column(
           children: [

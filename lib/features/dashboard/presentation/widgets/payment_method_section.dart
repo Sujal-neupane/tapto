@@ -19,11 +19,13 @@ class PaymentMethodSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final currency = ref.watch(currencyProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.outlineVariant),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.04),
@@ -74,61 +76,11 @@ class PaymentMethodSection extends ConsumerWidget {
 
   Widget _buildPaymentOption(PaymentMethodInfo method, BuildContext context) {
     final isSelected = selectedPayment == method.id;
+    final colorScheme = Theme.of(context).colorScheme;
     return InkWell(
-      onTap: () async {
+      onTap: () {
         HapticFeedback.selectionClick();
         onPaymentSelected(method.id);
-        // If not COD, Khalti, or eSewa, show mock payment dialog
-        if (method.id != 'COD' &&
-            method.id.toLowerCase() != 'khalti' &&
-            method.id.toLowerCase() != 'esewa') {
-          final paid = await showDialog<bool>(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: Text('Simulate ${method.label} Payment'),
-              content: Text(
-                'This is a mock payment for ${method.label}. Press Pay to simulate a successful payment.',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text('Cancel'),
-                ),
-                ElevatedButton(
-                  style: ButtonStyle(
-                    foregroundColor: WidgetStateProperty.all(AppColors.surface),
-                  ),
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: const Text('Pay'),
-                ),
-              ],
-            ),
-          );
-          if (paid == true) {
-            // Show a success snackbar
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Row(
-                  children: [
-                    const Icon(Icons.check_circle, color: Colors.white),
-                    const SizedBox(width: 12),
-                    Expanded(child: Text('${method.label} payment successful!')),
-                  ],
-                ),
-                backgroundColor: AppColors.success,
-                behavior: SnackBarBehavior.floating,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                margin: const EdgeInsets.all(16),
-                duration: const Duration(seconds: 2),
-              ),
-            );
-          } else {
-            // If cancelled, revert to COD
-            onPaymentSelected('COD');
-          }
-        }
       },
       child: Container(
         margin: const EdgeInsets.all(16),
@@ -136,10 +88,10 @@ class PaymentMethodSection extends ConsumerWidget {
         decoration: BoxDecoration(
           color: isSelected
               ? AppColors.primary.withOpacity(0.05)
-              : Colors.grey[50],
+              : colorScheme.surfaceContainerLow,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.primary : Colors.grey[200]!,
+            color: isSelected ? AppColors.primary : colorScheme.outlineVariant,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -176,7 +128,7 @@ class PaymentMethodSection extends ConsumerWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSelected ? AppColors.primary : Colors.grey[400]!,
+                  color: isSelected ? AppColors.primary : colorScheme.outline,
                   width: 2,
                 ),
                 color: isSelected ? AppColors.primary : Colors.transparent,

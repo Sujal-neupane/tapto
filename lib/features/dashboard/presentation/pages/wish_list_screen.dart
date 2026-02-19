@@ -18,7 +18,7 @@ class WishlistScreen extends ConsumerWidget {
     final wishlist = ref.watch(wishlistProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F8FA),
+      backgroundColor: Theme.of(context).colorScheme.surface,
       body: SafeArea(
         child: Column(
           children: [
@@ -63,19 +63,21 @@ class WishlistScreen extends ConsumerWidget {
             const SizedBox(height: 24),
             Text(
               'yourWishlistIsEmpty',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: Theme.of(context).colorScheme.onSurface,
               ),
             ).tr(),
             const SizedBox(height: 8),
             Text(
               'doubleTapProductsToAdd',
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
-                color: AppColors.textSecondary,
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withValues(alpha: 0.7),
                 height: 1.5,
               ),
             ).tr(),
@@ -255,7 +257,7 @@ class _WishlistItemCard extends ConsumerWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: Theme.of(context).colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
@@ -326,10 +328,12 @@ class _WishlistItemCard extends ConsumerWidget {
                             Expanded(
                               child: Text(
                                 product.name,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 15,
-                                  color: AppColors.textPrimary,
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface,
                                   height: 1.3,
                                 ),
                                 maxLines: 2,
@@ -358,9 +362,11 @@ class _WishlistItemCard extends ConsumerWidget {
                         // Category
                         Text(
                           product.category,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: AppColors.textSecondary,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.7),
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -374,9 +380,15 @@ class _WishlistItemCard extends ConsumerWidget {
                               runSpacing: 4,
                               children: [
                                 if (product.sizes.isNotEmpty)
-                                  _chip('${product.sizes.length} sizes'),
+                                  _chip(
+                                    context,
+                                    '${product.sizes.length} sizes',
+                                  ),
                                 if (product.colors.isNotEmpty)
-                                  _chip('${product.colors.length} colors'),
+                                  _chip(
+                                    context,
+                                    '${product.colors.length} colors',
+                                  ),
                               ],
                             ),
                           ),
@@ -454,7 +466,7 @@ class _WishlistItemCard extends ConsumerWidget {
     );
   }
 
-  Widget _chip(String text) {
+  Widget _chip(BuildContext context, String text) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
@@ -463,10 +475,10 @@ class _WishlistItemCard extends ConsumerWidget {
       ),
       child: Text(
         text,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w500,
-          color: AppColors.textSecondary,
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
           letterSpacing: 0.2,
         ),
       ),

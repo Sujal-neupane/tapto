@@ -6,13 +6,11 @@ import '../../../presentation/viewmodel/cart_viewmodel.dart';
 class CartAppBar extends ConsumerWidget {
   final int itemCount;
 
-  const CartAppBar({
-    super.key,
-    required this.itemCount,
-  });
+  const CartAppBar({super.key, required this.itemCount});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.fromLTRB(4, 8, 16, 8),
       child: Row(
@@ -22,7 +20,7 @@ class CartAppBar extends ConsumerWidget {
             icon: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.surface,
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
@@ -32,10 +30,10 @@ class CartAppBar extends ConsumerWidget {
                   ),
                 ],
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.arrow_back_ios_new_rounded,
                 size: 18,
-                color: AppColors.textPrimary,
+                color: colorScheme.onSurface,
               ),
             ),
           ),
@@ -43,12 +41,12 @@ class CartAppBar extends ConsumerWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'My Cart',
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                  color: colorScheme.onSurface,
                   letterSpacing: -0.3,
                 ),
               ),
@@ -57,7 +55,7 @@ class CartAppBar extends ConsumerWidget {
                   '$itemCount ${itemCount == 1 ? 'item' : 'items'}',
                   style: TextStyle(
                     fontSize: 13,
-                    color: AppColors.textSecondary,
+                    color: colorScheme.onSurface.withValues(alpha: 0.7),
                     fontWeight: FontWeight.w400,
                   ),
                 ),
@@ -80,7 +78,9 @@ class CartAppBar extends ConsumerWidget {
                         onPressed: () => Navigator.pop(ctx),
                         child: Text(
                           'Cancel',
-                          style: TextStyle(color: AppColors.textSecondary),
+                          style: TextStyle(
+                            color: colorScheme.onSurface.withValues(alpha: 0.7),
+                          ),
                         ),
                       ),
                       TextButton(
