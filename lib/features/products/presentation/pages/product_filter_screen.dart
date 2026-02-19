@@ -479,7 +479,7 @@ class _ProductFilterScreenState extends ConsumerState<ProductFilterScreen>
           const SizedBox(height: 8),
           Text(
             'priceRangeHint'.tr(),
-            style: AppTextStyles.caption?.copyWith(
+            style: AppTextStyles.caption.copyWith(
               color: Theme.of(
                 context,
               ).colorScheme.onSurface.withValues(alpha: 0.7),
