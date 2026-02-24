@@ -45,14 +45,15 @@ class OrderRepositoryImpl implements OrderRepository {
       try {
         final cachedOrders = await localDataSource.getCachedOrders();
         return Right(cachedOrders);
-      } on CacheException catch (e) {
-        return Left(CacheFailure(message: e.message));
+      } on CacheException {
+        // Return empty list instead of error on first load (no cached orders yet)
+        return const Right([]);
       } catch (e) {
         // Clear corrupt cache and return empty list
         try {
           await localDataSource.clearCache();
         } catch (_) {}
-        return const Left(CacheFailure(message: 'No cached orders available'));
+        return const Right([]);
       }
     }
   }

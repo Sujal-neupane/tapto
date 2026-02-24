@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/core/api/api_client.dart';
 import 'package:tapto/core/services/connectivity/network_info.dart';
+import 'package:tapto/core/services/hive/hive_services.dart';
 import 'package:tapto/core/usecases/app_usecases.dart';
+import 'package:tapto/features/addresses/data/datasource/local/address_local_datasource.dart';
 import 'package:tapto/features/addresses/data/datasource/remote/address_remote_datasource.dart';
 import 'package:tapto/features/addresses/data/repository/address_repository_impl.dart';
 import 'package:tapto/features/addresses/domain/entities/address_entity.dart';
@@ -12,9 +14,14 @@ final addressRemoteDataSourceProvider = Provider<AddressRemoteDataSource>((ref) 
   return AddressRemoteDataSourceImpl(apiClient: ref.watch(apiClientProvider));
 });
 
+final addressLocalDataSourceProvider = Provider<AddressLocalDataSource>((ref) {
+  return AddressLocalDataSourceImpl(hiveService: ref.watch(hiveServiceProvider));
+});
+
 final addressRepositoryProvider = Provider<AddressRepository>((ref) {
   return AddressRepositoryImpl(
     remoteDataSource: ref.watch(addressRemoteDataSourceProvider),
+    localDataSource: ref.watch(addressLocalDataSourceProvider),
     networkInfo: ref.watch(networkInfoProvider),
   );
 });
@@ -95,7 +102,6 @@ class AddressViewModel extends Notifier<AddressState> {
     
     return AddressState.initial();
   }
-
   Future<void> loadUserAddresses() async {
     state = state.copyWith(isLoading: true, errorMessage: null);
 
@@ -103,10 +109,17 @@ class AddressViewModel extends Notifier<AddressState> {
 
     result.fold(
       (failure) {
-        state = state.copyWith(
-          isLoading: false,
-          errorMessage: failure.message,
-        );
+        // If we already have addresses (from previous load or create),
+        // don't show error - just log it silently
+        if (state.addresses.isEmpty) {
+          state = state.copyWith(
+            isLoading: false,
+            errorMessage: failure.message,
+          );
+        } else {
+          // We have addresses already, just clear loading state
+          state = state.copyWith(isLoading: false);
+        }
       },
       (addresses) {
         final defaultAddress = addresses.where((addr) => addr.isDefault).firstOrNull;

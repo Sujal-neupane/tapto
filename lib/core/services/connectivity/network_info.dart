@@ -1,4 +1,4 @@
-import 'dart:io';
+
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -46,27 +46,17 @@ class NetworkInfo implements INetworkInfo {
     });
   }
 
-  /// Verify actual internet access by pinging a reliable host
+  /// Verify actual internet access
   Future<bool> _hasInternetAccess() async {
     try {
-      // On iOS simulator, InternetAddress.lookup can fail even with internet
-      // So we'll just trust the connectivity check result
       final result = await _connectivity.checkConnectivity();
-      if (result.contains(ConnectivityResult.wifi) || 
-          result.contains(ConnectivityResult.ethernet) ||
-          result.contains(ConnectivityResult.mobile)) {
-        return true;
-      }
-      
-      // Fallback: try the lookup anyway
-      final lookupResult = await InternetAddress.lookup('google.com')
-          .timeout(const Duration(seconds: 3));
-      return lookupResult.isNotEmpty && lookupResult[0].rawAddress.isNotEmpty;
-    } on SocketException catch (_) {
-      // If lookup fails but we have wifi/mobile, assume connected
-      final result = await _connectivity.checkConnectivity();
-      return result.contains(ConnectivityResult.wifi) || 
-             result.contains(ConnectivityResult.mobile);
+      // Handle both single and multi-result cases
+      final hasConnection = result.any((r) => 
+        r == ConnectivityResult.wifi || 
+        r == ConnectivityResult.ethernet ||
+        r == ConnectivityResult.mobile
+      );
+      return hasConnection;
     } catch (e) {
       return false;
     }

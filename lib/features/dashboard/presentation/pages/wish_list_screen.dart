@@ -200,7 +200,13 @@ class WishlistScreen extends ConsumerWidget {
         action: SnackBarAction(
           label: 'VIEW CART',
           textColor: Colors.white,
-          onPressed: () => Navigator.pushNamed(context, '/cart'),
+         onPressed: () {
+            Future.microtask(() {
+              if (context.mounted) {
+                Navigator.pushNamed(context, '/cart');
+              }
+            });
+          },
         ),
       ),
     );

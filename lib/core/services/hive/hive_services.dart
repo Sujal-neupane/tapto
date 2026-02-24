@@ -12,6 +12,9 @@ class HiveService {
   static const String _userBoxName = 'users';
   static const String _ordersBoxName = 'orders';
   static const String _orderCacheBoxName = 'order_cache';
+  static const String _addressesBoxName = 'addresses';
+  static const String _addressCacheBoxName = 'address_cache';
+  static const String _cartBoxName = 'cart';
   static const String _generalBoxName = 'general';
   static const String _productsBoxName = 'products';
   static const String _productCacheBoxName = 'product_cache';
@@ -20,6 +23,9 @@ class HiveService {
   Box<UserModel>? _userBox;
   Box? _ordersBox;
   Box? _orderCacheBox;
+  Box? _addressesBox;
+  Box? _addressCacheBox;
+  Box? _cartBox;
   Box? _generalBox;
   Box? _productsBox;
   Box? _productCacheBox;
@@ -46,6 +52,9 @@ class HiveService {
     _userBox = await Hive.openBox<UserModel>(_userBoxName);
     _ordersBox = await Hive.openBox(_ordersBoxName);
     _orderCacheBox = await Hive.openBox(_orderCacheBoxName);
+    _addressesBox = await Hive.openBox(_addressesBoxName);
+    _addressCacheBox = await Hive.openBox(_addressCacheBoxName);
+    _cartBox = await Hive.openBox(_cartBoxName);
     _generalBox = await Hive.openBox(_generalBoxName);
     _productsBox = await Hive.openBox(_productsBoxName);
     _productCacheBox = await Hive.openBox(_productCacheBoxName);
@@ -310,6 +319,124 @@ class HiveService {
   }
 
   // ========================================
+  // ADDRESS METHODS
+  // ========================================
+
+  /// Save multiple addresses
+  Future<void> saveAddresses(List<Map<String, dynamic>> addresses) async {
+    await _ensureInitialized();
+    try {
+      await _addressesBox!.put('my_addresses', addresses);
+      await _addressCacheBox!.put('last_sync', DateTime.now().toIso8601String());
+    } catch (e) {
+      throw Exception('Failed to cache addresses: $e');
+    }
+  }
+
+  /// Get all cached addresses
+  List<Map<String, dynamic>>? getAddresses() {
+    try {
+      if (_addressesBox == null) return null;
+
+      final addresses = _addressesBox!.get('my_addresses');
+      if (addresses == null) return null;
+
+      return List<Map<String, dynamic>>.from(addresses);
+    } catch (e) {
+      throw Exception('Failed to get cached addresses: $e');
+    }
+  }
+
+  /// Save single address by ID
+  Future<void> saveAddress(String addressId, Map<String, dynamic> address) async {
+    await _ensureInitialized();
+    try {
+      await _addressesBox!.put('address_$addressId', address);
+    } catch (e) {
+      throw Exception('Failed to cache address: $e');
+    }
+  }
+
+  /// Get single address by ID
+  Map<String, dynamic>? getAddress(String addressId) {
+    try {
+      if (_addressesBox == null) return null;
+
+      final address = _addressesBox!.get('address_$addressId');
+      return address != null ? Map<String, dynamic>.from(address) : null;
+    } catch (e) {
+      throw Exception('Failed to get cached address: $e');
+    }
+  }
+
+  /// Clear all addresses
+  Future<void> clearAddresses() async {
+    await _ensureInitialized();
+    try {
+      await _addressesBox!.clear();
+      await _addressCacheBox!.clear();
+    } catch (e) {
+      throw Exception('Failed to clear address cache: $e');
+    }
+  }
+
+  /// Check if address cache is valid
+  bool isAddressCacheValid({int maxAgeInMinutes = 30}) {
+    try {
+      if (_addressCacheBox == null) return false;
+
+      final lastSync = _addressCacheBox!.get('last_sync');
+      if (lastSync == null) return false;
+
+      final lastSyncTime = DateTime.parse(lastSync);
+      final difference = DateTime.now().difference(lastSyncTime);
+
+      return difference.inMinutes < maxAgeInMinutes;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  // ========================================
+  // CART METHODS
+  // ========================================
+
+  /// Save cart items
+  Future<void> saveCartItems(List<Map<String, dynamic>> items) async {
+    await _ensureInitialized();
+    try {
+      await _cartBox!.put('cart_items', items);
+      await _cartBox!.put('last_updated', DateTime.now().toIso8601String());
+    } catch (e) {
+      throw Exception('Failed to cache cart items: $e');
+    }
+  }
+
+  /// Get cached cart items
+  List<Map<String, dynamic>>? getCartItems() {
+    try {
+      if (_cartBox == null) return null;
+
+      final items = _cartBox!.get('cart_items');
+      if (items == null) return null;
+
+      return List<Map<String, dynamic>>.from(items);
+    } catch (e) {
+      throw Exception('Failed to get cached cart items: $e');
+    }
+  }
+
+  /// Clear cart cache
+  Future<void> clearCart() async {
+    await _ensureInitialized();
+    try {
+      await _cartBox!.clear();
+    } catch (e) {
+      throw Exception('Failed to clear cart cache: $e');
+    }
+  }
+
+  // ========================================
   // GENERAL METHODS
   // ========================================
 
@@ -352,6 +479,9 @@ class HiveService {
     await _userBox?.close();
     await _ordersBox?.close();
     await _orderCacheBox?.close();
+    await _addressesBox?.close();
+    await _addressCacheBox?.close();
+    await _cartBox?.close();
     await _productsBox?.close();
     await _productCacheBox?.close();
     await _generalBox?.close();
@@ -363,6 +493,9 @@ class HiveService {
     await _userBox?.clear();
     await _ordersBox?.clear();
     await _orderCacheBox?.clear();
+    await _addressesBox?.clear();
+    await _addressCacheBox?.clear();
+    await _cartBox?.clear();
     await _productsBox?.clear();
     await _productCacheBox?.clear();
     await _generalBox?.clear();
