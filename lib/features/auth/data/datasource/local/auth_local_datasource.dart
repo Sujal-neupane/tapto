@@ -120,7 +120,11 @@ class AuthLocalDataSourceImpl implements AuthLocalDataSource {
   @override
   Future<void> logout() async {
     try {
+      // Clear session
       await _sessionService.logout();
+      
+      // Clear all local data
+      await _hiveService.clearAll();
     } catch (e) {
       throw Exception('Logout failed: $e');
     }

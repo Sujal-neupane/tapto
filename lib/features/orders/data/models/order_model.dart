@@ -31,9 +31,19 @@ class OrderModel extends OrderEntity {
     final shippingAddr = _safeMap(json['shippingAddress']);
     final paymentMeth = _safeMap(json['paymentMethod']);
 
+    // Handle userId - can be string or object
+    String userId = '';
+    final userIdValue = json['userId'];
+    if (userIdValue is String) {
+      userId = userIdValue;
+    } else if (userIdValue is Map) {
+      // If it's an object/map, try to get _id field
+      userId = userIdValue['_id'] ?? userIdValue['id'] ?? '';
+    }
+
     return OrderModel(
       id: json['_id'] ?? json['id'] ?? '',
-      userId: json['userId'] ?? '',
+      userId: userId,
       items:
           (json['items'] as List?)
               ?.map((item) => OrderItemModel.fromJson(_safeMap(item)))

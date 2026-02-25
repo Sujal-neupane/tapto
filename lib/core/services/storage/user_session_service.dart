@@ -179,6 +179,13 @@ class UserSessionService {
   Future<void> logout() async {
     await _ensureInitialized();
     await _sessionBox!.delete(_currentUserKey);
+    
+    // Also clear token and user ID from SharedPreferences
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('auth_token');
+      await prefs.remove('user_id');
+    } catch (_) {}
   }
 
   /// Set current user by ID

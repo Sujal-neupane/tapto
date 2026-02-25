@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tapto/core/utils/currency_formatter.dart';
 
-class SummaryRow extends StatelessWidget {
+class SummaryRow extends ConsumerWidget {
   final String label;
   final double value;
 
@@ -11,9 +13,10 @@ class SummaryRow extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isFree = value == 0;
     final colorScheme = Theme.of(context).colorScheme;
+    final currencyFormatter = ref.watch(currencyFormatterProvider);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -26,7 +29,7 @@ class SummaryRow extends StatelessWidget {
           ),
         ),
         Text(
-          isFree ? 'Free' : 'Rs. ${value.toStringAsFixed(0)}',
+          isFree ? 'Free' : currencyFormatter(value),
           style: TextStyle(
             fontSize: 14,
             color: isFree ? Colors.green : colorScheme.onSurface,

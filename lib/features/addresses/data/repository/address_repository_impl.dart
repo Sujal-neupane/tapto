@@ -21,46 +21,33 @@ class AddressRepositoryImpl implements AddressRepository {
 
   @override
   Future<Either<Failure, List<AddressEntity>>> getUserAddresses() async {
-    final isConnected = await networkInfo.isConnected;
-    print('📍 getUserAddresses - isConnected: $isConnected');
-    
-    if (isConnected) {
+    if (await networkInfo.isConnected) {
       try {
-        print('📍 Fetching addresses from remote...');
         final addresses = await remoteDataSource.getUserAddresses();
-        print('📍 Got ${addresses.length} addresses from remote');
         // Cache the addresses for offline access
         try {
           await localDataSource.cacheAddresses(addresses);
-          print('📍 Cached ${addresses.length} addresses');
-        } catch (e) {
-          print('⚠️ Failed to cache addresses: $e');
+        } catch (_) {
+          // Ignore cache errors when we have fresh data
         }
         return Right(addresses.map((model) => model.toEntity()).toList());
       } on ServerException catch (e) {
-        print('❌ Server error: ${e.message}');
         // If server fails, try cache as fallback
         try {
           final cachedAddresses = await localDataSource.getCachedAddresses();
-          print('📍 Using ${cachedAddresses.length} cached addresses as fallback');
           return Right(cachedAddresses.map((model) => model.toEntity()).toList());
-        } catch (cacheError) {
-          print('❌ Cache fallback failed: $cacheError');
+        } catch (_) {
           return Left(ServerFailure(message: e.message));
         }
       }
     } else {
-      print('📍 Network offline, loading from cache...');
       try {
         final cachedAddresses = await localDataSource.getCachedAddresses();
-        print('📍 Loaded ${cachedAddresses.length} cached addresses');
         return Right(cachedAddresses.map((model) => model.toEntity()).toList());
-      } on CacheException catch (e) {
-        print('📍 No cache found: $e - returning empty list');
+      } on CacheException {
         // Return empty list instead of error on first load
         return const Right([]);
       } catch (e) {
-        print('❌ Cache error: $e - clearing and returning empty');
         // Clear corrupt cache and return empty list
         try {
           await localDataSource.clearCache();

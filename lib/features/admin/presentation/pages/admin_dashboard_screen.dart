@@ -14,6 +14,7 @@ import 'package:tapto/features/products/data/models/product_model.dart';
 import 'package:tapto/core/api/api_endpoint.dart';
 import 'package:tapto/core/widgets/cached_image.dart';
 import 'package:tapto/features/admin/presentation/pages/assign_delivery_screen.dart';
+import 'package:tapto/core/utils/currency_formatter.dart';
 
 class AdminDashboardScreen extends ConsumerStatefulWidget {
   const AdminDashboardScreen({super.key});
@@ -73,6 +74,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
   Widget build(BuildContext context) {
     final adminState = ref.watch(adminViewModelProvider);
     final user = ref.watch(currentUserProvider);
+    final currencyFormatter = ref.watch(currencyFormatterProvider);
 
     final userName = user?.name ?? 'Admin';
 
@@ -95,9 +97,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
                         child: TabBarView(
                           controller: _tabController,
                           children: [
-                            _buildDashboardTab(adminState),
-                            _buildOrdersTab(adminState),
-                            _buildProductsTab(),
+                            _buildDashboardTab(adminState, currencyFormatter),
+                            _buildOrdersTab(adminState, currencyFormatter),
+                            _buildProductsTab(currencyFormatter),
                             const AssignDeliveryScreen(),
                           ],
                         ),
@@ -231,7 +233,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
     );
   }
 
-  Widget _buildDashboardTab(AdminState state) {
+  Widget _buildDashboardTab(
+    AdminState state,
+    String Function(double) currencyFormatter,
+  ) {
     return RefreshIndicator(
       onRefresh: () async {
         HapticFeedback.mediumImpact();
@@ -247,7 +252,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
             const SizedBox(height: 24),
             _buildRevenueCards(state),
             const SizedBox(height: 24),
-            _buildRecentOrders(state),
+            _buildRecentOrders(state, currencyFormatter),
           ],
         ),
       ),
@@ -393,7 +398,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
     );
   }
 
-  Widget _buildRecentOrders(AdminState state) {
+  Widget _buildRecentOrders(AdminState state, String Function(double) currencyFormatter) {
     final recentOrders = state.orders.take(5).toList();
 
     return Column(
@@ -446,7 +451,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
             itemBuilder: (context, index) {
               return _OrderListItem(
                 order: recentOrders[index],
-                onTap: () => _showOrderDetails(recentOrders[index]),
+                currencyFormatter: currencyFormatter,
+                onTap: () =>
+                    _showOrderDetails(recentOrders[index], currencyFormatter),
               );
             },
           ),
@@ -454,7 +461,10 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
     );
   }
 
-  Widget _buildOrdersTab(AdminState state) {
+  Widget _buildOrdersTab(
+    AdminState state,
+    String Function(double) currencyFormatter,
+  ) {
     return RefreshIndicator(
       onRefresh: () async {
         HapticFeedback.mediumImpact();
@@ -469,7 +479,9 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
               itemBuilder: (context, index) {
                 return _OrderCard(
                   order: state.orders[index],
-                  onTap: () => _showOrderDetails(state.orders[index]),
+                  currencyFormatter: currencyFormatter,
+                  onTap: () =>
+                      _showOrderDetails(state.orders[index], currencyFormatter),
                   onStatusChange: (newStatus) =>
                       _updateOrderStatus(state.orders[index].id, newStatus),
                 );
@@ -478,7 +490,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
     );
   }
 
-  Widget _buildProductsTab() {
+  Widget _buildProductsTab(String Function(double) currencyFormatter) {
     final productsAsync = ref.watch(adminProductsProvider);
 
     return RefreshIndicator(
@@ -526,7 +538,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
               itemCount: products.length,
               itemBuilder: (context, index) {
                 final product = products[index];
-                return _buildProductCard(product);
+                return _buildProductCard(product, currencyFormatter);
               },
             ),
           );
@@ -555,7 +567,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
     );
   }
 
-  Widget _buildProductCard(ProductModel product) {
+  Widget _buildProductCard(ProductModel product, String Function(double) currencyFormatter) {
     String getImageUrl(String imagePath) {
       if (imagePath.startsWith('http')) return imagePath;
       return '${ApiEndpoints.baseUrl}$imagePath';
@@ -630,7 +642,7 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        '\$${product.price.toStringAsFixed(2)}',
+                        currencyFormatter(product.price),
                         style: const TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
@@ -902,13 +914,19 @@ class _AdminDashboardScreenState extends ConsumerState<AdminDashboardScreen>
     );
   }
 
-  void _showOrderDetails(OrderEntity order) {
+  void _showOrderDetails(
+    OrderEntity order,
+    String Function(double) currencyFormatter,
+  ) {
     HapticFeedback.mediumImpact();
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => _OrderDetailsSheet(order: order),
+      builder: (context) => _OrderDetailsSheet(
+        order: order,
+        currencyFormatter: currencyFormatter,
+      ),
     );
   }
 
@@ -1171,8 +1189,13 @@ class _RevenueCard extends StatelessWidget {
 class _OrderListItem extends StatelessWidget {
   final OrderEntity order;
   final VoidCallback onTap;
+  final String Function(double) currencyFormatter;
 
-  const _OrderListItem({required this.order, required this.onTap});
+  const _OrderListItem({
+    required this.order,
+    required this.onTap,
+    required this.currencyFormatter,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1260,7 +1283,7 @@ class _OrderListItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text(
-                  '\$${order.total.toStringAsFixed(2)}',
+                  currencyFormatter(order.total),
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 15,
@@ -1300,11 +1323,13 @@ class _OrderCard extends StatelessWidget {
   final OrderEntity order;
   final VoidCallback onTap;
   final Function(String) onStatusChange;
+  final String Function(double) currencyFormatter;
 
   const _OrderCard({
     required this.order,
     required this.onTap,
     required this.onStatusChange,
+    required this.currencyFormatter,
   });
 
   @override
@@ -1443,7 +1468,7 @@ class _OrderCard extends StatelessWidget {
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
                 ),
                 Text(
-                  '\$${order.total.toStringAsFixed(2)}',
+                  currencyFormatter(order.total),
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -1506,7 +1531,12 @@ class _OrderCard extends StatelessWidget {
 // ==================== ORDER DETAILS SHEET ====================
 class _OrderDetailsSheet extends StatelessWidget {
   final OrderEntity order;
-  const _OrderDetailsSheet({required this.order});
+  final String Function(double) currencyFormatter;
+
+  const _OrderDetailsSheet({
+    required this.order,
+    required this.currencyFormatter,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1605,7 +1635,7 @@ class _OrderDetailsSheet extends StatelessWidget {
                               ),
                             ),
                             Text(
-                              '\$${(item.price * item.quantity).toStringAsFixed(2)}',
+                              currencyFormatter(item.price * item.quantity),
                               style: const TextStyle(
                                 fontWeight: FontWeight.w500,
                               ),
@@ -1617,9 +1647,9 @@ class _OrderDetailsSheet extends StatelessWidget {
                     const SizedBox(height: 16),
                     const Divider(),
                     const SizedBox(height: 16),
-                    _PriceRow('Subtotal', order.subtotal),
-                    _PriceRow('Shipping', order.shippingFee),
-                    _PriceRow('Tax', order.tax),
+                    _PriceRow('Subtotal', order.subtotal, currencyFormatter),
+                    _PriceRow('Shipping', order.shippingFee, currencyFormatter),
+                    _PriceRow('Tax', order.tax, currencyFormatter),
                     const SizedBox(height: 8),
                     const Divider(),
                     const SizedBox(height: 8),
@@ -1634,7 +1664,7 @@ class _OrderDetailsSheet extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          '\$${order.total.toStringAsFixed(2)}',
+                          currencyFormatter(order.total),
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -1683,8 +1713,9 @@ class _DetailRow extends StatelessWidget {
 class _PriceRow extends StatelessWidget {
   final String label;
   final double amount;
+  final String Function(double) currencyFormatter;
 
-  const _PriceRow(this.label, this.amount);
+  const _PriceRow(this.label, this.amount, this.currencyFormatter);
 
   @override
   Widget build(BuildContext context) {
@@ -1695,7 +1726,7 @@ class _PriceRow extends StatelessWidget {
         children: [
           Text(label, style: TextStyle(fontSize: 14, color: Colors.grey[600])),
           Text(
-            '\$${amount.toStringAsFixed(2)}',
+            currencyFormatter(amount),
             style: const TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,

@@ -188,7 +188,8 @@ class AuthViewModel extends Notifier<AuthState> {
         );
       },
       (_) {
-      ref.read(cartViewModelProvider.notifier).clearCart();
+        state = state.copyWith(status: AuthStatus.loggedOut);
+        ref.read(cartViewModelProvider.notifier).clearCart();
       },
     );
 

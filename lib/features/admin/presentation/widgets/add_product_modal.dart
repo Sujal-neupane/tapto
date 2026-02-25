@@ -276,7 +276,7 @@ class _AddProductModalState extends ConsumerState<AddProductModal> {
                 _buildFashionTypeCard(
                   'Men\'s Fashion',
                   'Clothing and accessories for men',
-                  Icons.male,
+                  Icons.man,
                   'Men',
                   Colors.blue,
                 ),
