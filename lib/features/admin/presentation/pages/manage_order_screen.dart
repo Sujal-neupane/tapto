@@ -4,7 +4,6 @@ import 'package:tapto/app/theme/app_colors.dart';
 import 'package:tapto/features/admin/presentation/providers/admin_order_provider.dart';
 import 'package:tapto/features/orders/data/models/order_model.dart';
 import 'package:tapto/features/admin/presentation/providers/driver_provider.dart';
-import 'package:tapto/core/utils/currency_formatter.dart';
 import 'package:intl/intl.dart';
 
 class ManageOrdersScreen extends ConsumerStatefulWidget {
@@ -32,7 +31,6 @@ class _ManageOrdersScreenState extends ConsumerState<ManageOrdersScreen> {
   @override
   Widget build(BuildContext context) {
     final ordersAsync = ref.watch(adminOrdersProvider);
-    final currencyFormatter = ref.watch(currencyFormatterProvider);
 
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),

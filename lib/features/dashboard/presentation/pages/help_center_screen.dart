@@ -153,7 +153,7 @@ class HelpCenterScreen extends StatelessWidget {
             padding: const EdgeInsets.all(AppSpacing.md),
             child: Text(
               answer,
-              style: AppTextStyles.caption?.copyWith(
+              style: AppTextStyles.caption.copyWith(
                 color: Theme.of(context).colorScheme.onSurfaceVariant,
                 height: 1.5,
               ),
@@ -204,7 +204,7 @@ class HelpCenterScreen extends StatelessWidget {
         ),
         subtitle: Text(
           subtitle,
-          style: AppTextStyles.caption?.copyWith(
+          style: AppTextStyles.caption.copyWith(
             color: Theme.of(context).colorScheme.onSurfaceVariant,
           ),
         ),
