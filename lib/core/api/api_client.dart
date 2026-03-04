@@ -23,16 +23,31 @@ final dioProvider = Provider<Dio>((ref) {
     ),
   );
 
-  final token = tokenService.getToken();
-    if (token != null) {
-        dio.options.headers['Authorization'] = 'Bearer $token';
-  }
+  dio.interceptors.add(
+    InterceptorsWrapper(
+      onRequest: (options, handler) {
+        final path = options.path;
+        final shouldSkipAuth =
+            path.endsWith(ApiEndpoints.userLogin) ||
+            path.endsWith(ApiEndpoints.userRegister) ||
+            path.endsWith(ApiEndpoints.requestPasswordReset) ||
+            path.endsWith(ApiEndpoints.resetPassword);
 
-  // Get the tokenService from its provider
- final savedToken = tokenService.getToken();
- if (savedToken != null) {
-    dio.options.headers['Authorization'] = 'Bearer $savedToken';
-  }
+        if (shouldSkipAuth) {
+          options.headers.remove('Authorization');
+        } else {
+          final token = tokenService.getToken();
+          if (token != null && token.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $token';
+          } else {
+            options.headers.remove('Authorization');
+          }
+        }
+
+        handler.next(options);
+      },
+    ),
+  );
 
   // Add pretty logger for development
   dio.interceptors.add(

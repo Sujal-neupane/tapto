@@ -3,29 +3,47 @@ import 'package:tapto/core/providers/currency_provider.dart';
 
 /// Currency formatting utility with exchange rate conversion.
 ///
-/// All product prices in the backend are stored in USD.
-/// This class converts USD → user's local currency and formats the result.
+/// Prices are stored in a base currency and converted to the user's currency.
 class CurrencyFormatter {
-  /// Convert a USD amount to the target currency and format it.
-  static String format(double amountUSD, CurrencyInfo currency) {
-    final converted = amountUSD * currency.rate;
-
-    // JPY and KRW don't use decimal places
-    if (currency.code == 'JPY' || currency.code == 'KRW') {
-      return '${currency.symbol}${converted.round()}';
-    }
-
-    return '${currency.symbol}${converted.toStringAsFixed(2)}';
+  /// Convert a base amount to the target currency.
+  static double convert(double amountBase, CurrencyInfo target, CurrencyInfo base) {
+    if (target.code == base.code) return amountBase;
+    return amountBase * (target.rate / base.rate);
   }
 
-  /// Just convert without formatting (for calculations).
-  static double convert(double amountUSD, CurrencyInfo currency) {
-    return amountUSD * currency.rate;
+  /// Format a number for a currency, handling rounding rules.
+  static String _formatAmount(double amount, CurrencyInfo currency) {
+    // JPY and KRW don't use decimal places
+    if (currency.code == 'JPY' || currency.code == 'KRW') {
+      return '${currency.symbol}${amount.round()}';
+    }
+
+    return '${currency.symbol}${amount.toStringAsFixed(2)}';
+  }
+
+  /// Convert a base amount to the target currency and format it.
+  /// If showBase is true and currencies differ, append the base amount.
+  static String format(
+    double amountBase,
+    CurrencyInfo target,
+    CurrencyInfo base, {
+    bool showBase = false,
+  }) {
+    final converted = convert(amountBase, target, base);
+    final convertedText = _formatAmount(converted, target);
+
+    if (!showBase || target.code == base.code) {
+      return convertedText;
+    }
+
+    final baseText = _formatAmount(amountBase, base);
+    return '$convertedText ($baseText ${base.code})';
   }
 }
 
 /// Provider for formatted currency – returns a closure: (double usdPrice) → "Rs17,800.00"
 final currencyFormatterProvider = Provider<String Function(double)>((ref) {
   final currency = ref.watch(currencyProvider);
-  return (amount) => CurrencyFormatter.format(amount, currency);
+  final baseCurrency = ref.watch(baseCurrencyProvider);
+  return (amount) => CurrencyFormatter.format(amount, currency, baseCurrency);
 });

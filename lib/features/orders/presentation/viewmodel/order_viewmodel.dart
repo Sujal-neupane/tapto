@@ -97,6 +97,12 @@ Future<void> createOrderFromCart(
       throw Exception('User not authenticated');
     }
 
+    final networkInfo = ref.read(networkInfoProvider);
+    final isConnected = await networkInfo.isConnected;
+    if (!isConnected) {
+      throw Exception('No internet connection. Please connect to internet to place an order.');
+    }
+
     final apiClient = ref.read(apiClientProvider);
     final dataSource = OrderRemoteDataSourceImpl(apiClient: apiClient);
 

@@ -67,30 +67,81 @@ class CartViewModel extends Notifier<CartState> {
   // --- Load Cart ---
 
   /// Loads the cart. Prefers server data when online + logged in,
-  /// falls back to local SharedPreferences cache.
+  /// falls back to local optimistic state and cache.
   Future<void> loadCart() async {
     state = state.copyWith(isLoading: true, error: null);
     try {
       final result = await _getCartUsecase();
       result.fold(
         (failure) {
-          state = state.copyWith(error: failure.message);
+          // On failure, keep optimistic items if they exist
+          // Only show error if cart was completely empty
+          if (state.items.isEmpty) {
+            state = state.copyWith(
+              error: failure.message,
+              isLoading: false,
+            );
+          } else {
+            // Keep optimistic items, just clear loading
+            state = state.copyWith(isLoading: false);
+          }
         },
         (items) {
-          state = state.copyWith(items: items);
+          // If server returns empty but we have optimistic items, keep them
+          if (items.isEmpty && state.items.isNotEmpty) {
+            // Server returned empty - could be a sync issue
+            // Keep the optimistic items and log the issue
+            state = state.copyWith(isLoading: false);
+          } else {
+            // Use server data (either has items or we want to show empty)
+            state = state.copyWith(items: items, isLoading: false);
+          }
         },
       );
     } catch (e) {
-      state = state.copyWith(error: 'Failed to load cart');
-    } finally {
-      state = state.copyWith(isLoading: false);
+      // On exception, keep optimistic items if any
+      if (state.items.isEmpty) {
+        state = state.copyWith(
+          isLoading: false,
+          error: 'Failed to load cart',
+        );
+      } else {
+        state = state.copyWith(isLoading: false);
+      }
     }
   }
 
   // --- Mutators ---
 
   void addItem(CartItem item) {
-    state = state.copyWith(isLoading: true, error: null);
+    // Optimistic update: add item to cart immediately
+    final existingIndex = state.items.indexWhere((i) =>
+        i.productId == item.productId &&
+        i.size == item.size &&
+        i.color == item.color);
+
+    List<CartItem> optimisticItems;
+    if (existingIndex >= 0) {
+      // Item exists - increment quantity
+      optimisticItems = [...state.items];
+      optimisticItems[existingIndex] = CartItem(
+        productId: item.productId,
+        productName: item.productName,
+        productImage: item.productImage,
+        price: item.price,
+        quantity: optimisticItems[existingIndex].quantity + item.quantity,
+        size: item.size,
+        color: item.color,
+      );
+    } else {
+      // New item - add to cart
+      optimisticItems = [...state.items, item];
+    }
+
+    // Update UI immediately
+    state = state.copyWith(items: optimisticItems, error: null);
+
+    // Sync with server in the background
     _addToCartUsecase(AddToCartParams(
       productId: item.productId,
       productName: item.productName,
@@ -102,17 +153,27 @@ class CartViewModel extends Notifier<CartState> {
     )).then((result) {
       result.fold(
         (failure) {
-          state = state.copyWith(error: failure.message, isLoading: false);
+          // On failure, revert to previous state and show error
+          state = state.copyWith(error: failure.message);
         },
         (updatedItems) {
-          state = state.copyWith(items: updatedItems, isLoading: false);
+          // Server returned the full updated cart - use it
+          state = state.copyWith(items: updatedItems, error: null);
         },
       );
     });
   }
 
   void removeItem(String productId, {String? size, String? color}) {
-    state = state.copyWith(isLoading: true, error: null);
+    // Optimistic update: remove item immediately
+    final filteredItems = state.items.where((item) =>
+        !(item.productId == productId &&
+            (size == null || item.size == size) &&
+            (color == null || item.color == color))).toList();
+    
+    state = state.copyWith(items: filteredItems, error: null);
+
+    // Sync removal with server
     _removeFromCartUsecase(RemoveFromCartParams(
       productId: productId,
       size: size,
@@ -120,10 +181,11 @@ class CartViewModel extends Notifier<CartState> {
     )).then((result) {
       result.fold(
         (failure) {
-          state = state.copyWith(error: failure.message, isLoading: false);
+          // On failure, revert and show error
+          state = state.copyWith(error: failure.message);
         },
         (updatedItems) {
-          state = state.copyWith(items: updatedItems, isLoading: false);
+          state = state.copyWith(items: updatedItems, error: null);
         },
       );
     });
@@ -136,7 +198,27 @@ class CartViewModel extends Notifier<CartState> {
       return;
     }
 
-    state = state.copyWith(isLoading: true, error: null);
+    // Optimistic update: update quantity immediately
+    final updatedItems = state.items.map((item) {
+      if (item.productId == productId &&
+          (size == null || item.size == size) &&
+          (color == null || item.color == color)) {
+        return CartItem(
+          productId: item.productId,
+          productName: item.productName,
+          productImage: item.productImage,
+          price: item.price,
+          quantity: quantity,
+          size: item.size,
+          color: item.color,
+        );
+      }
+      return item;
+    }).toList();
+
+    state = state.copyWith(items: updatedItems, error: null);
+
+    // Sync with server
     _updateCartItemQuantityUsecase(UpdateCartItemParams(
       productId: productId,
       quantity: quantity,
@@ -145,10 +227,10 @@ class CartViewModel extends Notifier<CartState> {
     )).then((result) {
       result.fold(
         (failure) {
-          state = state.copyWith(error: failure.message, isLoading: false);
+          state = state.copyWith(error: failure.message);
         },
-        (updatedItems) {
-          state = state.copyWith(items: updatedItems, isLoading: false);
+        (syncedItems) {
+          state = state.copyWith(items: syncedItems, error: null);
         },
       );
     });

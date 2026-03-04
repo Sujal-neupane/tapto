@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:tapto/app/theme/app_colors.dart';
 import 'package:tapto/core/utils/currency_formatter.dart';
+import 'package:tapto/core/utils/image_utils.dart';
 import 'package:tapto/core/widgets/cached_image.dart';
 import 'package:tapto/features/dashboard/data/models/cart_item_model.dart';
 
@@ -89,7 +90,7 @@ class OrderSummaryCard extends ConsumerWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(10),
             child: AppCachedImage(
-              imageUrl: item.productImage,
+              imageUrl: ImageUtils.getImageUrl(item.productImage),
               width: 60,
               height: 60,
               fit: BoxFit.cover,

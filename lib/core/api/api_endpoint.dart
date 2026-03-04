@@ -5,25 +5,25 @@ class ApiEndpoints {
   ApiEndpoints._();
 
   static const bool isPhysicalDevice = false;
-  static const String compIpAddress = "localhost"; 
+  /// Set this to your computer's LAN IP. Only update this line if your IP changes.
+  static const String compIpAddress = "10.1.1.94"; 
 
   static String get baseUrl {
     // Prioritize platform-specific configurations
-    if (kIsWeb) {
-      return 'http://$compIpAddress:4000';
-    } else if (Platform.isAndroid) {
-      // Use 10.0.2.2 for Android emulator to access host machine
-      return 'http://172.25.0.41:4000';
-    } else if (Platform.isIOS) {
-      return 'http://localhost:4000';
-    } else {
-      // macOS, Linux, Windows desktop
-      return 'http://localhost:4000';
-    }
+     // Android emulator: use 10.0.2.2
+     if (!kIsWeb && Platform.isAndroid) {
+       return 'http://10.0.2.2:4000';
+     }
+     // iOS simulator: use localhost
+     if (!kIsWeb && Platform.isIOS) {
+       return 'http://localhost:4000';
+     }
+     // All physical devices and other platforms: use LAN IP
+     return 'http://$compIpAddress:4000';
   }
 
-  static const Duration connectionTimeout = Duration(seconds: 10);
-  static const Duration receiveTimeout = Duration(seconds: 10);
+  static const Duration connectionTimeout = Duration(seconds: 20);
+  static const Duration receiveTimeout = Duration(seconds: 20);
 
   // Auth Endpoints
   static const String user = '/api/auth';

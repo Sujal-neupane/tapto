@@ -384,21 +384,46 @@ CurrencyInfo _getCurrencyForCountry(String? country) {
   return countryCurrencyMap[country.toLowerCase()] ?? defaultCurrency;
 }
 
+/// Helper to resolve currency code → CurrencyInfo
+CurrencyInfo _getCurrencyForCode(String? code) {
+  if (code == null || code.isEmpty) return defaultCurrency;
+  for (final entry in countryCurrencyMap.entries) {
+    if (entry.value.code.toLowerCase() == code.toLowerCase()) {
+      return entry.value;
+    }
+  }
+  return defaultCurrency;
+}
+
 /// Currency provider based on user's selected country from auth state or stored locally
 final currencyProvider = Provider<CurrencyInfo>((ref) {
+  final hiveService = ref.watch(hiveServiceProvider);
   final authState = ref.watch(authViewModelProvider);
   final user = authState.user;
 
-  // First try to get country from authenticated user
-  String? country = user?.country;
-
-  // If not available, fallback to stored value
+  // Prefer locally stored country from registration for consistent currency.
+  String? country = hiveService.get<String>('user_country');
   if (country == null || country.isEmpty) {
-    final hiveService = ref.watch(hiveServiceProvider);
-    country = hiveService.get<String>('user_country', defaultValue: 'Nepal');
+    country = user?.country;
+  }
+
+  if (country == null || country.isEmpty) {
+    country = 'Nepal';
   }
 
   return _getCurrencyForCountry(country);
+});
+
+/// Base currency used for stored product prices.
+/// Default is NPR to keep prices consistent with local catalog values.
+final baseCurrencyProvider = Provider<CurrencyInfo>((ref) {
+  final hiveService = ref.watch(hiveServiceProvider);
+  final baseCode = hiveService.get<String>(
+    'base_currency',
+    defaultValue: 'NPR',
+  );
+
+  return _getCurrencyForCode(baseCode);
 });
 
 /// Tax rate provider based on user's selected country

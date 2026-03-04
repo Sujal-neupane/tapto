@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:tapto/app/app.dart';
@@ -26,6 +27,12 @@ void main() async {
   // Initialize Hive
   final hiveService = HiveService();
   await hiveService.init();
+
+  // Clear product/image caches on every app start so offline restart does not show stale data
+  await hiveService.clearProducts();
+  await DefaultCacheManager().emptyCache();
+  PaintingBinding.instance.imageCache.clear();
+  PaintingBinding.instance.imageCache.clearLiveImages();
 
   // Initialize UserSessionService
   final userSessionService = UserSessionService();

@@ -8,6 +8,7 @@ import 'package:tapto/app/theme/app_colors.dart';
 import 'package:tapto/core/widgets/cached_image.dart';
 import 'package:tapto/core/utils/localization.dart';
 import 'package:tapto/core/utils/currency_formatter.dart';
+import 'package:tapto/core/utils/image_utils.dart';
 import 'package:tapto/features/orders/domain/enitites/order_entity.dart';
 import 'package:tapto/features/orders/domain/services/invoice_service.dart';
 import 'package:tapto/features/orders/presentation/viewmodel/order_viewmodel.dart';
@@ -525,7 +526,7 @@ ${widget.order.items.map((item) => '• ${item.productName} x${item.quantity}').
                         height: 60,
                         color: colorScheme.surfaceContainer,
                         child: AppCachedImage(
-                          imageUrl: item.productImage,
+                          imageUrl: ImageUtils.getImageUrl(item.productImage),
                           fit: BoxFit.cover,
                           errorWidget: Icon(
                             Icons.image,

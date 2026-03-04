@@ -86,9 +86,73 @@ class _AddressesScreenState extends ConsumerState<AddressesScreen>
                   valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                 ),
               )
-            : addressState.addresses.isEmpty
-            ? _buildEmptyState(iconSize, titleFontSize, padding)
-            : _buildAddressesList(addressState),
+            : addressState.addresses.isEmpty && addressState.errorMessage != null
+                ? _buildErrorState(addressState.errorMessage!, iconSize, titleFontSize, padding, ref)
+                : addressState.addresses.isEmpty
+                    ? _buildEmptyState(iconSize, titleFontSize, padding)
+                    : _buildAddressesList(addressState),
+      ),
+    );
+  }
+
+  Widget _buildErrorState(
+    String errorMessage,
+    double iconSize,
+    double titleFontSize,
+    double padding,
+    WidgetRef ref,
+  ) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            padding: EdgeInsets.all(padding),
+            decoration: BoxDecoration(
+              color: AppColors.error.withOpacity(0.1),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.error_outline,
+              size: iconSize,
+              color: AppColors.error,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'Could\'t load addresses',
+            style: TextStyle(
+              fontSize: titleFontSize,
+              fontWeight: FontWeight.w600,
+              color: Theme.of(context).colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            errorMessage,
+            style: TextStyle(
+              fontSize: 16,
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 32),
+          ElevatedButton.icon(
+            onPressed: () {
+              ref.read(addressViewModelProvider.notifier).loadUserAddresses();
+            },
+            icon: const Icon(Icons.refresh),
+            label: const Text('Try Again'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(horizontal: padding * 1.5, vertical: padding * 0.5),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:tapto/core/utils/currency_formatter.dart';
 import '../../../../../app/theme/app_colors.dart';
 import '../../../presentation/viewmodel/cart_viewmodel.dart';
 import 'summary_row.dart';
@@ -13,6 +14,7 @@ class CheckoutPanel extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final cartState = ref.watch(cartViewModelProvider);
     final colorScheme = Theme.of(context).colorScheme;
+    final currencyFormatter = ref.watch(currencyFormatterProvider);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -69,7 +71,7 @@ class CheckoutPanel extends ConsumerWidget {
                 ),
               ),
               Text(
-                'Rs. ${cartState.total.toStringAsFixed(0)}',
+                currencyFormatter(cartState.total),
                 style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,

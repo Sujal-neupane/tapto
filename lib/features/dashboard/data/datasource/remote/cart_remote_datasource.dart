@@ -79,8 +79,8 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
         data: {
           'productId': productId,
           'quantity': quantity,
-          'size': ?size,
-          'color': ?color,
+          if (size != null) 'size': size,
+          if (color != null) 'color': color,
         },
       );
       final data = response.data;
@@ -115,8 +115,8 @@ class CartRemoteDataSourceImpl implements CartRemoteDataSource {
         data: {
           'productId': productId,
           'quantity': quantity,
-          'size': ?size,
-          'color': ?color,
+          if (size != null) 'size': size,
+          if (color != null) 'color': color,
         },
       );
       final data = response.data;

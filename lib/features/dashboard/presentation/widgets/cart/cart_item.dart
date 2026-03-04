@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../../app/theme/app_colors.dart';
 import '../../../../../core/utils/image_utils.dart';
 import '../../../../../core/widgets/cached_image.dart';
+import '../../../../../core/utils/currency_formatter.dart';
 import '../../../domain/entities/cart_item.dart';
 import '../../../presentation/viewmodel/cart_viewmodel.dart';
 import 'cart_chip.dart';
@@ -18,6 +19,7 @@ class CartItemWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final colorScheme = Theme.of(context).colorScheme;
+    final currencyFormatter = ref.watch(currencyFormatterProvider);
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(16),
@@ -95,15 +97,19 @@ class CartItemWidget extends ConsumerWidget {
                     // Price and Quantity
                     Row(
                       children: [
-                        Text(
-                          'Rs. ${item.totalPrice.toStringAsFixed(0)}',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: AppColors.primary,
+                        Flexible(
+                          child: Text(
+                            currencyFormatter(item.totalPrice),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w700,
+                              color: AppColors.primary,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
                           ),
                         ),
-                        const Spacer(),
+                        const SizedBox(width: 8),
                         // Quantity controls
                         Container(
                           decoration: BoxDecoration(
