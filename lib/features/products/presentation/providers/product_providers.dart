@@ -1,7 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:tapto/core/api/api_client.dart';
-import 'package:tapto/core/services/hive/hive_services.dart';
 import 'package:tapto/features/auth/presentation/state/auth_state.dart';
 import 'package:tapto/features/auth/presentation/viewmodel/auth_viewmodel.dart';
 import 'package:tapto/features/products/data/datasource/remote/product_remote_datasource.dart';
@@ -18,25 +17,7 @@ final productRemoteDataSourceProvider = Provider<ProductRemoteDataSource>((
 /// Provider to fetch all products (for admin)
 final adminProductsProvider = FutureProvider<List<ProductModel>>((ref) async {
   final dataSource = ref.watch(productRemoteDataSourceProvider);
-  final hive = ref.watch(hiveServiceProvider);
-  const cacheKey = 'admin_products';
-
-  try {
-    final products = await dataSource.fetchAdminProducts();
-    // Cache the fetched products
-    await hive.saveProducts(
-      cacheKey,
-      products.map((p) => p.toJson()..['_id'] = p.id).toList(),
-    );
-    return products;
-  } catch (e) {
-    // Fallback to cached data if offline
-    final cached = hive.getProducts(cacheKey);
-    if (cached != null && cached.isNotEmpty) {
-      return cached.map((json) => ProductModel.fromJson(json)).toList();
-    }
-    rethrow;
-  }
+  return dataSource.fetchAdminProducts();
 });
 
 /// Helper function to convert user preference to product category
@@ -57,8 +38,6 @@ String? _preferenceToCategory(String? preference) {
 final userProductsProvider = FutureProvider<List<ProductModel>>((ref) async {
   final dataSource = ref.watch(productRemoteDataSourceProvider);
   final authState = ref.watch(authViewModelProvider);
-  final hive = ref.watch(hiveServiceProvider);
-  const cacheKey = 'user_products';
 
   // Wait for user to be authenticated
   if (authState.status != AuthStatus.authenticated || authState.user == null) {
@@ -69,31 +48,15 @@ final userProductsProvider = FutureProvider<List<ProductModel>>((ref) async {
   final preference = authState.user?.preference;
   final category = _preferenceToCategory(preference);
 
-  try {
-    List<ProductModel> products;
-    // If no preference is set, fetch all active products
-    if (category == null) {
-      products = await dataSource.fetchProducts(isActive: true);
-    } else {
-      products = await dataSource.fetchProducts(
-        fashionType: category,
-        isActive: true,
-      );
-    }
-    // Cache the fetched products
-    await hive.saveProducts(
-      cacheKey,
-      products.map((p) => p.toJson()..['_id'] = p.id).toList(),
-    );
-    return products;
-  } catch (e) {
-    // Fallback to cached data if offline
-    final cached = hive.getProducts(cacheKey);
-    if (cached != null && cached.isNotEmpty) {
-      return cached.map((json) => ProductModel.fromJson(json)).toList();
-    }
-    rethrow;
+  // If no preference is set, fetch all active products
+  if (category == null) {
+    return dataSource.fetchProducts(isActive: true);
   }
+
+  return dataSource.fetchProducts(
+    fashionType: category,
+    isActive: true,
+  );
 });
 
 /// Provider to fetch products by specific fashion type
@@ -277,7 +240,6 @@ final searchFiltersProvider =
 /// Provider to fetch search results
 final searchResultsProvider = FutureProvider<List<ProductModel>>((ref) async {
   final dataSource = ref.watch(productRemoteDataSourceProvider);
-  final hive = ref.watch(hiveServiceProvider);
   final filters = ref.watch(searchFiltersProvider);
 
   // Only search if there's a query or filters
@@ -285,28 +247,11 @@ final searchResultsProvider = FutureProvider<List<ProductModel>>((ref) async {
     return [];
   }
 
-  final cacheKey = 'search_${filters.query}_${filters.category}';
-
-  try {
-    final products = await dataSource.searchProducts(
-      query: filters.query.isEmpty ? null : filters.query,
-      category: filters.category,
-      minPrice: filters.minPrice,
-      maxPrice: filters.maxPrice,
-      tags: filters.tags,
-    );
-    // Cache search results
-    await hive.saveProducts(
-      cacheKey,
-      products.map((p) => p.toJson()..['_id'] = p.id).toList(),
-    );
-    return products;
-  } catch (e) {
-    // Fallback to cached search results
-    final cached = hive.getProducts(cacheKey);
-    if (cached != null && cached.isNotEmpty) {
-      return cached.map((json) => ProductModel.fromJson(json)).toList();
-    }
-    rethrow;
-  }
+  return dataSource.searchProducts(
+    query: filters.query.isEmpty ? null : filters.query,
+    category: filters.category,
+    minPrice: filters.minPrice,
+    maxPrice: filters.maxPrice,
+    tags: filters.tags,
+  );
 });
