@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../app/routes/app_routes.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
@@ -21,7 +22,7 @@ class AccountSection extends StatelessWidget {
         Align(
           alignment: Alignment.centerLeft,
           child: Text(
-            'Account',
+            'account'.tr(),
             style: AppTextStyles.body.copyWith(
               fontWeight: FontWeight.bold,
               color: colorScheme.onSurface,
@@ -32,8 +33,8 @@ class AccountSection extends StatelessWidget {
 
         _ProfileMenuItem(
           icon: Icons.person_outline,
-          title: 'Edit Profile',
-          subtitle: 'Update your personal information',
+          title: 'editProfile'.tr(),
+          subtitle: 'updatePersonalInfo'.tr(),
           onTap: () {
             Navigator.push(
               context,
@@ -44,8 +45,8 @@ class AccountSection extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         _ProfileMenuItem(
           icon: Icons.location_on_outlined,
-          title: 'Addresses',
-          subtitle: 'Manage delivery addresses',
+          title: 'address'.tr(),
+          subtitle: 'deliveryAddress'.tr(),
           onTap: () {
             Navigator.push(
               context,
@@ -56,15 +57,15 @@ class AccountSection extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         _ProfileMenuItem(
           icon: Icons.payment_outlined,
-          title: 'Payment Methods',
-          subtitle: 'Manage your payment options',
+          title: 'paymentMethod'.tr(),
+          subtitle: 'paymentMethod'.tr(),
           onTap: onPaymentMethodsTap,
         ),
         const SizedBox(height: AppSpacing.sm),
         _ProfileMenuItem(
           icon: Icons.settings_outlined,
-          title: 'Settings',
-          subtitle: 'App preferences and account settings',
+          title: 'settings'.tr(),
+          subtitle: 'managePreferences'.tr(),
           onTap: () {
             Navigator.pushNamed(context, AppRoutes.setting);
           },

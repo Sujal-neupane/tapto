@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../../app/theme/app_colors.dart';
@@ -118,21 +119,21 @@ class ProfileHeaderCard extends ConsumerWidget {
                   _StatItem(
                     icon: Icons.shopping_bag_outlined,
                     count: '$ordersCount',
-                    label: 'Orders',
+                    label: 'orders'.tr(),
                     onSurfaceColor: colorScheme.onSurface,
                   ),
                   const _VerticalDivider(),
                   _StatItem(
                     icon: Icons.favorite_outline,
                     count: '$wishlistCount',
-                    label: 'Wishlist',
+                    label: 'wishlist'.tr(),
                     onSurfaceColor: colorScheme.onSurface,
                   ),
                   const _VerticalDivider(),
                   _StatItem(
                     icon: Icons.star_outline,
                     count: '4.8',
-                    label: 'Reviews',
+                    label: 'reviews'.tr(),
                     onSurfaceColor: colorScheme.onSurface,
                   ),
                 ],

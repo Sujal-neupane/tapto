@@ -29,7 +29,7 @@ final cartRepositoryProvider = Provider<CartRepository>((ref) {
 class CartRepositoryImpl implements CartRepository {
   final CartRemoteDataSource remoteDataSource;
   final CartLocalDataSource localDataSource;
-  final NetworkInfo networkInfo;
+  final INetworkInfo networkInfo;
 
   CartRepositoryImpl({
     required this.remoteDataSource,

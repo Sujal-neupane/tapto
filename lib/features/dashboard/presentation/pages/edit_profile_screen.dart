@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_text_styles.dart';
@@ -61,10 +62,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
         final authState = ref.read(authViewModelProvider);
         if (authState.status == AuthStatus.authenticated) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Profile updated successfully!'),
+            SnackBar(
+              content: Text('success'.tr()),
               backgroundColor: Colors.green,
-              duration: Duration(seconds: 2),
+              duration: const Duration(seconds: 2),
             ),
           );
           // Navigate back after a brief delay to let user see the toast
@@ -76,7 +77,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                authState.errorMessage ?? 'Failed to update profile',
+                authState.errorMessage ?? 'failed'.tr(),
               ),
               backgroundColor: Colors.red,
               duration: const Duration(seconds: 2),
@@ -88,7 +89,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text('${'error'.tr()}: ${e.toString()}'),
             backgroundColor: Colors.red,
             duration: const Duration(seconds: 2),
           ),
@@ -101,10 +102,11 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
   Widget build(BuildContext context) {
     final isLoading = ref.watch(isLoadingProvider);
     final currentUser = ref.watch(currentUserProvider);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.surface,
-      appBar: const CustomAppBar(title: 'Edit Profile', showBackButton: true),
+      appBar: CustomAppBar(title: 'editProfile'.tr(), showBackButton: true),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Form(
@@ -116,10 +118,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
               // Email (read-only)
               Text(
-                'Email',
+                'email'.tr(),
                 style: AppTextStyles.body.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey[700],
+                  color: colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
@@ -127,45 +129,53 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 width: double.infinity,
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[300]!),
+                  border: Border.all(
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.8),
+                  ),
                 ),
                 child: Text(
                   currentUser?.email ?? '',
-                  style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: colorScheme.onSurface.withValues(alpha: 0.8),
+                  ),
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
               Text(
-                'Email cannot be changed',
-                style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                'email'.tr(),
+                style: TextStyle(
+                  fontSize: 12,
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
+                ),
               ),
 
               const SizedBox(height: AppSpacing.lg),
 
               // Full Name
               Text(
-                'Full Name',
+                'fullName'.tr(),
                 style: AppTextStyles.body.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey[700],
+                  color: colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
               TextFormField(
                 controller: _nameController,
                 decoration: InputDecoration(
-                  hintText: 'Enter your full name',
+                  hintText: 'enterFullName'.tr(),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: colorScheme.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey[300]!),
+                    borderSide: BorderSide(color: colorScheme.outlineVariant),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey[300]!),
+                    borderSide: BorderSide(color: colorScheme.outlineVariant),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -178,7 +188,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 ),
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'Please enter your name';
+                    return 'pleaseEnterName'.tr();
                   }
                   return null;
                 },
@@ -188,10 +198,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
               // Phone Number
               Text(
-                'Phone Number',
+                'phoneNumber'.tr(),
                 style: AppTextStyles.body.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey[700],
+                  color: colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
@@ -199,16 +209,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
                 decoration: InputDecoration(
-                  hintText: 'Enter your phone number',
+                  hintText: 'enterPhone'.tr(),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: colorScheme.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey[300]!),
+                    borderSide: BorderSide(color: colorScheme.outlineVariant),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey[300]!),
+                    borderSide: BorderSide(color: colorScheme.outlineVariant),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -225,10 +235,10 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
 
               // Password Field
               Text(
-                'Password',
+                'password'.tr(),
                 style: AppTextStyles.body.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: Colors.grey[700],
+                  color: colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
@@ -236,16 +246,16 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                 controller: _passwordController,
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
-                  hintText: 'Enter new password (optional)',
+                  hintText: 'enterPassword'.tr(),
                   filled: true,
-                  fillColor: Colors.white,
+                  fillColor: colorScheme.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey[300]!),
+                    borderSide: BorderSide(color: colorScheme.outlineVariant),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: Colors.grey[300]!),
+                    borderSide: BorderSide(color: colorScheme.outlineVariant),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -260,7 +270,7 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                       _obscurePassword
                           ? Icons.visibility_off
                           : Icons.visibility,
-                      color: Colors.grey[600],
+                      color: colorScheme.onSurface.withValues(alpha: 0.7),
                     ),
                     onPressed: () {
                       setState(() {
@@ -296,8 +306,8 @@ class _EditProfileScreenState extends ConsumerState<EditProfileScreen> {
                             strokeWidth: 2,
                           ),
                         )
-                      : const Text(
-                          'Save Changes',
+                        : Text(
+                          'save'.tr(),
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,

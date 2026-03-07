@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../app/routes/app_routes.dart';
 import '../../../../app/theme/app_spacing.dart';
 import '../../../../app/theme/app_text_styles.dart';
@@ -19,7 +20,7 @@ class QuickActionsSection extends ConsumerWidget {
         Align(
           alignment: Alignment.centerLeft,
           child: Text(
-            'Quick Actions',
+            'support'.tr(),
             style: AppTextStyles.body.copyWith(
               fontWeight: FontWeight.bold,
               color: colorScheme.onSurface,
@@ -33,7 +34,7 @@ class QuickActionsSection extends ConsumerWidget {
             Expanded(
               child: _QuickActionCard(
                 icon: Icons.shopping_bag_outlined,
-                title: 'My Orders',
+                title: 'myOrders'.tr(),
                 color: Colors.blue,
                 onTap: () {
                   Navigator.pushNamed(context, AppRoutes.myOrders);
@@ -44,7 +45,7 @@ class QuickActionsSection extends ConsumerWidget {
             Expanded(
               child: _QuickActionCard(
                 icon: Icons.favorite_outline,
-                title: 'Wishlist',
+                title: 'wishlist'.tr(),
                 color: Colors.red,
                 onTap: () {
                   Navigator.pushNamed(context, AppRoutes.wishlist);
@@ -59,7 +60,7 @@ class QuickActionsSection extends ConsumerWidget {
             Expanded(
               child: _QuickActionCard(
                 icon: Icons.local_shipping_outlined,
-                title: 'Track Order',
+                title: 'trackOrder'.tr(),
                 color: Colors.orange,
                 onTap: onTrackOrderTap,
               ),
@@ -68,14 +69,14 @@ class QuickActionsSection extends ConsumerWidget {
             Expanded(
               child: _QuickActionCard(
                 icon: Icons.receipt_long_outlined,
-                title: 'Invoices',
+                title: 'orders'.tr(),
                 color: Colors.green,
                 onTap: () {
                   // Navigate to orders screen where invoices can be downloaded
                   Navigator.pushNamed(context, AppRoutes.myOrders);
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Tap on an order to download its invoice'),
+                    SnackBar(
+                      content: Text('orderDetails'.tr()),
                       behavior: SnackBarBehavior.floating,
                     ),
                   );

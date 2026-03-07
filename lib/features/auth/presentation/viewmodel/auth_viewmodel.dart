@@ -343,19 +343,22 @@ class AuthViewModel extends Notifier<AuthState> {
       final dio = Dio();
       final tokenStorage = ref.read(tokenStorageServiceProvider);
       final String? token = tokenStorage.getToken();
-      final String? userId = tokenStorage.getUserId();
 
-      if (token == null || token.isEmpty || userId == null) {
-        throw Exception('No auth token or user ID found');
+      if (token == null || token.isEmpty) {
+        throw Exception('No auth token found');
+      }
+
+      final payload = <String, dynamic>{'fullName': name.trim()};
+      if (phoneNumber != null && phoneNumber.trim().isNotEmpty) {
+        payload['phoneNumber'] = phoneNumber.trim();
+      }
+      if (preference != null && preference.trim().isNotEmpty) {
+        payload['shoppingPreference'] = preference.trim();
       }
 
       final response = await dio.put(
-        "${ApiEndpoints.baseUrl}${ApiEndpoints.userById(userId)}",
-        data: {
-          'fullName': name,
-          'phoneNumber': ?phoneNumber,
-          'shoppingPreference': ?preference,
-        },
+        "${ApiEndpoints.baseUrl}/api/auth/update-profile",
+        data: payload,
         options: Options(
           headers: {
             'Authorization': 'Bearer $token',
@@ -368,6 +371,7 @@ class AuthViewModel extends Notifier<AuthState> {
       if (data['success'] == true && data['data'] != null) {
         // Refresh user from backend to ensure latest info
         await getCurrentUser();
+        state = state.copyWith(status: AuthStatus.authenticated);
       } else {
         throw Exception(data['message'] ?? 'Update failed');
       }
