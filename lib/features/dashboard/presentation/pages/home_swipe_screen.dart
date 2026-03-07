@@ -905,178 +905,198 @@ class _SwipeCard extends StatelessWidget {
       child: SizedBox(
         width: cardWidth,
         height: width < 600 ? 650 : 750,
-        child: Padding(
-          padding: const EdgeInsets.all(18.0),
-          child: Stack(
-            children: [
-              // Main content
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final availableHeight = constraints.maxHeight.isFinite
+                ? constraints.maxHeight
+                : (width < 600 ? 650.0 : 750.0);
+            final isCompact = availableHeight < 360;
+            final isVeryCompact = availableHeight < 300;
+            final imageHeight = (availableHeight * (isCompact ? 0.34 : 0.38))
+              .clamp(60.0, 220.0);
+
+            return Padding(
+              padding: const EdgeInsets.all(18.0),
+              child: Stack(
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(22),
-                    child: imageUrl.isNotEmpty
-                        ? AppCachedImage(
-                            imageUrl: imageUrl,
-                            width: double.infinity,
-                            height: 220,
-                            fit: BoxFit.cover,
-                            errorWidget: _buildImagePlaceholder(context),
-                          )
-                        : _buildImagePlaceholder(context),
-                  ),
-                  const SizedBox(height: 18),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.surfaceContainer,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      product.category.toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.2,
-                        color: AppColors.primary,
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(22),
+                        child: imageUrl.isNotEmpty
+                            ? AppCachedImage(
+                                imageUrl: imageUrl,
+                                width: double.infinity,
+                                height: imageHeight,
+                                fit: BoxFit.cover,
+                                errorWidget: _buildImagePlaceholder(
+                                  context,
+                                  imageHeight,
+                                ),
+                              )
+                            : _buildImagePlaceholder(context, imageHeight),
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    product.name,
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w900,
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Row(
-                      children: [
-                        Text(
-                          currencyFormatter(product.price),
-                          style: const TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.blue,
+                      SizedBox(height: isCompact ? 8 : 18),
+                      if (!isCompact) ...[
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Theme.of(context).colorScheme.surfaceContainer,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            product.category.toUpperCase(),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.2,
+                              color: AppColors.primary,
+                            ),
                           ),
                         ),
-                        if (product.discount != null &&
-                            product.discount! > 0) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.red.shade100,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              '-${product.discount!.toStringAsFixed(0)}%',
+                        SizedBox(height: isCompact ? 6 : 10),
+                      ],
+                      Text(
+                        product.name,
+                        style: TextStyle(
+                          fontSize: isCompact ? 16 : 20,
+                          fontWeight: FontWeight.w900,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                        maxLines: isVeryCompact ? 1 : (isCompact ? 2 : 2),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 8),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          children: [
+                            Text(
+                              currencyFormatter(product.price),
                               style: TextStyle(
-                                fontSize: 12,
+                                fontSize: isCompact ? 20 : 26,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.red.shade700,
+                                color: Colors.blue,
                               ),
+                            ),
+                            if (!isVeryCompact &&
+                              product.discount != null &&
+                                product.discount! > 0 &&
+                                !isCompact) ...[
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.shade100,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  '-${product.discount!.toStringAsFixed(0)}%',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.red.shade700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      if (!isCompact && !isVeryCompact) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          product.description,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.7),
+                            fontSize: 14,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: product.colors.take(3).map((c) {
+                              return Container(
+                                width: 22,
+                                height: 22,
+                                margin: const EdgeInsets.only(right: 8),
+                                decoration: BoxDecoration(
+                                  color: _getColorFromName(c),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.grey.shade300,
+                                    width: 1.5,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ],
+                      if (!isVeryCompact) const Spacer(),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            _ActionButton(
+                              icon: Icons.favorite_border,
+                              onTap: onDoubleTap,
+                            ),
+                            const SizedBox(width: 12),
+                            _ActionButton(
+                              icon: Icons.arrow_forward,
+                              onTap: onSwipeUp,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  if (!isCompact)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.keyboard_arrow_up,
+                            color: Theme.of(
+                              context,
+                            ).colorScheme.onSurface.withValues(alpha: 0.55),
+                            size: 28,
+                          ),
+                          Text(
+                            'swipeUpForDetails'.tr(),
+                            style: TextStyle(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.onSurface.withValues(alpha: 0.7),
+                              fontSize: 13,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                         ],
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    product.description,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withValues(alpha: 0.7),
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: product.colors.take(3).map((c) {
-                        return Container(
-                          width: 22,
-                          height: 22,
-                          margin: const EdgeInsets.only(right: 8),
-                          decoration: BoxDecoration(
-                            color: _getColorFromName(c),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: Colors.grey.shade300,
-                              width: 1.5,
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  ),
-                  const Spacer(),
-                  FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        _ActionButton(
-                          icon: Icons.favorite_border,
-                          onTap: onDoubleTap,
-                        ),
-                        const SizedBox(width: 12),
-                        _ActionButton(
-                          icon: Icons.arrow_forward,
-                          onTap: onSwipeUp,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              // Swipe up indicator (always visible, bottom center)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.keyboard_arrow_up,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withValues(alpha: 0.55),
-                      size: 28,
-                    ),
-                    Text(
-                      'swipeUpForDetails'.tr(),
-                      style: TextStyle(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withValues(alpha: 0.7),
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                  ],
-                ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -1101,9 +1121,9 @@ class _SwipeCard extends StatelessWidget {
     );
   }
 
-  Widget _buildImagePlaceholder(BuildContext context) {
+  Widget _buildImagePlaceholder(BuildContext context, [double height = 220]) {
     return Container(
-      height: 220,
+      height: height,
       color: Theme.of(context).colorScheme.surfaceContainerHighest,
       child: Icon(
         Icons.shopping_bag_outlined,

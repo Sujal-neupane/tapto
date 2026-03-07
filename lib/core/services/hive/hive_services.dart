@@ -485,6 +485,17 @@ class HiveService {
     await _productsBox?.close();
     await _productCacheBox?.close();
     await _generalBox?.close();
+
+    _userBox = null;
+    _ordersBox = null;
+    _orderCacheBox = null;
+    _addressesBox = null;
+    _addressCacheBox = null;
+    _cartBox = null;
+    _generalBox = null;
+    _productsBox = null;
+    _productCacheBox = null;
+    _isInitialized = false;
   }
 
   /// Clear all data (for testing/logout)

@@ -50,7 +50,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             Padding(
               padding: EdgeInsets.all(16.0),
               child: Text(
-                'Profile Photo',
+                'editProfile'.tr(),
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
@@ -258,7 +258,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         return Padding(
           padding: const EdgeInsets.all(16),
           child: orders.isEmpty
-              ? Center(child: Text('No orders to track.'))
+              ? Center(child: Text('noProductsAvailable'.tr()))
               : ListView.separated(
                   shrinkWrap: true,
                   itemCount: orders.length,
@@ -284,7 +284,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       ),
                       trailing: ElevatedButton.icon(
                         icon: const Icon(Icons.location_on, size: 18),
-                        label: const Text('Track'),
+                        label: Text('trackOrder'.tr()),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,
                           foregroundColor: Colors.white,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:tapto/features/dashboard/presentation/pages/help_center_screen.dart';
 import 'package:tapto/features/dashboard/presentation/pages/privacy_policy_screen.dart';
+import 'package:tapto/features/dashboard/presentation/pages/edit_profile_screen.dart';
 import '../../../../app/routes/app_routes.dart';
 import '../../../../app/theme/app_colors.dart';
 import '../../../../app/theme/app_spacing.dart';
@@ -131,8 +132,11 @@ class _SettingScreenState extends ConsumerState<SettingScreen> {
               title: 'editProfile'.tr(),
               subtitle: 'updatePersonalInfo'.tr(),
               onTap: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('editProfileComingSoon'.tr())),
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const EditProfileScreen(),
+                  ),
                 );
               },
             ),
