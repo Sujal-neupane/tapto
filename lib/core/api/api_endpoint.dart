@@ -4,22 +4,35 @@ import 'package:flutter/foundation.dart';
 class ApiEndpoints {
   ApiEndpoints._();
 
+  /// Optional override:
+  /// flutter run --dart-define=API_BASE_URL=http://192.168.1.92:4000
+  static const String apiBaseUrlOverride = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: '',
+  );
+
   static const bool isPhysicalDevice = false;
   /// Set this to your computer's LAN IP. Only update this line if your IP changes.
-  static const String compIpAddress = "10.1.1.94"; 
+  static const String compIpAddress = "192.168.1.92";
 
   static String get baseUrl {
-    // Prioritize platform-specific configurations
-     // Android emulator: use 10.0.2.2
-     if (!kIsWeb && Platform.isAndroid) {
-       return 'http://10.0.2.2:4000';
-     }
-     // iOS simulator: use localhost
-     if (!kIsWeb && Platform.isIOS) {
-       return 'http://localhost:4000';
-     }
-     // All physical devices and other platforms: use LAN IP
-     return 'http://$compIpAddress:4000';
+    if (apiBaseUrlOverride.isNotEmpty) {
+      return apiBaseUrlOverride;
+    }
+
+    if (!kIsWeb && Platform.isAndroid) {
+      return isPhysicalDevice
+          ? 'http://$compIpAddress:4000'
+          : 'http://10.0.2.2:4000';
+    }
+
+    if (!kIsWeb && Platform.isIOS) {
+      return isPhysicalDevice
+          ? 'http://$compIpAddress:4000'
+          : 'http://localhost:4000';
+    }
+
+    return 'http://$compIpAddress:4000';
   }
 
   static const Duration connectionTimeout = Duration(seconds: 20);
