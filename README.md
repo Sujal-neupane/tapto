@@ -123,6 +123,3 @@ flutter test
 
 **License & contact**
 Include project license and contributor contact info here.
-
----
-Generated from code inspection of `lib/core/api/api_endpoint.dart` to capture runtime configuration and endpoints.
